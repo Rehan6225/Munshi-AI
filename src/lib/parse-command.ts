@@ -15,13 +15,13 @@ export function parseCommand(text: string) {
   let amount: number | null = null;
   const m = cleaned.match(/(?:₹|rs\.?|inr)?\s*(\d+(?:\.\d+)?)\s*(k|thousand|lakh|lakhs|l)?\b/i);
   if (m) {
-    amount = parseFloat(m[1]);
+    amount = parseFloat(m[1] ?? "0");
     const unit = m[2]?.toLowerCase();
     if (unit === "k" || unit === "thousand") amount *= 1000;
     if (unit === "lakh" || unit === "lakhs" || unit === "l") amount *= 100000;
   }
   const merchantMatch = text.match(/\b(?:on|at|for|to)\s+([A-Za-z][\w&' ]{1,24}?)(?=\s+(?:last|yesterday|today|this|for|on|at|and|in)\b|[.,!?]|$)/i);
-  const merchant = merchantMatch ? capitalize(merchantMatch[1].trim()) : "Expense";
+  const merchant = merchantMatch ? capitalize((merchantMatch[1] ?? "").trim()) : "Expense";
   const category = CATEGORY_HINTS.find(([, re]) => re.test(text))?.[0] ?? "Other";
   const daysAgo = /yesterday|last night/i.test(text) ? 1 : 0;
   return { amount, merchant, category, daysAgo };

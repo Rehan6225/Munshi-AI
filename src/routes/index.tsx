@@ -32,7 +32,7 @@ function Dashboard() {
   const savingsRate = Math.max(0, Math.round(((PROFILE.monthlyIncome - spend) / PROFILE.monthlyIncome) * 100));
   const ef = PROFILE.emergencyFund;
   const efPct = Math.round((ef.saved / ef.target) * 100);
-  const goal = PROFILE.goals[0];
+  const goal = PROFILE.goals[0]!;
   const goalPct = Math.round((goal.saved / goal.target) * 100);
 
   const byCat = Object.entries(
