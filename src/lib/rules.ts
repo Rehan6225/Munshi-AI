@@ -44,13 +44,25 @@ export function suggestCategories(transactions: Transaction[]) {
   return suggestions;
 }
 
+/** How people say each category out loud. */
 const CATEGORY_WORDS: [Category, RegExp][] = [
-  ["Food", /\b(food|eating out|dining|restaurants?|takeaway|food delivery)\b/g],
+  ["Food & Dining", /\b(food|eating out|dining|restaurants?|takeaway|food delivery)\b/g],
   ["Groceries", /\b(groceries|grocery|kirana)\b/g],
-  ["Transport", /\b(transport|travel|commute|cab|cabs)\b/g],
+  ["Transport", /\b(transport|commute|cabs?|fuel)\b/g],
+  ["Travel", /\b(travel|trips?|holidays?)\b/g],
   ["Shopping", /\b(shopping)\b/g],
-  ["Bills", /\b(bills?|utilities|utility)\b/g],
-  ["Entertainment", /\b(entertainment|subscriptions?|fun)\b/g],
+  ["Rent & Housing", /\b(rent|housing|home)\b/g],
+  ["Utilities", /\b(utilities|utility|bills?)\b/g],
+  ["EMIs & Loans", /\b(emis?|loans?)\b/g],
+  ["Insurance", /\b(insurance)\b/g],
+  ["Household help", /\b(household help|house help|household|help|laundry)\b/g],
+  ["Education", /\b(education|studies|fees)\b/g],
+  ["Family support", /\b(family support|family)\b/g],
+  ["Subscriptions", /\b(subscriptions?)\b/g],
+  ["Health", /\b(health|medical|medicines?)\b/g],
+  ["Entertainment", /\b(entertainment|fun|movies?)\b/g],
+  ["Personal care", /\b(personal care|grooming|self care)\b/g],
+  ["Savings & Investments", /\b(savings?|investments?|investing|sip)\b/g],
   ["Other", /\b(other|misc|miscellaneous)\b/g],
 ];
 
@@ -78,10 +90,16 @@ export function parseRuleCommand(text: string, merchants: string[]): RuleCommand
     });
   if (!merchant) return null;
 
+  // Where the merchant's name was said: words in there ("Star Health insurance") aren't categories.
+  const name = merchant.toLowerCase();
+  const start = lower.indexOf(name);
+  const span = start >= 0 ? { from: start, to: start + name.length } : { from: -1, to: -1 };
+
   // First category mentioned that isn't negated ("not groceries", "instead of groceries").
   const mentions: { category: Category; at: number }[] = [];
   for (const [category, re] of CATEGORY_WORDS) {
     for (const m of lower.matchAll(re)) {
+      if (m.index >= span.from && m.index < span.to) continue;
       const before = lower.slice(Math.max(0, m.index - 14), m.index);
       if (!/\b(not|isn'?t|instead of|rather than|from)\s+(an?\s+|the\s+)?$/.test(before))
         mentions.push({ category, at: m.index });

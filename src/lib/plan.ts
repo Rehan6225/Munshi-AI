@@ -1,3 +1,4 @@
+import { isSaving } from "./categories";
 import { formatINR } from "./format";
 import { yearlyCost, type Recurring } from "./recurring";
 import type { Transaction } from "./store";
@@ -42,10 +43,20 @@ export interface GoalPlan extends Goal {
   note: string;
 }
 
-/** Total spent in the last 30 days. */
+const lastMonth = (transactions: Transaction[], now: number) =>
+  transactions.filter((t) => now - new Date(t.date).getTime() < 30 * DAY);
+
+/** Total spent in the last 30 days. Savings and investments aren't spending. */
 export function monthlySpend(transactions: Transaction[], now = Date.now()) {
-  return transactions
-    .filter((t) => now - new Date(t.date).getTime() < 30 * DAY)
+  return lastMonth(transactions, now)
+    .filter((t) => !isSaving(t.category))
+    .reduce((s, t) => s + t.amount, 0);
+}
+
+/** Put into SIPs, RDs and other investments in the last 30 days. */
+export function monthlyInvested(transactions: Transaction[], now = Date.now()) {
+  return lastMonth(transactions, now)
+    .filter((t) => isSaving(t.category))
     .reduce((s, t) => s + t.amount, 0);
 }
 
@@ -73,7 +84,8 @@ export function planGoals(
     spend,
     fixed,
     emergencyMonths,
-  }: { income: number; spend: number; fixed: number; emergencyMonths: number },
+    invested = 0,
+  }: { income: number; spend: number; fixed: number; emergencyMonths: number; invested?: number },
   now = Date.now(),
 ): GoalPlan[] {
   const monthlyNeed = Math.max(spend, fixed);
@@ -81,7 +93,8 @@ export function planGoals(
     g.emergency ? { ...g, target: Math.round(emergencyMonths * monthlyNeed) } : g,
   );
   const open = withTargets.filter((g) => g.saved < g.target).length;
-  const share = open ? Math.max(0, income - spend) / open : 0;
+  // Money already going into SIPs isn't free for these goals.
+  const share = open ? Math.max(0, income - spend - invested) / open : 0;
 
   return withTargets.map((g) => {
     const remaining = Math.max(0, g.target - g.saved);

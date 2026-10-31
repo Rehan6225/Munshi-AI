@@ -94,9 +94,9 @@ describe("detectRecurring", () => {
 
   it("never flags bills like rent as unused", () => {
     const rent = [
-      tx("House rent", 22000, 64, "Bills"),
-      tx("House rent", 22000, 34, "Bills"),
-      tx("House rent", 22000, 4, "Bills"),
+      tx("House rent", 22000, 64, "Rent & Housing"),
+      tx("House rent", 22000, 34, "Rent & Housing"),
+      tx("House rent", 22000, 4, "Rent & Housing"),
     ];
     const [r] = detectRecurring(rent, { houserent: null }, NOW);
     expect(r).toMatchObject({ kind: "bill" });

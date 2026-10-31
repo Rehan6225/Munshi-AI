@@ -26,8 +26,8 @@ export const Route = createFileRoute("/goals")({
 });
 
 function Page() {
-  const { hydrated, goals, profile, spend } = useStore();
-  const free = Math.max(0, profile.income - spend);
+  const { hydrated, goals, profile, spend, invested } = useStore();
+  const free = Math.max(0, profile.income - spend - invested);
   const editLink = (
     <Link
       to="/profile"
@@ -43,7 +43,7 @@ function Page() {
         title="Goals"
         subtitle={
           profile.income > 0
-            ? `You have about ${formatINR(free)}/month left after spending, split across your goals.`
+            ? `You have about ${formatINR(free)}/month left after spending and investments, split across your goals.`
             : "Add your income in Money profile to see how your goals are tracking."
         }
       />

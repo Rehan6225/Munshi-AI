@@ -1,8 +1,13 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { Cell, Pie, PieChart, ResponsiveContainer, Tooltip } from "recharts";
 import { Lightbulb, TrendingUp, Repeat, ShieldAlert, Tag, Receipt } from "lucide-react";
+import { useState } from "react";
 import { PageHeader } from "@/components/app-shell";
+import { MunshiAvatar } from "@/components/munshi";
+import { dailySummary, type Line } from "@/lib/munshi";
+import { speak, useSpeech } from "@/lib/speech";
 import { DEMO_EATING_OUT, useStore } from "@/lib/store";
+import { isSaving } from "@/lib/categories";
 import { daysSince, yearlyCost } from "@/lib/recurring";
 import { formatINR, formatINRShort } from "@/lib/format";
 import { Progress } from "@/components/ui/progress";
@@ -76,9 +81,14 @@ function Dashboard() {
     );
   }
 
+  // SIPs and other investments are saving, not spending.
   const month = transactions.filter((t) => {
     const d = new Date(t.date);
-    return d.getMonth() === now.getMonth() && d.getFullYear() === now.getFullYear();
+    return (
+      !isSaving(t.category) &&
+      d.getMonth() === now.getMonth() &&
+      d.getFullYear() === now.getFullYear()
+    );
   });
   const spend = month.reduce((s, t) => s + t.amount, 0);
   const income = profile.income;
@@ -144,9 +154,9 @@ function Dashboard() {
 
   return (
     <>
-      <PageHeader
-        title="Namaste 👋"
-        subtitle={now.toLocaleDateString("en-IN", { month: "long", year: "numeric" })}
+      <MunshiGreeting
+        date={now.toLocaleDateString("en-IN", { month: "long", year: "numeric" })}
+        summary={dailySummary({ spend, income, topNudge: nudges[0]?.text })}
       />
 
       <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-4">
@@ -300,6 +310,33 @@ function Stat({
         {value}
       </p>
       <p className="mt-2 text-xs text-muted-foreground">{hint}</p>
+    </div>
+  );
+}
+
+function MunshiGreeting({ date, summary }: { date: string; summary: Line }) {
+  const [shown, setShown] = useState(false);
+  const { supported } = useSpeech();
+  return (
+    <div className="mb-8 flex flex-col gap-4 sm:flex-row sm:items-center">
+      <MunshiAvatar size="lg" />
+      <div className="min-w-0 flex-1">
+        <h1 className="text-2xl font-semibold tracking-tight sm:text-3xl">
+          Namaste! Main hoon Munshi ji 🙏
+        </h1>
+        <p className="mt-1.5 text-muted-foreground">
+          {shown ? summary.text : `${date} · Aapka hisaab-kitaab main rakhta hoon.`}
+        </p>
+      </div>
+      <button
+        onClick={() => {
+          setShown(true);
+          speak(summary, { force: true });
+        }}
+        className="inline-flex shrink-0 items-center gap-2 self-start rounded-xl bg-secondary px-4 py-2.5 text-sm font-medium transition hover:bg-secondary/70 sm:self-auto"
+      >
+        {supported ? "🔊 Suniye aaj ka hisaab" : "Aaj ka hisaab dekhiye"}
+      </button>
     </div>
   );
 }

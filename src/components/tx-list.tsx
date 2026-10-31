@@ -1,18 +1,9 @@
 import { AlertTriangle, Brain } from "lucide-react";
 import { toast } from "sonner";
+import { CategorySelect } from "./category-select";
 import { formatINR } from "@/lib/format";
 import { merchantKey } from "@/lib/recurring";
 import { useStore, type Category, type Transaction } from "@/lib/store";
-
-const CATEGORIES: Category[] = [
-  "Food",
-  "Groceries",
-  "Transport",
-  "Shopping",
-  "Bills",
-  "Entertainment",
-  "Other",
-];
 
 export function TxList({ items }: { items: Transaction[] }) {
   const { transactions, suggestions, recategorize, learnRule } = useStore();
@@ -57,18 +48,12 @@ export function TxList({ items }: { items: Transaction[] }) {
                 <div className="min-w-0">
                   <p className="truncate font-medium">{t.merchant}</p>
                   <p className="flex items-center gap-1.5 truncate text-xs text-muted-foreground">
-                    <select
+                    <CategorySelect
                       value={t.category}
-                      onChange={(e) => change(t, e.target.value as Category)}
-                      aria-label={`Category for ${t.merchant}`}
-                      className="-ml-1 cursor-pointer rounded-md bg-transparent px-1 py-0.5 transition hover:bg-secondary focus:outline-none focus-visible:ring-1 focus-visible:ring-ring"
-                    >
-                      {CATEGORIES.map((c) => (
-                        <option key={c} value={c} className="bg-popover">
-                          {c}
-                        </option>
-                      ))}
-                    </select>
+                      onChange={(c) => change(t, c)}
+                      label={`Category for ${t.merchant}`}
+                      className="-ml-1"
+                    />
                     {t.ruleId && (
                       <span
                         title="Categorised by a rule Munshi learned from you"

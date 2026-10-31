@@ -1,89 +1,170 @@
-import { useRef, useState } from "react";
-import { Mic, ArrowUp } from "lucide-react";
-import { toast } from "sonner";
-import { parseCommand } from "@/lib/parse-command";
+import { useEffect, useRef, useState } from "react";
+import { Mic, ArrowUp, Loader2 } from "lucide-react";
+import { HeardCard } from "./heard-card";
+import { MunshiBubble, MuteButton } from "./munshi";
+import { parseVoiceWithAi } from "@/lib/ai.functions";
 import { useStore } from "@/lib/store";
-import { formatINR } from "@/lib/format";
-import { parseUsageCommand, yearlyCost } from "@/lib/recurring";
-import { parseRuleCommand } from "@/lib/rules";
+import {
+  munshiReply,
+  weeklyAside,
+  type Line,
+  type MunshiEvent,
+  type MunshiReply,
+} from "@/lib/munshi";
+import { speak } from "@/lib/speech";
+import { merchantKey, yearlyCost } from "@/lib/recurring";
+import { parseLocally, sanitizeAiParse, type VoiceAction, type VoiceParse } from "@/lib/voice";
 import { cn } from "@/lib/utils";
+
+/** Minimal shape of the browser's speech recognition API, which TypeScript doesn't ship. */
+interface Recognition {
+  lang: string;
+  interimResults: boolean;
+  onresult: (e: { results: { 0: { 0: { transcript: string } } } }) => void;
+  onend: () => void;
+  start: () => void;
+}
+type RecognitionCtor = new () => Recognition;
+
+/** Munshi's latest reply, plus a follow-up button when it helps. */
+interface Said {
+  reply: MunshiReply;
+  offerCancel?: { key: string; name: string; yearly: number } | undefined;
+}
 
 export function VoiceBar() {
   const [text, setText] = useState("");
   const [listening, setListening] = useState(false);
+  const [busy, setBusy] = useState(false);
+  const [draft, setDraft] = useState<VoiceParse | null>(null);
+  const [said, setSaid] = useState<Said | null>(null);
+
+  // Replies fade after a while; ones with a follow-up button stay longer.
+  useEffect(() => {
+    if (!said) return;
+    const t = setTimeout(() => setSaid(null), said.offerCancel ? 20000 : 9000);
+    return () => clearTimeout(t);
+  }, [said]);
   const ref = useRef<HTMLTextAreaElement>(null);
   const { add, transactions, subscriptions, cancelSub, markUsed, markUnused, learnRule } =
     useStore();
 
-  const submit = () => {
-    const value = text.trim();
-    if (!value) return;
+  /** Gemini first; the on-device parser if there's no key, no network, or a bad answer. */
+  const understand = async (value: string): Promise<VoiceParse> => {
+    const merchants = [...new Set(transactions.map((t) => t.merchant))];
+    try {
+      const res = await parseVoiceWithAi({
+        data: {
+          text: value,
+          merchants,
+          subscriptions: subscriptions.map((s) => s.name),
+          today: new Date().toDateString(),
+        },
+      });
+      if (res.ok) {
+        const parsed = sanitizeAiParse(JSON.parse(res.json), value);
+        if (parsed) return parsed;
+      } else if (res.reason === "error") {
+        console.warn("AI parsing failed, using the on-device parser:", res.message);
+      }
+    } catch (e) {
+      console.warn("AI parsing unavailable, using the on-device parser:", e);
+    }
+    return parseLocally(value, { merchants, subscriptions });
+  };
 
-    const usage = parseUsageCommand(value, subscriptions);
-    // "Paid 1299 at Cult, went to the gym" is an expense, not a usage check-in.
-    if (usage && !(usage.action === "used" && parseCommand(value).amount)) {
-      const { action, sub } = usage;
-      const saving = `${formatINR(yearlyCost(sub))} a year`;
-      if (action === "unused") {
-        markUnused(sub.key);
-        toast(`Got it, you don't use ${sub.name}`, {
-          description: `Cancelling it saves ${saving}.`,
-          action: { label: "Cancel it", onClick: () => cancelSub(sub.key) },
-        });
-      } else if (action === "cancel") {
-        cancelSub(sub.key);
-        toast.success(`${sub.name} marked to cancel`, {
-          description: `That's ${saving} back in your pocket.`,
-        });
-      } else {
-        markUsed(sub.key);
-        toast.success(`Noted, you still use ${sub.name}`);
+  const submit = async () => {
+    const value = text.trim();
+    if (!value || busy) return;
+    setBusy(true);
+    try {
+      const parsed = await understand(value);
+      setSaid(null);
+      if (parsed.actions.length) setDraft(parsed);
+      else {
+        setDraft(null);
+        respond({ reply: munshiReply({ kind: "not-understood" }) });
       }
       setText("");
-      return;
+      if (ref.current) ref.current.style.height = "auto";
+    } finally {
+      setBusy(false);
     }
+  };
 
-    const p = parseCommand(value);
+  const save = (actions: VoiceAction[]) => {
+    const replies: MunshiReply[] = [];
+    const spends: Extract<MunshiEvent, { kind: "logged" }>["spends"] = [];
+    let aside: Line | undefined;
+    let offerCancel: Said["offerCancel"];
 
-    // No amount + a known merchant + a category = a correction, e.g. "Swiggy is food, not groceries".
-    const rule = p.amount
-      ? null
-      : parseRuleCommand(
-          value,
-          transactions.map((t) => t.merchant),
+    for (const a of actions) {
+      if (a.type === "expense") {
+        if (!a.amount) continue;
+        const tx = add({
+          merchant: a.merchant,
+          category: a.category,
+          amount: a.amount,
+          date: new Date(Date.now() - a.daysAgo * 86400000).toISOString(),
+        });
+        spends.push({ ...tx, learned: !!tx.ruleId });
+        aside ??= weeklyAside(tx.merchant, tx.category, [tx, ...transactions]);
+      } else if (a.type === "rule") {
+        const refiled = learnRule(a.merchant, a.category);
+        replies.push(
+          munshiReply({ kind: "rule", merchant: a.merchant, category: a.category, refiled }),
         );
-    if (rule) {
-      const n = learnRule(rule.merchant, rule.category);
-      toast.success(`Got it. ${rule.merchant} → ${rule.category}, always.`, {
-        description: n
-          ? `Refiled ${n} past transaction${n > 1 ? "s" : ""}.`
-          : "Munshi will use this for new ones.",
-      });
-      setText("");
-      return;
+      } else {
+        const sub =
+          subscriptions.find((s) => merchantKey(s.name) === merchantKey(a.merchant)) ??
+          subscriptions.find((s) => merchantKey(s.name).includes(merchantKey(a.merchant)));
+        if (!sub) {
+          replies.push(munshiReply({ kind: "no-subscription", name: a.merchant }));
+          continue;
+        }
+        const yearly = yearlyCost(sub);
+        if (a.action === "unused") {
+          markUnused(sub.key);
+          offerCancel = { key: sub.key, name: sub.name, yearly };
+        } else if (a.action === "cancel") cancelSub(sub.key);
+        else markUsed(sub.key);
+        replies.push(munshiReply({ kind: a.action, name: sub.name, yearly }));
+      }
     }
+    if (spends.length) replies.unshift(munshiReply({ kind: "logged", spends }));
 
-    if (!p.amount) {
-      toast("Couldn't find an amount", {
-        description: "Try something like “Spent 480 on Swiggy last night”.",
-      });
-      return;
-    }
-    const tx = add({
-      merchant: p.merchant,
-      category: p.category,
-      amount: p.amount,
-      date: new Date(Date.now() - p.daysAgo * 86400000).toISOString(),
-      note: value,
+    respond({
+      reply: {
+        text: replies.map((r) => r.text).join(" "),
+        hindi: replies.map((r) => r.hindi).join(" "),
+        aside,
+      },
+      offerCancel,
     });
-    toast.success(`Logged ${formatINR(tx.amount)} · ${tx.merchant}`, {
-      description: tx.ruleId ? `${tx.category} (learned from you 🧠)` : tx.category,
-    });
-    setText("");
+    setDraft(null);
+    ref.current?.focus();
+  };
+
+  /** Show Munshi's reply and say it out loud. */
+  const respond = (next: Said) => {
+    setSaid(next);
+    const { reply } = next;
+    speak(
+      reply.aside
+        ? {
+            text: `${reply.text} ${reply.aside.text}`,
+            hindi: `${reply.hindi} ${reply.aside.hindi}`,
+          }
+        : reply,
+    );
   };
 
   const mic = () => {
-    const SR = (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition;
+    const w = window as unknown as {
+      SpeechRecognition?: RecognitionCtor;
+      webkitSpeechRecognition?: RecognitionCtor;
+    };
+    const SR = w.SpeechRecognition ?? w.webkitSpeechRecognition;
     if (!SR) {
       ref.current?.focus();
       return;
@@ -91,7 +172,7 @@ export function VoiceBar() {
     const rec = new SR();
     rec.lang = "en-IN";
     rec.interimResults = false;
-    rec.onresult = (e: any) => setText((t) => (t ? t + " " : "") + e.results[0][0].transcript);
+    rec.onresult = (e) => setText((t) => (t ? t + " " : "") + e.results[0][0].transcript);
     rec.onend = () => setListening(false);
     setListening(true);
     rec.start();
@@ -100,6 +181,30 @@ export function VoiceBar() {
   return (
     <div className="sticky bottom-0 z-30 pointer-events-none">
       <div className="mx-auto max-w-4xl px-4 pb-4 pt-6 bg-gradient-to-t from-background via-background/90 to-transparent pointer-events-auto">
+        {draft && (
+          <HeardCard
+            parse={draft}
+            onChange={(actions) => setDraft({ ...draft, actions })}
+            onConfirm={() => save(draft.actions)}
+            onCancel={() => setDraft(null)}
+          />
+        )}
+        {said && !draft && (
+          <MunshiBubble reply={said.reply} onClose={() => setSaid(null)}>
+            {said.offerCancel && (
+              <button
+                onClick={() => {
+                  const { key, name, yearly } = said.offerCancel!;
+                  cancelSub(key);
+                  respond({ reply: munshiReply({ kind: "cancel", name, yearly }) });
+                }}
+                className="rounded-lg bg-primary px-3 py-1.5 text-xs font-medium text-primary-foreground"
+              >
+                Haan, cancel karo
+              </button>
+            )}
+          </MunshiBubble>
+        )}
         <div className="flex items-end gap-2 rounded-2xl border bg-card p-2 shadow-glow">
           <textarea
             ref={ref}
@@ -111,15 +216,28 @@ export function VoiceBar() {
               e.target.style.height = Math.min(e.target.scrollHeight, 160) + "px";
             }}
             onKeyDown={(e) => {
+              // With an empty bar, Enter saves the card and Esc discards it.
+              if (draft && !text.trim()) {
+                if (e.key === "Enter" && draft.actions.length) {
+                  e.preventDefault();
+                  save(draft.actions);
+                  return;
+                }
+                if (e.key === "Escape") {
+                  setDraft(null);
+                  return;
+                }
+              }
               if (e.key === "Enter" && !e.shiftKey) {
                 e.preventDefault();
-                submit();
+                void submit();
               }
             }}
             placeholder="Just say it — “Spent 480 on Swiggy last night”"
             aria-label="Voice command"
             className="flex-1 resize-none bg-transparent px-3 py-2.5 text-[15px] leading-relaxed outline-none placeholder:text-muted-foreground"
           />
+          <MuteButton />
           <button
             type="button"
             onClick={mic}
@@ -133,12 +251,12 @@ export function VoiceBar() {
           </button>
           <button
             type="button"
-            onClick={submit}
+            onClick={() => void submit()}
             aria-label="Send"
-            disabled={!text.trim()}
+            disabled={!text.trim() || busy}
             className="grid size-10 shrink-0 place-items-center rounded-xl bg-primary text-primary-foreground transition hover:opacity-90 disabled:opacity-30"
           >
-            <ArrowUp className="size-5" />
+            {busy ? <Loader2 className="size-5 animate-spin" /> : <ArrowUp className="size-5" />}
           </button>
         </div>
       </div>
