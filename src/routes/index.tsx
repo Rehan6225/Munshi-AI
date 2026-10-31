@@ -76,7 +76,7 @@ function Dashboard() {
           <h2 className="font-semibold">Spending by category</h2>
           <div className="mt-4 flex flex-col items-center gap-6 sm:flex-row">
             <div className="relative h-56 w-56 shrink-0">
-              <ResponsiveContainer>
+              <ResponsiveContainer width="100%" height="100%">
                 <PieChart>
                   <Pie data={byCat} dataKey="value" innerRadius={70} outerRadius={100} paddingAngle={3} stroke="none">
                     {byCat.map((_, i) => (
