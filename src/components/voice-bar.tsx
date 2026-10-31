@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState } from "react";
 import { Mic, ArrowUp, Loader2 } from "lucide-react";
 import { HeardCard } from "./heard-card";
-import { MunshiBubble, MuteButton, VoiceToggle } from "./munshi";
+import { MunshiBubble, MuteButton } from "./munshi";
 import { parseVoiceWithAi } from "@/lib/ai.functions";
 import { useStore } from "@/lib/store";
 import {
@@ -237,7 +237,6 @@ export function VoiceBar() {
             aria-label="Voice command"
             className="flex-1 resize-none bg-transparent px-3 py-2.5 text-[15px] leading-relaxed outline-none placeholder:text-muted-foreground"
           />
-          <VoiceToggle />
           <MuteButton />
           <button
             type="button"

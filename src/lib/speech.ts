@@ -3,16 +3,11 @@ import { toSpeech, type Line } from "./munshi";
 
 /**
  * Munshi's voice: the browser's built-in text-to-speech (free, no key, works offline in Chrome).
- * Mute and the voice choice are per-device preferences, so they live in localStorage.
+ * Mute is a per-device preference, so it lives in localStorage.
  */
 const MUTE_KEY = "munshi-ai:muted";
-const VOICE_KEY = "munshi-ai:voice";
-
-/** "en": Indian English reading the Hinglish (the default). "hi": a Hindi voice reading Devanagari. */
-export type VoiceChoice = "en" | "hi";
 
 let muted = false;
-let voiceChoice: VoiceChoice = "en";
 let speaking = false;
 let loaded = false;
 const listeners = new Set<() => void>();
@@ -23,7 +18,6 @@ function load() {
   loaded = true;
   try {
     muted = localStorage.getItem(MUTE_KEY) === "1";
-    voiceChoice = localStorage.getItem(VOICE_KEY) === "hi" ? "hi" : "en";
   } catch {
     // Storage blocked: start unmuted.
   }
@@ -39,14 +33,12 @@ function findVoice(lang: (l: string) => boolean) {
   return voices.find((v) => /google/i.test(v.name)) ?? voices[0];
 }
 
-const hindiVoice = () => findVoice((l) => l.startsWith("hi"));
-
 /**
- * Indian English with the Hinglish text by default. With "hi" chosen and a Hindi voice on the
- * device (Chrome's "Google हिन्दी", macOS "Lekha"), the Devanagari version instead.
+ * Hindi voice + Devanagari when the device has one (Chrome's "Google हिन्दी", macOS "Lekha"),
+ * since Hindi voices pronounce Hindi properly. Otherwise Indian English with the Hinglish text.
  */
 function utterance(line: Line) {
-  const hindi = voiceChoice === "hi" ? hindiVoice() : undefined;
+  const hindi = findVoice((l) => l.startsWith("hi"));
   if (hindi) {
     const u = new SpeechSynthesisUtterance(toSpeech(line.hindi, "रुपये"));
     u.voice = hindi;
@@ -67,7 +59,7 @@ export function speak(line: Line | string, { force = false } = {}) {
   const synth = window.speechSynthesis;
   synth.cancel();
   const utter = utterance(typeof line === "string" ? { text: line, hindi: line } : line);
-  utter.rate = 1.02;
+  utter.rate = 1;
   utter.onstart = () => {
     speaking = true;
     emit();
@@ -97,28 +89,11 @@ export function setMuted(value: boolean) {
   emit();
 }
 
-export function setVoiceChoice(value: VoiceChoice) {
-  load();
-  voiceChoice = value;
-  try {
-    localStorage.setItem(VOICE_KEY, value);
-  } catch {
-    // Storage blocked: the choice lasts for this session.
-  }
-  emit();
-}
-
 const subscribe = (l: () => void) => {
   listeners.add(l);
-  // Chrome loads voices late; re-render when they arrive so the Hindi option can appear.
-  if (speechSupported()) {
-    window.speechSynthesis.getVoices();
-    window.speechSynthesis.addEventListener?.("voiceschanged", emit);
-  }
-  return () => {
-    listeners.delete(l);
-    if (speechSupported()) window.speechSynthesis.removeEventListener?.("voiceschanged", emit);
-  };
+  // Chrome loads voices late; nothing to re-render, but warm the list up.
+  if (speechSupported()) window.speechSynthesis.getVoices();
+  return () => listeners.delete(l);
 };
 
 export function useSpeech() {
@@ -126,20 +101,8 @@ export function useSpeech() {
   // One number so the snapshot is stable; the server renders 0 (unmuted, silent, unsupported).
   const state = useSyncExternalStore(
     subscribe,
-    () =>
-      (muted ? 1 : 0) +
-      (speaking ? 2 : 0) +
-      (speechSupported() ? 4 : 0) +
-      (speechSupported() && hindiVoice() ? 8 : 0) +
-      (voiceChoice === "hi" ? 16 : 0),
+    () => (muted ? 1 : 0) + (speaking ? 2 : 0) + (speechSupported() ? 4 : 0),
     () => 0,
   );
-  return {
-    muted: (state & 1) === 1,
-    speaking: (state & 2) === 2,
-    supported: (state & 4) === 4,
-    /** The device has a Hindi voice, so offering the choice makes sense. */
-    hindiAvailable: (state & 8) === 8,
-    voice: (state & 16) === 16 ? ("hi" as const) : ("en" as const),
-  };
+  return { muted: (state & 1) === 1, speaking: (state & 2) === 2, supported: (state & 4) === 4 };
 }

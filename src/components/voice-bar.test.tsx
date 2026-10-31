@@ -64,13 +64,12 @@ describe("VoiceBar", () => {
     expect(spoken.at(-1)).not.toContain("₹");
   });
 
-  it("speaks Devanagari with a Hindi voice when you switch to हि", async () => {
+  it("speaks Devanagari with a Hindi voice when the device has one", async () => {
     voices = [
       { lang: "en-IN", name: "Test India" },
       { lang: "hi-IN", name: "Google हिन्दी" },
     ];
     const box = await setup();
-    fireEvent.click(screen.getByLabelText("Switch Munshi to a Hindi voice"));
     fireEvent.change(box, { target: { value: "480 on swiggy" } });
     fireEvent.keyDown(box, { key: "Enter" });
     await screen.findByText("What Munshi heard");
@@ -79,21 +78,6 @@ describe("VoiceBar", () => {
     await screen.findByText(/Ho gaya!|Likh liya!/);
     expect(spoken.at(-1)).toMatch(/480 रुपये/);
     expect(spoken.at(-1)).toMatch(/लिख/);
-    fireEvent.click(screen.getByLabelText("Switch Munshi to an English voice"));
-  });
-
-  it("uses the Indian-English voice by default, even when a Hindi voice exists", async () => {
-    voices = [
-      { lang: "en-IN", name: "Test India" },
-      { lang: "hi-IN", name: "Lekha" },
-    ];
-    const box = await setup();
-    fireEvent.change(box, { target: { value: "480 on swiggy" } });
-    fireEvent.keyDown(box, { key: "Enter" });
-    await screen.findByText("What Munshi heard");
-    fireEvent.click(screen.getByRole("button", { name: /save/i }));
-    await screen.findByText(/Ho gaya!|Likh liya!/);
-    expect(spoken.at(-1)).toMatch(/480 rupaye/);
   });
 
   it("stays quiet when muted", async () => {
