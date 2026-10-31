@@ -152,7 +152,8 @@ export function AppShell({ children }: { children: ReactNode }) {
               {children}
             </div>
           </main>
-          <VoiceBar />
+          {/* The Coach page has its own question box. */}
+          {path !== "/coach" && <VoiceBar />}
         </div>
       </div>
     </SidebarProvider>
