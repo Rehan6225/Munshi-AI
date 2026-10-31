@@ -3,7 +3,7 @@
 Everything needed to finish Munshi AI for **The Product Space AI Hackathon** (problem statement **#04: Personal Finance Coach with a Living Money Model**).
 
 **Deadline:** 31 Oct, 11:59 PM IST
-**Overall progress:** about 55%
+**Overall progress:** about 65%
 **Rule:** everything must be **dynamic**. Every number, alert and status is calculated from real data, never hardcoded.
 
 Legend: 🔴 not started · 🟡 in progress · 🟢 done
@@ -38,8 +38,8 @@ Legend: 🔴 not started · 🟡 in progress · 🟢 done
 | # | Upgrade | Status | Why it matters |
 |---|---|---|---|
 | U1 | **"What Munshi heard"** card: raw speech with fillers and corrections struck through, then the clean entry | 🟢 | ✅ Built: fillers struck in grey, take-backs in red, editable entries, Save / Discard, Gemini or On-device badge |
-| U2 | **Munshi persona**: avatar plus warm Hinglish replies ("Ho gaya! ₹480 Swiggy pe likh diya.") | 🔴 | Makes the app memorable; builds on the munshi story |
-| U3 | **Munshi talks back**: spoken replies (free browser text-to-speech) | 🔴 | Wow moment in the demo; voice works both ways |
+| U2 | **Munshi persona**: avatar plus warm Hinglish replies ("Ho gaya! ₹480 Swiggy pe likh diya.") | 🟢 | ✅ Munshi ji avatar (logo, card, replies), Hinglish replies for every voice action, weekly nudges ("teesra Swiggy order"), dashboard greeting |
+| U3 | **Munshi talks back**: spoken replies (free browser text-to-speech) | 🟢 | ✅ Speaks every reply in an Indian-English voice, avatar pulses while talking, 🔊/🔇 toggle remembered, "Suniye aaj ka hisaab" spoken summary |
 | U4 | **Ledger (khata) look** for transactions (optional) | 🔴 | A distinct look, tied to the munshi idea |
 
 ## 🧱 Behind the scenes (needed for "dynamic")
@@ -63,7 +63,7 @@ Legend: 🔴 not started · 🟡 in progress · 🟢 done
 | 5 | AI voice parsing + U1 "What Munshi heard" | **Yes** | 1 hr | 🟢 Built; add the key to enable Gemini |
 | 6 | Import: CSV + SMS paste with AI categories (#1); PDF only if time allows | **Yes** | 1 hr | 🔴 |
 | 7 | Coach with guardrails (#8) | **Yes** | 45 min | 🔴 |
-| 8 | U2 Munshi persona + U3 talk-back | No | 45 min | 🔴 |
+| 8 | U2 Munshi persona + U3 talk-back | No | 45 min | 🟢 |
 | 9 | Deploy, then record the demo, then the LinkedIn post, then submit | No | 1 hr | 🔴 |
 | — | U4 ledger look | No | Only if ahead | 🔴 |
 
@@ -81,5 +81,6 @@ Newest last. Every finished task gets a line here, along with whether it has bee
 | 4:00 PM | COMPLETION.md tracker created | ✅ |
 | 4:55 PM | **Task 1, saving data + Money profile (#4):** everything saves across refreshes; new Money profile page (income, fixed costs, emergency fund, goals); goal status and advice calculated; "Start with my own numbers" option next to "Try with demo data"; Demo badge and Reset / switch button with confirmation; 8 tests | ✅ |
 | 5:05 PM | **Task 2, correction loop (#2):** category picker on every transaction; "Remember" saves a rule and refiles past and future spends; 🧠 learned badge; Learned rules card; voice corrections ("Swiggy is food, not groceries"); calculated suggestions replace the hardcoded one; 11 tests | ✅ |
-| 5:51 PM | **Task 5, voice parsing + U1 "What Munshi heard":** Gemini server function (key stays on the server) with an on-device fallback; handles fillers, "450, no wait, 480" and several spends per sentence; confirm card with struck-through speech, editable amounts and categories; 12 tests | ⏳ Not yet |
-| 5:57 PM | **18 categories:** Rent & Housing, Utilities, EMIs, Insurance, Household help (incl. laundry), Education, Family support, Subscriptions, Groceries, Transport, Health, Food & Dining, Shopping, Entertainment, Personal care, Travel, Savings & Investments, Other; grouped picker; fixed-cost categories auto-fill fixed costs; SIPs excluded from spending; bills get no price or "new" alerts; old saved data migrated; 25 tests | ⏳ Not yet |
+| 5:51 PM | **Task 5, voice parsing + U1 "What Munshi heard":** Gemini server function (key stays on the server) with an on-device fallback; handles fillers, "450, no wait, 480" and several spends per sentence; confirm card with struck-through speech, editable amounts and categories; 12 tests | ✅ (feature/Rehan/FinanceCoach) |
+| 5:57 PM | **18 categories:** Rent & Housing, Utilities, EMIs, Insurance, Household help (incl. laundry), Education, Family support, Subscriptions, Groceries, Transport, Health, Food & Dining, Shopping, Entertainment, Personal care, Travel, Savings & Investments, Other; grouped picker; fixed-cost categories auto-fill fixed costs; SIPs excluded from spending; bills get no price or "new" alerts; old saved data migrated; 25 tests | ✅ (feature/Rehan/FinanceCoach) |
+| 6:09 PM | **Task 8, Munshi ji persona + talk-back (U2, U3):** avatar as logo and in replies; warm Hinglish replies for spends, rules and subscriptions; weekly heads-up for repeat orders; spoken replies with an Indian-English voice and remembered mute; dashboard greeting with spoken summary; 12 tests including a full voice flow | ⏳ Not yet |

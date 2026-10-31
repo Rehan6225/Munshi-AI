@@ -1,5 +1,4 @@
 import { CATEGORIES, CATEGORY_INFO, isCategory } from "./categories";
-import { formatINR } from "./format";
 import { parseCommand } from "./parse-command";
 import { parseUsageCommand, type Recurring } from "./recurring";
 import { parseRuleCommand } from "./rules";
@@ -208,10 +207,3 @@ Return ONLY JSON in this shape:
 
 Example input: "uh spent like 450, no wait, 480 on swiggy last night"
 Example output: {"heard":[{"text":"uh ","kind":"filler"},{"text":"spent ","kind":"keep"},{"text":"like ","kind":"filler"},{"text":"450, no wait, ","kind":"corrected"},{"text":"480 on swiggy last night","kind":"keep"}],"actions":[{"type":"expense","amount":480,"merchant":"Swiggy","category":"Food & Dining","daysAgo":1}]}`;
-
-/** Short spoken-style summary of what was saved, e.g. for the toast. */
-export function summarize(actions: VoiceAction[]) {
-  const spends = actions.filter((a) => a.type === "expense");
-  const total = spends.reduce((s, a) => s + a.amount, 0);
-  return spends.length > 1 ? `Logged ${spends.length} spends · ${formatINR(total)} total` : null;
-}

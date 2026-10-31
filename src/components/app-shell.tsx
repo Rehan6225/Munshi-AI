@@ -22,6 +22,7 @@ import {
   SidebarProvider,
   SidebarTrigger,
 } from "@/components/ui/sidebar";
+import { MunshiAvatar } from "./munshi";
 import { VoiceBar } from "./voice-bar";
 import { Onboarding } from "./onboarding";
 import { useStore } from "@/lib/store";
@@ -57,9 +58,7 @@ function AppSidebar() {
     <Sidebar collapsible="icon">
       <SidebarHeader className="px-4 py-5">
         <div className="flex items-center gap-2.5">
-          <div className="grid size-8 shrink-0 place-items-center rounded-xl bg-primary font-bold text-primary-foreground">
-            ₹
-          </div>
+          <MunshiAvatar size="sm" />
           <span className="text-lg font-semibold tracking-tight group-data-[collapsible=icon]:hidden">
             Munshi AI
           </span>

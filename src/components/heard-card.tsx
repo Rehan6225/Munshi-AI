@@ -1,5 +1,6 @@
 import { Brain, Check, Repeat, Sparkles, Tag, X, Zap } from "lucide-react";
 import { CategorySelect } from "./category-select";
+import { MunshiAvatar } from "./munshi";
 import { findRule } from "@/lib/rules";
 import { useStore, type Category } from "@/lib/store";
 import { cn } from "@/lib/utils";
@@ -31,7 +32,8 @@ export function HeardCard({
   return (
     <div className="mb-2 rounded-2xl border bg-card p-4 shadow-glow animate-in fade-in slide-in-from-bottom-2 duration-300">
       <div className="flex items-center justify-between gap-3">
-        <p className="text-xs font-medium uppercase tracking-wide text-muted-foreground">
+        <p className="flex items-center gap-2 text-xs font-medium uppercase tracking-wide text-muted-foreground">
+          <MunshiAvatar size="sm" />
           What Munshi heard
         </p>
         <span className="inline-flex items-center gap-1 rounded-full bg-secondary px-2 py-0.5 text-[10px] text-muted-foreground">

@@ -1,18 +1,13 @@
-import { useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { Mic, ArrowUp, Loader2 } from "lucide-react";
-import { toast } from "sonner";
 import { HeardCard } from "./heard-card";
+import { MunshiBubble, MuteButton } from "./munshi";
 import { parseVoiceWithAi } from "@/lib/ai.functions";
 import { useStore } from "@/lib/store";
-import { formatINR } from "@/lib/format";
+import { munshiReply, weeklyAside, type MunshiEvent, type MunshiReply } from "@/lib/munshi";
+import { speak } from "@/lib/speech";
 import { merchantKey, yearlyCost } from "@/lib/recurring";
-import {
-  parseLocally,
-  sanitizeAiParse,
-  summarize,
-  type VoiceAction,
-  type VoiceParse,
-} from "@/lib/voice";
+import { parseLocally, sanitizeAiParse, type VoiceAction, type VoiceParse } from "@/lib/voice";
 import { cn } from "@/lib/utils";
 
 /** Minimal shape of the browser's speech recognition API, which TypeScript doesn't ship. */
@@ -25,11 +20,25 @@ interface Recognition {
 }
 type RecognitionCtor = new () => Recognition;
 
+/** Munshi's latest reply, plus a follow-up button when it helps. */
+interface Said {
+  reply: MunshiReply;
+  offerCancel?: { key: string; name: string; yearly: number } | undefined;
+}
+
 export function VoiceBar() {
   const [text, setText] = useState("");
   const [listening, setListening] = useState(false);
   const [busy, setBusy] = useState(false);
   const [draft, setDraft] = useState<VoiceParse | null>(null);
+  const [said, setSaid] = useState<Said | null>(null);
+
+  // Replies fade after a while; ones with a follow-up button stay longer.
+  useEffect(() => {
+    if (!said) return;
+    const t = setTimeout(() => setSaid(null), said.offerCancel ? 20000 : 9000);
+    return () => clearTimeout(t);
+  }, [said]);
   const ref = useRef<HTMLTextAreaElement>(null);
   const { add, transactions, subscriptions, cancelSub, markUsed, markUnused, learnRule } =
     useStore();
@@ -63,7 +72,13 @@ export function VoiceBar() {
     if (!value || busy) return;
     setBusy(true);
     try {
-      setDraft(await understand(value));
+      const parsed = await understand(value);
+      setSaid(null);
+      if (parsed.actions.length) setDraft(parsed);
+      else {
+        setDraft(null);
+        respond({ reply: munshiReply({ kind: "not-understood" }) });
+      }
       setText("");
       if (ref.current) ref.current.style.height = "auto";
     } finally {
@@ -72,6 +87,11 @@ export function VoiceBar() {
   };
 
   const save = (actions: VoiceAction[]) => {
+    const replies: MunshiReply[] = [];
+    const spends: Extract<MunshiEvent, { kind: "logged" }>["spends"] = [];
+    let aside: string | undefined;
+    let offerCancel: Said["offerCancel"];
+
     for (const a of actions) {
       if (a.type === "expense") {
         if (!a.amount) continue;
@@ -81,47 +101,44 @@ export function VoiceBar() {
           amount: a.amount,
           date: new Date(Date.now() - a.daysAgo * 86400000).toISOString(),
         });
-        if (actions.length === 1)
-          toast.success(`Logged ${formatINR(tx.amount)} · ${tx.merchant}`, {
-            description: tx.ruleId ? `${tx.category} (learned from you 🧠)` : tx.category,
-          });
+        spends.push({ ...tx, learned: !!tx.ruleId });
+        aside ??= weeklyAside(tx.merchant, tx.category, [tx, ...transactions]);
       } else if (a.type === "rule") {
-        const n = learnRule(a.merchant, a.category);
-        toast.success(`Got it. ${a.merchant} → ${a.category}, always.`, {
-          description: n
-            ? `Refiled ${n} past transaction${n > 1 ? "s" : ""}.`
-            : "Munshi will use this for new ones.",
-        });
+        const refiled = learnRule(a.merchant, a.category);
+        replies.push(
+          munshiReply({ kind: "rule", merchant: a.merchant, category: a.category, refiled }),
+        );
       } else {
         const sub =
           subscriptions.find((s) => merchantKey(s.name) === merchantKey(a.merchant)) ??
           subscriptions.find((s) => merchantKey(s.name).includes(merchantKey(a.merchant)));
         if (!sub) {
-          toast(`I couldn't find a ${a.merchant} subscription`);
+          replies.push(munshiReply({ kind: "no-subscription", name: a.merchant }));
           continue;
         }
-        const saving = `${formatINR(yearlyCost(sub))} a year`;
+        const yearly = yearlyCost(sub);
         if (a.action === "unused") {
           markUnused(sub.key);
-          toast(`Got it, you don't use ${sub.name}`, {
-            description: `Cancelling it saves ${saving}.`,
-            action: { label: "Cancel it", onClick: () => cancelSub(sub.key) },
-          });
-        } else if (a.action === "cancel") {
-          cancelSub(sub.key);
-          toast.success(`${sub.name} marked to cancel`, {
-            description: `That's ${saving} back in your pocket.`,
-          });
-        } else {
-          markUsed(sub.key);
-          toast.success(`Noted, you still use ${sub.name}`);
-        }
+          offerCancel = { key: sub.key, name: sub.name, yearly };
+        } else if (a.action === "cancel") cancelSub(sub.key);
+        else markUsed(sub.key);
+        replies.push(munshiReply({ kind: a.action, name: sub.name, yearly }));
       }
     }
-    const summary = summarize(actions);
-    if (summary) toast.success(summary);
+    if (spends.length) replies.unshift(munshiReply({ kind: "logged", spends }));
+
+    respond({
+      reply: { text: replies.map((r) => r.text).join(" "), ...(aside ? { aside } : {}) },
+      offerCancel,
+    });
     setDraft(null);
     ref.current?.focus();
+  };
+
+  /** Show Munshi's reply and say it out loud. */
+  const respond = (next: Said) => {
+    setSaid(next);
+    speak([next.reply.text, next.reply.aside].filter(Boolean).join(" "));
   };
 
   const mic = () => {
@@ -153,6 +170,22 @@ export function VoiceBar() {
             onConfirm={() => save(draft.actions)}
             onCancel={() => setDraft(null)}
           />
+        )}
+        {said && !draft && (
+          <MunshiBubble reply={said.reply} onClose={() => setSaid(null)}>
+            {said.offerCancel && (
+              <button
+                onClick={() => {
+                  const { key, name, yearly } = said.offerCancel!;
+                  cancelSub(key);
+                  respond({ reply: munshiReply({ kind: "cancel", name, yearly }) });
+                }}
+                className="rounded-lg bg-primary px-3 py-1.5 text-xs font-medium text-primary-foreground"
+              >
+                Haan, cancel karo
+              </button>
+            )}
+          </MunshiBubble>
         )}
         <div className="flex items-end gap-2 rounded-2xl border bg-card p-2 shadow-glow">
           <textarea
@@ -186,6 +219,7 @@ export function VoiceBar() {
             aria-label="Voice command"
             className="flex-1 resize-none bg-transparent px-3 py-2.5 text-[15px] leading-relaxed outline-none placeholder:text-muted-foreground"
           />
+          <MuteButton />
           <button
             type="button"
             onClick={mic}
