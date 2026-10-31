@@ -101,78 +101,6 @@ Gemini handles voice parsing and Coach answers. If the AI is slow, unavailable o
 - **Hosting:** Cloudflare Workers (free plan), auto-deployed from `main` with Cloudflare Workers Builds
 - **Tests:** Vitest + Testing Library (165 tests)
 
-## 🚀 Run it locally
-
-You need **Node.js 20+**.
-
-```bash
-git clone https://github.com/Rehan6225/Munshi-AI.git
-cd Munshi-AI
-npm install
-npm run dev
-```
-
-Open **http://localhost:5173** and click **Try with demo data**.
-
-**Optional: switch on Gemini.** Get a free key at [Google AI Studio](https://aistudio.google.com/apikey) and create `.env.local` in the project root:
-
-```bash
-GEMINI_API_KEY=your-key-here
-# Optional; this is the default:
-GEMINI_MODEL=gemini-3.5-flash-lite
-```
-
-Restart `npm run dev`. Without a key, everything still works on-device.
-
-| Command | What it does |
-|---|---|
-| `npm run dev` | Start the dev server |
-| `npm run build` | Production build for Cloudflare Workers |
-| `npm run test` | Run the tests |
-| `npm run lint` | Lint the codebase |
-
-## ☁️ Deploy your own (free)
-
-1. Fork this repo.
-2. In the [Cloudflare dashboard](https://dash.cloudflare.com), go to **Workers & Pages → Create → Import a repository** and pick your fork.
-3. Set the build command to `npm run build` and the deploy command to `npx wrangler deploy`, then deploy.
-4. Optional: under **Settings → Variables and Secrets**, add `GEMINI_API_KEY` as a **Secret**.
-
-Every push to `main` redeploys automatically.
-
-## 🗂️ Project structure
-
-```
-src/
-├── routes/                 # One file per page (TanStack file-based routing)
-│   ├── index.tsx               → Dashboard
-│   ├── transactions.tsx        → Transactions + learned rules
-│   ├── subscriptions.tsx       → Subscription radar
-│   ├── goals.tsx               → Goals
-│   ├── plan-ahead.tsx          → Plan Ahead simulator
-│   ├── monthly-review.tsx      → Monthly review + PDF report
-│   ├── coach.tsx               → Coach chat
-│   ├── profile.tsx             → Money profile
-│   └── welcome.tsx             → Landing page
-├── components/
-│   ├── voice-bar.tsx           # 🎙️ The voice command bar on every page
-│   ├── heard-card.tsx          # "What Munshi heard"
-│   ├── import-dialog.tsx       # PDF / CSV / SMS import and review
-│   ├── munshi.tsx              # Munshi ji avatar, replies, mute
-│   └── ui/                     # shadcn/ui components
-└── lib/
-    ├── voice.ts                # Speech → clean entries (fillers, corrections, many spends)
-    ├── ai.functions.ts         # Gemini voice parsing (server)
-    ├── coach.ts / coach.functions.ts / guardrails.ts   # Coach and its guardrails
-    ├── recurring.ts            # Subscription and bill detection, price-hike and unused alerts
-    ├── rules.ts                # Learned "merchant → category" rules
-    ├── nudges.ts               # Drift and budget nudges
-    ├── plan.ts / simulate.ts   # Goals and Plan Ahead
-    ├── report.ts / review.ts   # Monthly review
-    ├── importers/              # PDF, CSV and SMS parsers, auto-categories, sample files
-    ├── munshi.ts / speech.ts   # Munshi ji's Hinglish replies and Hindi voice
-    └── store.tsx               # App state, saving, demo data
-```
 
 ## 🏆 Built for
 
@@ -180,6 +108,4 @@ src/
 
 The whole app was built **by voice**: every prompt, spec and fix was dictated with **Wispr Flow**.
 
-## 👥 Built by
 
-**Rehan Singh** and **Piyush Saharia**
