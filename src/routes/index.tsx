@@ -4,7 +4,7 @@ import { Lightbulb, TrendingUp, Repeat, ShieldAlert, Tag, Receipt } from "lucide
 import { useState } from "react";
 import { PageHeader } from "@/components/app-shell";
 import { MunshiAvatar } from "@/components/munshi";
-import { dailySummary } from "@/lib/munshi";
+import { dailySummary, type Line } from "@/lib/munshi";
 import { speak, useSpeech } from "@/lib/speech";
 import { DEMO_EATING_OUT, useStore } from "@/lib/store";
 import { isSaving } from "@/lib/categories";
@@ -314,7 +314,7 @@ function Stat({
   );
 }
 
-function MunshiGreeting({ date, summary }: { date: string; summary: string }) {
+function MunshiGreeting({ date, summary }: { date: string; summary: Line }) {
   const [shown, setShown] = useState(false);
   const { supported } = useSpeech();
   return (
@@ -325,7 +325,7 @@ function MunshiGreeting({ date, summary }: { date: string; summary: string }) {
           Namaste! Main hoon Munshi ji 🙏
         </h1>
         <p className="mt-1.5 text-muted-foreground">
-          {shown ? summary : `${date} · Aapka hisaab-kitaab main rakhta hoon.`}
+          {shown ? summary.text : `${date} · Aapka hisaab-kitaab main rakhta hoon.`}
         </p>
       </div>
       <button

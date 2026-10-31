@@ -4,7 +4,13 @@ import { HeardCard } from "./heard-card";
 import { MunshiBubble, MuteButton } from "./munshi";
 import { parseVoiceWithAi } from "@/lib/ai.functions";
 import { useStore } from "@/lib/store";
-import { munshiReply, weeklyAside, type MunshiEvent, type MunshiReply } from "@/lib/munshi";
+import {
+  munshiReply,
+  weeklyAside,
+  type Line,
+  type MunshiEvent,
+  type MunshiReply,
+} from "@/lib/munshi";
 import { speak } from "@/lib/speech";
 import { merchantKey, yearlyCost } from "@/lib/recurring";
 import { parseLocally, sanitizeAiParse, type VoiceAction, type VoiceParse } from "@/lib/voice";
@@ -89,7 +95,7 @@ export function VoiceBar() {
   const save = (actions: VoiceAction[]) => {
     const replies: MunshiReply[] = [];
     const spends: Extract<MunshiEvent, { kind: "logged" }>["spends"] = [];
-    let aside: string | undefined;
+    let aside: Line | undefined;
     let offerCancel: Said["offerCancel"];
 
     for (const a of actions) {
@@ -128,7 +134,11 @@ export function VoiceBar() {
     if (spends.length) replies.unshift(munshiReply({ kind: "logged", spends }));
 
     respond({
-      reply: { text: replies.map((r) => r.text).join(" "), ...(aside ? { aside } : {}) },
+      reply: {
+        text: replies.map((r) => r.text).join(" "),
+        hindi: replies.map((r) => r.hindi).join(" "),
+        aside,
+      },
       offerCancel,
     });
     setDraft(null);
@@ -138,7 +148,15 @@ export function VoiceBar() {
   /** Show Munshi's reply and say it out loud. */
   const respond = (next: Said) => {
     setSaid(next);
-    speak([next.reply.text, next.reply.aside].filter(Boolean).join(" "));
+    const { reply } = next;
+    speak(
+      reply.aside
+        ? {
+            text: `${reply.text} ${reply.aside.text}`,
+            hindi: `${reply.hindi} ${reply.aside.hindi}`,
+          }
+        : reply,
+    );
   };
 
   const mic = () => {

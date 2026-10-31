@@ -63,9 +63,10 @@ describe("weeklyAside", () => {
   });
 
   it("speaks up on the third order this week", () => {
-    expect(weeklyAside("Swiggy", "Food & Dining", [order(0), order(2), order(5)], now)).toBe(
-      "Is hafte yeh teesra Swiggy order hai. Thoda dhyan rakhiye 😉",
-    );
+    expect(weeklyAside("Swiggy", "Food & Dining", [order(0), order(2), order(5)], now)).toEqual({
+      text: "Is hafte yeh teesra Swiggy order hai. Thoda dhyan rakhiye 😉",
+      hindi: "इस हफ़्ते ये तीसरा Swiggy ऑर्डर है। थोड़ा ध्यान रखिए।",
+    });
   });
 
   it("stays quiet for older orders or essentials", () => {
@@ -78,14 +79,44 @@ describe("weeklyAside", () => {
 
 describe("dailySummary", () => {
   it("reads out spend, savings rate and the top nudge", () => {
-    expect(dailySummary({ spend: 40000, income: 100000, topNudge: "Netflix went up." })).toBe(
+    expect(dailySummary({ spend: 40000, income: 100000, topNudge: "Netflix went up." }).text).toBe(
       "Namaste! Is mahine ab tak ₹40,000 kharch hue hain. Savings rate 60% hai, bahut badhiya! Ek baat: Netflix went up.",
     );
   });
 
   it("skips the savings rate without an income", () => {
-    expect(dailySummary({ spend: 500, income: 0 })).toBe(
+    expect(dailySummary({ spend: 500, income: 0 }).text).toBe(
       "Namaste! Is mahine ab tak ₹500 kharch hue hain.",
+    );
+  });
+});
+
+describe("the Hindi version", () => {
+  it("says the same thing in Devanagari, with amounts a Hindi voice reads well", () => {
+    const reply = munshiReply(
+      {
+        kind: "logged",
+        spends: [{ amount: 1200, merchant: "DMart", category: "Groceries", learned: true }],
+      },
+      first,
+    );
+    expect(reply.hindi).toBe(
+      "हो गया! 1200 रुपये DMart पे लिख दिया, Groceries में। आपका रूल याद था।",
+    );
+  });
+
+  it("has a Hindi line for every kind of reply", () => {
+    const events = [
+      { kind: "rule", merchant: "Swiggy", category: "Food & Dining", refiled: 0 },
+      { kind: "unused", name: "Hotstar", yearly: 3588 },
+      { kind: "cancel", name: "Hotstar", yearly: 3588 },
+      { kind: "used", name: "Hotstar", yearly: 3588 },
+      { kind: "no-subscription", name: "Zee5" },
+      { kind: "not-understood" },
+    ] as const;
+    for (const e of events) expect(munshiReply(e, first).hindi).toMatch(/[\u0900-\u097F]/);
+    expect(dailySummary({ spend: 40000, income: 100000 }).hindi).toBe(
+      "नमस्ते! इस महीने अब तक 40000 रुपये खर्च हुए हैं। सेविंग्स रेट 60 प्रतिशत है, बहुत बढ़िया!",
     );
   });
 });

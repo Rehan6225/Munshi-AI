@@ -4,10 +4,12 @@ import { VoiceBar } from "./voice-bar";
 import { StoreProvider } from "@/lib/store";
 
 const spoken: string[] = [];
+let voices = [{ lang: "en-IN", name: "Test India" }];
 
 beforeEach(() => {
   localStorage.clear();
   spoken.length = 0;
+  voices = [{ lang: "en-IN", name: "Test India" }];
   // jsdom has no speech engine; record what Munshi would say.
   vi.stubGlobal(
     "SpeechSynthesisUtterance",
@@ -27,7 +29,7 @@ beforeEach(() => {
   Object.defineProperty(window, "speechSynthesis", {
     configurable: true,
     value: {
-      getVoices: () => [{ lang: "en-IN", name: "Test India" }],
+      getVoices: () => voices,
       cancel: () => {},
       speak: (u: { text: string }) => spoken.push(u.text),
     },
@@ -60,6 +62,22 @@ describe("VoiceBar", () => {
     await screen.findByText(/Ho gaya!|Likh liya!/);
     expect(spoken.at(-1)).toMatch(/480 rupaye/);
     expect(spoken.at(-1)).not.toContain("₹");
+  });
+
+  it("speaks Devanagari with a Hindi voice when the device has one", async () => {
+    voices = [
+      { lang: "en-IN", name: "Test India" },
+      { lang: "hi-IN", name: "Google हिन्दी" },
+    ];
+    const box = await setup();
+    fireEvent.change(box, { target: { value: "480 on swiggy" } });
+    fireEvent.keyDown(box, { key: "Enter" });
+    await screen.findByText("What Munshi heard");
+    fireEvent.click(screen.getByRole("button", { name: /save/i }));
+    // The screen keeps the Hinglish; only the voice switches to Hindi.
+    await screen.findByText(/Ho gaya!|Likh liya!/);
+    expect(spoken.at(-1)).toMatch(/480 रुपये/);
+    expect(spoken.at(-1)).toMatch(/लिख/);
   });
 
   it("stays quiet when muted", async () => {

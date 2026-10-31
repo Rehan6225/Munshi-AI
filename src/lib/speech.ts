@@ -1,5 +1,5 @@
 import { useSyncExternalStore } from "react";
-import { toSpeech } from "./munshi";
+import { toSpeech, type Line } from "./munshi";
 
 /**
  * Munshi's voice: the browser's built-in text-to-speech (free, no key, works offline in Chrome).
@@ -25,28 +25,41 @@ function load() {
 
 export const speechSupported = () => typeof window !== "undefined" && "speechSynthesis" in window;
 
-/** Indian English reads Hinglish best; Hindi next; otherwise the default voice. */
-function pickVoice() {
-  const voices = window.speechSynthesis.getVoices();
-  return (
-    voices.find((v) => v.lang === "en-IN") ??
-    voices.find((v) => v.lang.replace("_", "-") === "en-IN") ??
-    voices.find((v) => v.lang.startsWith("hi")) ??
-    undefined
-  );
+const norm = (lang: string) => lang.replace("_", "-").toLowerCase();
+
+/** Prefer Google's voices (most natural in Chrome), then whatever the OS ships. */
+function findVoice(lang: (l: string) => boolean) {
+  const voices = window.speechSynthesis.getVoices().filter((v) => lang(norm(v.lang)));
+  return voices.find((v) => /google/i.test(v.name)) ?? voices[0];
+}
+
+/**
+ * Hindi voice + Devanagari when the device has one (Chrome's "Google हिन्दी", macOS "Lekha"),
+ * since Hindi voices pronounce Hindi properly. Otherwise Indian English with the Hinglish text.
+ */
+function utterance(line: Line) {
+  const hindi = findVoice((l) => l.startsWith("hi"));
+  if (hindi) {
+    const u = new SpeechSynthesisUtterance(toSpeech(line.hindi, "रुपये"));
+    u.voice = hindi;
+    u.lang = hindi.lang;
+    return u;
+  }
+  const english = findVoice((l) => l === "en-in");
+  const u = new SpeechSynthesisUtterance(toSpeech(line.text));
+  if (english) u.voice = english;
+  u.lang = english?.lang ?? "en-IN";
+  return u;
 }
 
 /** `force` is for when the user explicitly asks Munshi to talk, even while muted. */
-export function speak(text: string, { force = false } = {}) {
+export function speak(line: Line | string, { force = false } = {}) {
   load();
   if ((muted && !force) || !speechSupported()) return;
   const synth = window.speechSynthesis;
   synth.cancel();
-  const utter = new SpeechSynthesisUtterance(toSpeech(text));
-  const voice = pickVoice();
-  if (voice) utter.voice = voice;
-  utter.lang = voice?.lang ?? "en-IN";
-  utter.rate = 1.02;
+  const utter = utterance(typeof line === "string" ? { text: line, hindi: line } : line);
+  utter.rate = 1;
   utter.onstart = () => {
     speaking = true;
     emit();

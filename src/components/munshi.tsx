@@ -50,7 +50,7 @@ export function MunshiBubble({
           Munshi ji{speaking && <span className="ml-1.5 text-primary">· bol rahe hain…</span>}
         </p>
         <p className="mt-0.5 text-[15px] leading-relaxed">{reply.text}</p>
-        {reply.aside && <p className="mt-1 text-sm text-muted-foreground">{reply.aside}</p>}
+        {reply.aside && <p className="mt-1 text-sm text-muted-foreground">{reply.aside.text}</p>}
         {children && <div className="mt-2 flex flex-wrap gap-2">{children}</div>}
       </div>
       <button
