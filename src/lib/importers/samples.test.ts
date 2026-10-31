@@ -10,7 +10,6 @@ import { sampleCsv, sampleSms } from "./samples";
 import { parseSms } from "./sms";
 
 const NOW = new Date(2026, 9, 31, 12);
-const DAY = 86400000;
 
 /** What the import dialog would add. */
 function imported(rows: ReturnType<typeof parseCsv>): Transaction[] {
@@ -48,28 +47,23 @@ function dashboard(txs: Transaction[]) {
   return { subscriptions, fixed, goals, nudges };
 }
 
-const totals = (txs: Transaction[]) => {
-  const out: Record<string, number> = {};
-  for (const t of txs) out[t.category] = (out[t.category] ?? 0) + t.amount;
-  return out;
-};
-
 describe("sample files", () => {
-  // The demo files one Swiggy order under Groceries on purpose; a bank statement can't.
-  const demo = demoTransactions(NOW)
-    .filter((t) => NOW.getTime() - new Date(t.date).getTime() <= 270 * DAY)
-    .map((t) =>
-      t.merchant === "Swiggy" && t.category === "Groceries"
-        ? { ...t, category: "Food & Dining" as const }
-        : t,
-    );
+  const demo = demoTransactions(NOW);
+  const drafts = toDrafts(parseCsv(sampleCsv(NOW)), []);
   const sample = imported(parseCsv(sampleCsv(NOW)));
 
-  it("the CSV holds the demo's spending, filed under the same categories", () => {
-    expect(sample).toHaveLength(demo.length);
-    expect(totals(sample)).toEqual(totals(demo));
-    const credits = parseCsv(sampleCsv(NOW)).filter((r) => r.direction === "credit");
-    expect(credits.filter((r) => r.amount === DEMO_PROFILE.income).length).toBeGreaterThan(5);
+  it("the CSV has 68 spends, a few of which need a look", () => {
+    const spends = drafts.filter((d) => d.direction === "debit");
+    expect(spends).toHaveLength(68);
+    expect(sample).toHaveLength(68);
+    // What the review step lists under "need a look".
+    const unsure = spends.filter((d) => !d.duplicate && d.confidence !== "high");
+    expect(unsure.length).toBeGreaterThanOrEqual(3);
+    expect(unsure.length).toBeLessThanOrEqual(4);
+    const salary = drafts.filter(
+      (d) => d.direction === "credit" && d.amount === DEMO_PROFILE.income,
+    );
+    expect(salary.length).toBeGreaterThanOrEqual(2);
   });
 
   it("the CSV gives the demo's fixed costs and subscriptions", () => {
@@ -90,12 +84,13 @@ describe("sample files", () => {
     );
   });
 
-  it("the CSV brings up the demo's nudges and goal statuses", () => {
+  it("the CSV brings up the same nudges and goal statuses as the demo", () => {
     const mine = dashboard(sample);
     const theirs = dashboard(demo);
-    expect(mine.nudges.map((n) => n.kind)).toEqual(
-      theirs.nudges.map((n) => n.kind).filter((k) => k !== "category"),
-    );
+    // Same heads-ups; their order depends on how far each one is off.
+    const kinds = (n: { kind: string }[]) => n.map((x) => x.kind).sort();
+    expect(kinds(mine.nudges)).toEqual(kinds(theirs.nudges));
+    expect(mine.nudges).toHaveLength(theirs.nudges.length);
     expect(mine.goals.map((g) => g.status)).toEqual(theirs.goals.map((g) => g.status));
   });
 

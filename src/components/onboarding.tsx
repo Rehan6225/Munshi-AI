@@ -23,7 +23,7 @@ const FEATURES = [
 ];
 
 export function Onboarding() {
-  const { mode, loadDemo, startOwn } = useStore();
+  const { mode, loadDemo } = useStore();
   const navigate = useNavigate();
   return (
     <div className="relative min-h-screen overflow-hidden">
@@ -73,15 +73,6 @@ export function Onboarding() {
                 Import my transactions
               </button>
             </ImportDialog>
-            <button
-              onClick={() => {
-                startOwn();
-                void navigate({ to: "/profile" });
-              }}
-              className="inline-flex items-center gap-2 rounded-2xl border px-6 py-3.5 font-medium transition hover:bg-secondary"
-            >
-              Start with my own numbers
-            </button>
           </div>
           <p className="mt-4 text-xs text-muted-foreground">
             Bank statement PDF, CSV or SMS · read on your device

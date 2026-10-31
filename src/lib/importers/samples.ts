@@ -1,10 +1,11 @@
-import { demoTransactions, SAMPLE_INCOME } from "../store";
+import { SAMPLE_INCOME } from "../store";
 
 /**
  * Sample files for people who want to try importing without their own statement.
- * They hold the demo's own spending, written the way a bank prints it, so importing one
- * gives the same bills, subscriptions, trends and nudges as the demo. Built fresh from
- * today's date, so the month always looks current.
+ * Three months of the demo's money, written the way a bank prints it: every fixed cost
+ * (rent, bike EMI, maid, electricity, laundry, insurance, broadband), the SIP, the
+ * subscriptions and everyday spends, so importing one brings up the demo's bills and
+ * nudges. Built fresh from today's date, so the month always looks current.
  */
 
 interface SampleRow {
@@ -16,70 +17,91 @@ interface SampleRow {
 
 const DAY = 86400000;
 
-/** How the bank prints each demo merchant. Rent, EMI, insurance and SIP go by mandate. */
-const NARRATION: Record<string, string> = {
-  Swiggy: "UPI-SWIGGY-swiggy@icici",
-  Zomato: "UPI-ZOMATO-zomato@hdfcbank",
-  Blinkit: "UPI-BLINKIT-blinkit@hdfcbank",
-  Uber: "UPI-UBER INDIA-uber@axisbank",
-  "Third Wave Coffee": "UPI-THIRD WAVE COFFEE-twc@okaxis",
-  "Apollo Pharmacy": "POS 4581XXXX9014 APOLLO PHARMACY HSR",
-  Myntra: "UPI-MYNTRA-myntra@icici",
-  Amazon: "ECOM-AMAZON PAY INDIA-AMZN0981",
-  "Social, Indiranagar": "UPI-SOCIAL RESTAURANT INDIRANAGAR-social@ybl",
-  "Looks Salon": "UPI-LOOKS SALON-looks.salon@okicici",
-  Petrol: "POS 4581XXXX9014 INDIAN OIL COCO BLR",
-  DMart: "POS 4581XXXX9014 DMART HSR LAYOUT",
-  Toit: "UPI-TOIT BREWPUB RESTAURANT-toit@ybl",
-  Truffles: "UPI-TRUFFLES CAFE-truffles@okicici",
-  "Sent to Mom": "UPI-SENT TO MOM-anita.sharma@okhdfcbank",
-  Netflix: "NETFLIX.COM SI-MANDATE",
-  "Disney+ Hotstar": "DISNEY HOTSTAR SI-MANDATE",
-  Spotify: "SPOTIFY INDIA SI-MANDATE",
-  "Cult.fit": "UPI-CULTFIT-cultfit@hdfcbank-AUTOPAY",
-  "YouTube Premium": "YOUTUBE PREMIUM SI-MANDATE",
-  "Amazon Prime": "AMAZON PRIME SI-MANDATE",
-  "House rent": "ACH D-HOUSE RENT-SI MANDATE",
-  "Airtel broadband": "ACH D-AIRTEL BROADBAND-NACH",
-  "BESCOM electricity": "BBPS/BESCOM/0042718831",
-  "Bike EMI": "ACH D-BIKE EMI BAJAJ FIN-NACH",
-  "Star Health insurance": "ACH D-STAR HEALTH INSURANCE-NACH",
-  "Maid (Sunita)": "UPI-SUNITA MAID-sunita.devi@ybl",
-  "Laundry & ironing": "UPI-LAUNDRY RAJU-raju.dhobi@ybl",
-  "Groww SIP": "ACH D-GROWW SIP-NACH",
-};
-export const narrationFor = (merchant: string) =>
-  NARRATION[merchant] ?? `UPI-${merchant.toUpperCase()}-payee@ybl`;
+/** Bills, the SIP and subscriptions: [narration, amounts oldest first, days since the latest]. */
+const MONTHLY: [string, number[], number][] = [
+  ["ACH D-HOUSE RENT-SI MANDATE", [22000, 22000, 22000], 4],
+  ["ACH D-BIKE EMI BAJAJ FIN-NACH", [3200, 3200, 3200], 5],
+  ["UPI-SUNITA MAID-sunita.devi@ybl", [3000, 3000, 3000], 1],
+  ["BBPS/BESCOM/0042718831", [1550, 1390, 1450], 7],
+  ["UPI-LAUNDRY RAJU-raju.dhobi@ybl", [600, 600, 600], 8],
+  ["ACH D-STAR HEALTH INSURANCE-NACH", [1250, 1250, 1250], 15],
+  ["ACH D-AIRTEL BROADBAND-NACH", [999, 999, 999], 9],
+  ["ACH D-GROWW SIP-NACH", [10000, 10000, 10000], 5],
+  // Netflix went up last month; YouTube Premium is a new sign-up.
+  ["NETFLIX.COM SI-MANDATE", [499, 649, 649], 12],
+  ["DISNEY HOTSTAR SI-MANDATE", [299, 299, 299], 12],
+  ["SPOTIFY INDIA SI-MANDATE", [119, 119, 119], 11],
+  ["UPI-CULTFIT-cultfit@hdfcbank-AUTOPAY", [1299, 1299, 1299], 13],
+  ["YOUTUBE PREMIUM SI-MANDATE", [149, 149], 3],
+  ["AMAZON PRIME SI-MANDATE", [1499], 80],
+];
 
-/** The demo's transactions from the last 9 months (enough to catch the yearly Prime renewal), plus salary credits. */
+/**
+ * Everyday spends: [narration, amount, days ago]. Eating out is well above the two months
+ * before, and Shopping is past the demo's budget. Meghana Foods is a local place the bank
+ * text only hints at, so those rows need a look, and one is filed apart from the rest.
+ */
+const SPENDS: [string, number, number][] = [
+  // This month
+  ["UPI-SWIGGY-swiggy@icici", 640, 0],
+  ["UPI-ZOMATO-zomato@hdfcbank", 520, 1],
+  ["UPI-BLINKIT-blinkit@hdfcbank", 1240, 1],
+  ["UPI-UBER INDIA-uber@axisbank", 320, 2],
+  ["UPI-THIRD WAVE COFFEE-twc@okaxis", 410, 3],
+  ["POS 4581XXXX9014 APOLLO PHARMACY HSR", 860, 4],
+  ["UPI-TRUFFLES CAFE-truffles@okicici", 980, 6],
+  ["UPI-MYNTRA-myntra@icici", 2899, 7],
+  ["UPI-SOCIAL RESTAURANT INDIRANAGAR-social@ybl", 2350, 8],
+  ["UPI-LOOKS SALON-looks.salon@okicici", 700, 9],
+  ["POS 4581XXXX9014 INDIAN OIL COCO BLR", 2500, 10],
+  ["UPI-TOIT BREWPUB RESTAURANT-toit@ybl", 1450, 11],
+  ["POS 4581XXXX9014 DMART HSR LAYOUT", 3150, 14],
+  ["UPI-MEGHANA FOODS-meghana@ybl-BIRYANI ORDER", 560, 16],
+  ["UPI-SENT TO MOM-anita.sharma@okhdfcbank", 5000, 18],
+  // Last month
+  ["UPI-SWIGGY-swiggy@icici", 1800, 36],
+  ["UPI-MEGHANA FOODS-meghana@ybl-BIRYANI ORDER", 1300, 39],
+  ["POS 4581XXXX9014 DMART HSR LAYOUT", 3300, 50],
+  ["UPI-ZOMATO-zomato@hdfcbank", 1400, 45],
+  ["POS 4581XXXX9014 INDIAN OIL COCO BLR", 2100, 47],
+  ["UPI-MEGHANA FOODS-meghana@ybl", 420, 50],
+  ["UPI-BLINKIT-blinkit@hdfcbank", 2200, 52],
+  ["ECOM-AMAZON PAY INDIA-AMZN0981", 2200, 55],
+  // The month before
+  ["UPI-SWIGGY-swiggy@icici", 2100, 66],
+  ["POS 4581XXXX9014 DMART HSR LAYOUT", 3200, 70],
+  ["UPI-MEGHANA FOODS-meghana@ybl-BIRYANI ORDER", 1900, 74],
+  ["UPI-BLINKIT-blinkit@hdfcbank", 2000, 78],
+  ["POS 4581XXXX9014 INDIAN OIL COCO BLR", 2200, 82],
+  ["UPI-MYNTRA-myntra@icici", 1500, 85],
+];
+
+/** Every spend plus a salary credit each month and a refund, oldest first. */
 function sampleRows(now: Date): SampleRow[] {
-  const from = now.getTime() - 270 * DAY;
-  const spends: SampleRow[] = demoTransactions(now)
-    .filter((t) => new Date(t.date).getTime() >= from)
-    .map((t) => ({ date: new Date(t.date), narration: narrationFor(t.merchant), debit: t.amount }));
-  const first = Math.min(...spends.map((r) => r.date.getTime()));
-  const salaries: SampleRow[] = [];
-  for (let m = 0; m < 10; m++) {
+  const ago = (days: number) => new Date(now.getTime() - days * DAY);
+  const rows: SampleRow[] = [
+    ...MONTHLY.flatMap(([narration, amounts, latest]) =>
+      amounts.map((debit, i) => ({
+        date: ago(latest + (amounts.length - 1 - i) * 30),
+        narration,
+        debit,
+      })),
+    ),
+    ...SPENDS.map(([narration, debit, days]) => ({ date: ago(days), narration, debit })),
+    // A refund, as real statements have: it's a credit, so the import leaves it out.
+    { date: ago(5), narration: "UPI-MYNTRA REFUND-myntra@icici", credit: 899 },
+  ];
+  const first = Math.min(...rows.map((r) => r.date.getTime()));
+  for (let m = 0; m < 4; m++) {
     const date = new Date(now.getFullYear(), now.getMonth() - m, 1, 10);
-    if (date.getTime() > now.getTime() || date.getTime() < first) continue;
-    salaries.push({
-      date,
-      narration: "NEFT CR-ACME TECHNOLOGIES PVT LTD-SALARY",
-      credit: SAMPLE_INCOME,
-    });
+    if (date.getTime() <= now.getTime() && date.getTime() >= first)
+      rows.push({
+        date,
+        narration: "NEFT CR-ACME TECHNOLOGIES PVT LTD-SALARY",
+        credit: SAMPLE_INCOME,
+      });
   }
-  // A refund, as real statements have: it's a credit, so the import leaves it out.
-  const myntra = spends.find((r) => r.narration === NARRATION["Myntra"]);
-  const refund: SampleRow[] = myntra
-    ? [
-        {
-          date: new Date(myntra.date.getTime() + 2 * DAY),
-          narration: "UPI-MYNTRA REFUND-myntra@icici",
-          credit: 899,
-        },
-      ].filter((r) => r.date.getTime() <= now.getTime())
-    : [];
-  return [...spends, ...salaries, ...refund].sort((a, b) => a.date.getTime() - b.date.getTime());
+  return rows.sort((a, b) => a.date.getTime() - b.date.getTime());
 }
 
 const OPENING = 48250;
