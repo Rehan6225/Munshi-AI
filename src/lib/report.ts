@@ -1,6 +1,8 @@
 import { formatINR } from "./format";
 import { daysSince, yearlyCost, type Recurring } from "./recurring";
-import type { Category, Goal, Transaction } from "./store";
+import { isSaving } from "./categories";
+import type { GoalPlan } from "./plan";
+import type { Category, Transaction } from "./store";
 
 const pad = (n: number) => String(n).padStart(2, "0");
 /** "2026-10", in the user's own timezone. */
@@ -50,14 +52,14 @@ export interface MonthReport {
     note: string;
   }[];
   subscriptionsMonthly: number;
-  goals: Goal[];
+  goals: GoalPlan[];
   highlights: { tone: "good" | "warn" | "info"; text: string }[];
 }
 
 interface Input {
   transactions: Transaction[];
   subscriptions: Recurring[];
-  goals: Goal[];
+  goals: GoalPlan[];
   income: number | null;
 }
 
@@ -73,7 +75,9 @@ export function buildMonthReport(
   month: string,
   now = Date.now(),
 ): MonthReport {
-  const inMonth = (m: string) => transactions.filter((t) => monthOf(t.date) === m);
+  // Money moved into savings and investments isn't spending.
+  const inMonth = (m: string) =>
+    transactions.filter((t) => monthOf(t.date) === m && !isSaving(t.category));
   const txs = inMonth(month);
   const spent = txs.reduce((s, t) => s + t.amount, 0);
   const saved = income === null ? null : income - spent;

@@ -12,10 +12,10 @@ const tx = (merchant: string, amount: number, date: string, category: Category):
 });
 
 const txs = [
-  tx("Swiggy", 3000, "2026-09-10", "Food"),
+  tx("Swiggy", 3000, "2026-09-10", "Food & Dining"),
   tx("DMart", 4000, "2026-09-12", "Groceries"),
-  tx("Swiggy", 2500, "2026-10-05", "Food"),
-  tx("Social", 2500, "2026-10-12", "Food"),
+  tx("Swiggy", 2500, "2026-10-05", "Food & Dining"),
+  tx("Social", 2500, "2026-10-12", "Food & Dining"),
   tx("DMart", 3000, "2026-10-08", "Groceries"),
 ];
 
@@ -34,18 +34,18 @@ describe("buildMonthReport", () => {
       count: 3,
     });
     expect(r.categories.map((c) => [c.category, c.amount])).toEqual([
-      ["Food", 5000],
+      ["Food & Dining", 5000],
       ["Groceries", 3000],
     ]);
   });
 
   it("compares with last month and explains the biggest moves", () => {
     expect(r.previousLabel).toBe("September 2026");
-    expect(r.changes[0]).toEqual({ category: "Food", now: 5000, before: 3000, diff: 2000 });
+    expect(r.changes[0]).toEqual({ category: "Food & Dining", now: 5000, before: 3000, diff: 2000 });
     expect(r.highlights.map((h) => h.text)).toEqual([
       "You kept ₹42,000, 84% of your income.",
-      "Food was your biggest spend at ₹5,000 (63%).",
-      "Food is up ₹2,000 on Sept (+67%).",
+      "Food & Dining was your biggest spend at ₹5,000 (63%).",
+      "Food & Dining is up ₹2,000 on Sept (+67%).",
       "Groceries is down ₹1,000 on Sept.",
     ]);
   });

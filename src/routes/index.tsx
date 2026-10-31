@@ -1,8 +1,13 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { Cell, Pie, PieChart, ResponsiveContainer, Tooltip } from "recharts";
 import { Lightbulb, TrendingUp, Repeat, ShieldAlert, Tag, Receipt } from "lucide-react";
+import { useState } from "react";
 import { PageHeader } from "@/components/app-shell";
+import { MunshiAvatar } from "@/components/munshi";
+import { dailySummary, type Line } from "@/lib/munshi";
+import { speak, useSpeech } from "@/lib/speech";
 import { DEMO_EATING_OUT, useStore } from "@/lib/store";
+import { isSaving } from "@/lib/categories";
 import { daysSince, yearlyCost } from "@/lib/recurring";
 import { formatINR, formatINRShort } from "@/lib/format";
 import { Progress } from "@/components/ui/progress";
@@ -10,8 +15,6 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { TxList } from "@/components/tx-list";
 import { CardSkeletons, EmptyState, ListSkeleton } from "@/components/states";
 import { StatusBadge } from "@/components/status-badge";
-import { AddIncomeButton } from "@/components/income-dialog";
-import type { ReactNode } from "react";
 
 export const Route = createFileRoute("/")({
   head: () => ({
@@ -42,7 +45,7 @@ const COLORS = [
 ];
 
 function Dashboard() {
-  const { hydrated, transactions, subscriptions, goals, income } = useStore();
+  const { hydrated, transactions, subscriptions, goals, profile, suggestions } = useStore();
   const now = new Date();
 
   if (!hydrated) {
@@ -78,17 +81,24 @@ function Dashboard() {
     );
   }
 
+  // SIPs and other investments are saving, not spending.
   const month = transactions.filter((t) => {
     const d = new Date(t.date);
-    return d.getMonth() === now.getMonth() && d.getFullYear() === now.getFullYear();
+    return (
+      !isSaving(t.category) &&
+      d.getMonth() === now.getMonth() &&
+      d.getFullYear() === now.getFullYear()
+    );
   });
   const spend = month.reduce((s, t) => s + t.amount, 0);
+  const income = profile.income;
   const savingsRate =
-    income === null ? null : Math.max(0, Math.round(((income - spend) / income) * 100));
-  const ef = goals.find((g) => g.name === "Emergency fund");
-  const efPct = ef ? Math.round((ef.saved / ef.target) * 100) : 0;
-  const goal = goals.find((g) => g !== ef);
-  const goalPct = goal ? Math.round((goal.saved / goal.target) * 100) : 0;
+    income > 0 ? Math.max(0, Math.round(((income - spend) / income) * 100)) : null;
+  const ef = goals.find((g) => g.emergency);
+  // The unfinished goal with the nearest deadline.
+  const goal = goals
+    .filter((g) => !g.emergency && g.status !== "Done")
+    .sort((a, b) => a.due.localeCompare(b.due))[0];
 
   const byCat = Object.entries(
     month.reduce<Record<string, number>>(
@@ -104,7 +114,7 @@ function Dashboard() {
   const fresh = subscriptions.find((s) => s.alerts.includes("new"));
   const renews = (iso: string) =>
     new Date(iso).toLocaleDateString("en-IN", { day: "numeric", month: "short" });
-  const miscat = transactions.find((t) => t.suggestedCategory);
+  const miscat = transactions.find((t) => suggestions.has(t.id));
   const eo = DEMO_EATING_OUT;
   const eoFirst = eo[0]!.amount;
   const eoLast = eo[eo.length - 1]!.amount;
@@ -132,7 +142,7 @@ function Dashboard() {
     },
     miscat && {
       icon: Tag,
-      text: `A ${miscat.merchant} order was filed under ${miscat.category}. Fix it so your food spend is honest.`,
+      text: `A ${miscat.merchant} spend is under ${miscat.category}, but you usually file it as ${suggestions.get(miscat.id)}. Fix it so your numbers stay honest.`,
       to: "/transactions" as const,
     },
     ef?.status === "At risk" && {
@@ -144,9 +154,9 @@ function Dashboard() {
 
   return (
     <>
-      <PageHeader
-        title="Namaste 👋"
-        subtitle={now.toLocaleDateString("en-IN", { month: "long", year: "numeric" })}
+      <MunshiGreeting
+        date={now.toLocaleDateString("en-IN", { month: "long", year: "numeric" })}
+        summary={dailySummary({ spend, income, topNudge: nudges[0]?.text })}
       />
 
       <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-4">
@@ -154,13 +164,13 @@ function Dashboard() {
           label="This month's spend"
           value={formatINR(spend)}
           hint={
-            income === null ? "Add your income to compare" : `of ${formatINRShort(income)} income`
+            income > 0 ? `of ${formatINRShort(income)} income` : "Add your income in Money profile"
           }
         />
         <Stat
           label="Savings rate"
           value={savingsRate === null ? "—" : `${savingsRate}%`}
-          hint={savingsRate === null ? <AddIncomeButton /> : "Target 30%"}
+          hint="Target 30%"
           accent={savingsRate !== null && savingsRate >= 30}
         />
         {ef && (
@@ -170,9 +180,9 @@ function Dashboard() {
               <StatusBadge status={ef.status} />
             </div>
             <p className="mt-2 text-2xl font-semibold tabular-nums">{formatINRShort(ef.saved)}</p>
-            <Progress value={efPct} className="mt-4 h-1.5" />
+            <Progress value={ef.pct} className="mt-4 h-1.5" />
             <p className="mt-2 text-xs text-muted-foreground">
-              {efPct}% of {formatINRShort(ef.target)}
+              {ef.pct}% of {formatINRShort(ef.target)}
             </p>
           </Link>
         )}
@@ -180,9 +190,10 @@ function Dashboard() {
           <Link to="/goals" className="card-soft p-6 transition hover:shadow-glow">
             <p className="text-sm text-muted-foreground">Next goal</p>
             <p className="mt-2 truncate text-2xl font-semibold">{goal.name}</p>
-            <Progress value={goalPct} className="mt-4 h-1.5" />
+            <Progress value={goal.pct} className="mt-4 h-1.5" />
             <p className="mt-2 text-xs text-muted-foreground">
-              {formatINR(goal.saved)} / {formatINR(goal.target)} · {goal.due}
+              {formatINR(goal.saved)} / {formatINR(goal.target)} ·{" "}
+              {new Date(goal.due).toLocaleDateString("en-IN", { month: "short", year: "numeric" })}
             </p>
           </Link>
         )}
@@ -289,7 +300,7 @@ function Stat({
 }: {
   label: string;
   value: string;
-  hint: ReactNode;
+  hint: string;
   accent?: boolean;
 }) {
   return (
@@ -298,7 +309,34 @@ function Stat({
       <p className={`mt-2 text-2xl font-semibold tabular-nums ${accent ? "text-primary" : ""}`}>
         {value}
       </p>
-      <div className="mt-2 text-xs text-muted-foreground">{hint}</div>
+      <p className="mt-2 text-xs text-muted-foreground">{hint}</p>
+    </div>
+  );
+}
+
+function MunshiGreeting({ date, summary }: { date: string; summary: Line }) {
+  const [shown, setShown] = useState(false);
+  const { supported } = useSpeech();
+  return (
+    <div className="mb-8 flex flex-col gap-4 sm:flex-row sm:items-center">
+      <MunshiAvatar size="lg" />
+      <div className="min-w-0 flex-1">
+        <h1 className="text-2xl font-semibold tracking-tight sm:text-3xl">
+          Namaste! Main hoon Munshi ji 🙏
+        </h1>
+        <p className="mt-1.5 text-muted-foreground">
+          {shown ? summary.text : `${date} · Aapka hisaab-kitaab main rakhta hoon.`}
+        </p>
+      </div>
+      <button
+        onClick={() => {
+          setShown(true);
+          speak(summary, { force: true });
+        }}
+        className="inline-flex shrink-0 items-center gap-2 self-start rounded-xl bg-secondary px-4 py-2.5 text-sm font-medium transition hover:bg-secondary/70 sm:self-auto"
+      >
+        {supported ? "🔊 Suniye aaj ka hisaab" : "Aaj ka hisaab dekhiye"}
+      </button>
     </div>
   );
 }

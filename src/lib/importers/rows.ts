@@ -1,6 +1,7 @@
 import type { Category, Transaction } from "../store";
 import { AUTOPAY, looksRecurring, merchantKey } from "../recurring";
-import { categorize, cleanMerchant, type Confidence, type Rules } from "./categorize";
+import type { Rule } from "../rules";
+import { categorize, cleanMerchant, type Confidence } from "./categorize";
 
 export type ImportSource = "pdf" | "csv" | "sms";
 
@@ -61,7 +62,7 @@ export function parseAmount(text: string): number | null {
 }
 
 /** Cleans names, picks categories and flags rows that are already in Munshi. */
-export function toDrafts(rows: RawRow[], existing: Transaction[], rules: Rules = {}): Draft[] {
+export function toDrafts(rows: RawRow[], existing: Transaction[], rules: Rule[] = []): Draft[] {
   return rows.map((r, i) => {
     const merchant = cleanMerchant(r.description);
     const { category, confidence, remembered } = categorize(merchant, r.description, rules);

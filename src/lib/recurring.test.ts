@@ -70,7 +70,7 @@ describe("detectRecurring", () => {
 
   it("doesn't mistake two different-sized orders a month apart for a subscription", () => {
     expect(
-      detectRecurring([tx("Zomato", 520, 26, "Food"), tx("Zomato", 690, 1, "Food")], {}, NOW),
+      detectRecurring([tx("Zomato", 520, 26, "Food & Dining"), tx("Zomato", 690, 1, "Food & Dining")], {}, NOW),
     ).toEqual([]);
   });
 
@@ -79,7 +79,7 @@ describe("detectRecurring", () => {
       [
         tx("Netflix", 649, 2),
         tx("Amazon Prime", 1499, 10, "Shopping"),
-        { ...tx("Society Maintenance", 3500, 5, "Bills"), recurring: true },
+        { ...tx("Society Maintenance", 3500, 5, "Rent & Housing"), recurring: true },
       ],
       {},
       NOW,
@@ -118,9 +118,9 @@ describe("detectRecurring", () => {
 
   it("never flags bills like rent as unused", () => {
     const rent = [
-      tx("House rent", 22000, 64, "Bills"),
-      tx("House rent", 22000, 34, "Bills"),
-      tx("House rent", 22000, 4, "Bills"),
+      tx("House rent", 22000, 64, "Rent & Housing"),
+      tx("House rent", 22000, 34, "Rent & Housing"),
+      tx("House rent", 22000, 4, "Rent & Housing"),
     ];
     const [r] = detectRecurring(rent, { houserent: null }, NOW);
     expect(r).toMatchObject({ kind: "bill" });

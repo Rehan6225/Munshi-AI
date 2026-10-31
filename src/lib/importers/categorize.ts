@@ -1,38 +1,58 @@
 import type { Category } from "../store";
-import { merchantKey } from "../recurring";
+import { findRule, type Rule } from "../rules";
 
 export type Confidence = "high" | "medium" | "low";
 
-/** Merchant → category the user picked by hand. Always wins. */
-export type Rules = Record<string, Category>;
-
-/** Common Indian merchants and UPI handles, matched against the cleaned-up name. */
+/** Common Indian merchants and UPI handles, matched against the cleaned-up name. Order matters. */
 const KNOWN: [Category, RegExp][] = [
-  // Before Food, so "Swiggy Instamart" isn't read as a Swiggy order.
+  [
+    "Savings & Investments",
+    /groww|zerodha|upstox|kuvera|smallcase|paytm money|indmoney|\bsip\b|mutual fund|\bppf\b|\bnps\b|recurring deposit|fixed deposit/i,
+  ],
+  [
+    "Insurance",
+    /insurance|\blic\b|policybazaar|star health|hdfc ergo|icici lombard|acko|tata aia|max life/i,
+  ],
+  ["EMIs & Loans", /\bemi\b|loan|bajaj finserv|home credit|credit card bill|\bcred\b/i],
+  ["Rent & Housing", /\brent\b|maintenance|society|nobroker|nestaway/i],
+  // Before Shopping, so "Amazon Prime" isn't read as an Amazon order.
+  [
+    "Subscriptions",
+    /netflix|hotstar|disney|spotify|prime video|amazon prime|youtube premium|apple\.com|google play|sonyliv|zee5|jiocinema|gaana|wynk|audible|cult\.? ?fit|\bgym\b/i,
+  ],
+  [
+    "Utilities",
+    /airtel|\bjio\b|vodafone|\bvi\b|bsnl|fibernet|hathway|tata ?play|bescom|msedcl|tneb|adani (electricity|gas)|tata power|bses|mahanagar gas|indane|hp gas|bharat gas|electricity|water bill|gas bill|broadband|recharge|postpaid|bbps|\bdth\b/i,
+  ],
+  // Before Food & Dining, so "Swiggy Instamart" isn't read as a Swiggy order.
   [
     "Groceries",
     /blinkit|grofers|zepto|bigbasket|instamart|dmart|avenue supermart|reliance (fresh|smart|retail)|more retail|spencer|nature'?s basket|jiomart|milkbasket|country delight|kirana|supermarket|provision/i,
   ],
   [
-    "Food",
+    "Food & Dining",
     /swiggy|zomato|eatsure|dominos|pizza ?hut|mcdonald|kfc|burger king|subway|starbucks|third wave|blue tokai|chaayos|haldiram|barbeque|faasos|box8|behrouz|cafe|restaurant|hotel|dhaba|bakery|biryani/i,
   ],
   [
+    "Health",
+    /apollo|pharmeasy|\b1mg\b|netmeds|medplus|practo|hospital|clinic|pharmacy|chemist|diagnostic|thyrocare/i,
+  ],
+  [
+    "Travel",
+    /irctc|redbus|indigo|interglobe|air ?india|vistara|akasa|spicejet|makemytrip|goibibo|ixigo|cleartrip|\boyo\b|airbnb|yatra/i,
+  ],
+  [
     "Transport",
-    /uber|ola|rapido|namma yatri|blusmart|irctc|redbus|indigo|interglobe|air ?india|vistara|akasa|spicejet|makemytrip|goibibo|ixigo|metro|fastag|indian ?oil|iocl|hpcl|bpcl|bharat petroleum|hindustan petroleum|shell|petrol|fuel/i,
+    /uber|\bola\b|rapido|namma yatri|blusmart|metro|fastag|indian ?oil|iocl|hpcl|bpcl|bharat petroleum|hindustan petroleum|\bshell\b|petrol|fuel|parking/i,
   ],
   [
     "Shopping",
     /amazon|flipkart|myntra|ajio|nykaa|meesho|tata ?cliq|croma|reliance digital|vijay sales|decathlon|ikea|lifestyle|westside|zara|h&m|uniqlo|lenskart|firstcry|pepperfry|urban ?ladder/i,
   ],
-  [
-    "Bills",
-    /airtel|jio|vodafone|\bvi\b|bsnl|act fibernet|hathway|tata ?play|bescom|msedcl|tneb|adani (electricity|gas)|tata power|bses|mahanagar gas|indane|hp gas|bharat gas|electricity|water bill|gas bill|broadband|recharge|postpaid|\brent\b|maintenance|society|\bemi\b|loan|insurance|lic\b|policybazaar|bbps|credit card bill|cred\b/i,
-  ],
-  [
-    "Entertainment",
-    /netflix|hotstar|disney|spotify|prime video|youtube|apple\.com|google play|sonyliv|zee5|jiocinema|bookmyshow|pvr|inox|cinepolis|steam|playstation|xbox|gaana|wynk|audible/i,
-  ],
+  ["Entertainment", /bookmyshow|\bpvr\b|inox|cinepolis|steam|playstation|xbox/i],
+  ["Personal care", /salon|\bspa\b|urban company|barber|grooming|naturals/i],
+  ["Education", /school|college|tuition|coaching|byju|unacademy|udemy|coursera/i],
+  ["Household help", /\bmaid\b|\bcook\b|laundry|dhobi|ironing/i],
 ];
 
 /** Payment-rail noise to strip before reading the merchant name. */
@@ -93,10 +113,10 @@ export function cleanMerchant(raw: string): string {
 export function categorize(
   merchant: string,
   raw: string,
-  rules: Rules = {},
+  rules: Rule[] = [],
 ): { category: Category; confidence: Confidence; remembered?: true } {
-  const rule = rules[merchantKey(merchant)];
-  if (rule) return { category: rule, confidence: "high", remembered: true };
+  const rule = findRule(merchant, rules);
+  if (rule) return { category: rule.category, confidence: "high", remembered: true };
   const byName = KNOWN.find(([, re]) => re.test(merchant))?.[0];
   if (byName) return { category: byName, confidence: "high" };
   const byRaw = KNOWN.find(([, re]) => re.test(raw))?.[0];

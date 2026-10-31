@@ -1,3 +1,4 @@
+import { isFixed, isSaving } from "./categories";
 import type { Category, Transaction } from "./store";
 
 const DAY = 86400000;
@@ -60,6 +61,8 @@ export function detectRecurring(
 ): Recurring[] {
   const groups = new Map<string, Transaction[]>();
   for (const t of transactions) {
+    // A monthly SIP repeats too, but it's saving, not a subscription or a bill.
+    if (isSaving(t.category)) continue;
     const key = merchantKey(t.merchant);
     groups.set(key, [...(groups.get(key) ?? []), t]);
   }
@@ -96,7 +99,9 @@ export function detectRecurring(
         ? 365
         : 30
       : gaps.reduce((s, g) => s + g, 0) / gaps.length;
-    const kind = last.category === "Bills" ? "bill" : "subscription";
+    // Rent, utilities, EMIs and the like are bills; everything else that repeats can be cancelled.
+    const kind =
+      isFixed(last.category) && last.category !== "Subscriptions" ? "bill" : "subscription";
     const lastUsed = usage[key];
 
     // Walk back to the last charge at a different price; flag it if the change is recent.
@@ -105,8 +110,11 @@ export function detectRecurring(
     while (before >= 0 && samePrice(sorted[before]!)) before--;
     const prev = before >= 0 ? sorted[before]! : undefined;
     const changedOn = prev ? sorted[before + 1]!.date : undefined;
+    // Bills like electricity vary every month, so only subscriptions count as price changes.
     const changed =
-      !!changedOn && now - new Date(changedOn).getTime() < PRICE_CHANGE_WITHIN_DAYS * DAY;
+      kind === "subscription" &&
+      !!changedOn &&
+      now - new Date(changedOn).getTime() < PRICE_CHANGE_WITHIN_DAYS * DAY;
 
     const alerts: RecurringAlert[] = [];
     if (changed) alerts.push(last.amount > prev!.amount ? "price-up" : "price-down");
@@ -117,7 +125,9 @@ export function detectRecurring(
     )
       alerts.push("unused");
     // With a single charge we can't tell a new sign-up from history we haven't seen.
-    if (!single && now - times[0]! < NEW_WITHIN_DAYS * DAY) alerts.push("new");
+    if (kind === "subscription" && !single && now - times[0]! < NEW_WITHIN_DAYS * DAY) {
+      alerts.push("new");
+    }
 
     found.push({
       key,

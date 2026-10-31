@@ -1,6 +1,5 @@
 import type { jsPDF as JsPDF } from "jspdf";
 import type { CellHookData } from "jspdf-autotable";
-import { formatMonth } from "./plan";
 import type { MonthReport } from "./report";
 
 /*
@@ -446,7 +445,7 @@ export async function createReportPdf(r: MonthReport, opts: Options): Promise<Js
       const boxH = 62 + note.length * 12;
       room(boxH + 10);
       const tone = g.status === "At risk" ? RED : g.status === "On track" ? AMBER : GREEN;
-      const pct = Math.min(1, g.saved / g.target);
+      const pct = g.target > 0 ? Math.min(1, g.saved / g.target) : 0;
       fill(CARD);
       doc.roundedRect(M, y, W, boxH, 8, 8, "F");
       text(INK);
@@ -459,7 +458,7 @@ export async function createReportPdf(r: MonthReport, opts: Options): Promise<Js
       doc.roundedRect(M + 14, y + 29, Math.max(6, (W - 28) * pct), 6, 3, 3, "F");
       text(MUTED);
       font(8.5).text(
-        `${rs(g.saved)} of ${rs(g.target)} (${Math.round(pct * 100)}%) · by ${formatMonth(g.due)} · ${rs(g.monthly)} a month`,
+        `${rs(g.saved)} of ${rs(g.target)} (${Math.round(pct * 100)}%) · by ${new Date(g.due).toLocaleDateString("en-IN", { month: "short", year: "numeric" })} · needs ${rs(g.neededPerMonth)} a month`,
         M + 14,
         y + 48,
       );

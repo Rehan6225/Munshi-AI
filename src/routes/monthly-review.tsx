@@ -86,7 +86,8 @@ function Page() {
 }
 
 function Review() {
-  const { transactions, subscriptions, goals, income, incomeAssumed, mode } = useStore();
+  const { transactions, subscriptions, goals, profile, incomeAssumed, mode } = useStore();
+  const income = profile.income > 0 ? profile.income : null;
   const months = useMemo(() => monthsWithData(transactions), [transactions]);
   const [month, setMonth] = useState(months[0]!);
   const report = useMemo(

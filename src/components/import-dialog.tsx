@@ -10,13 +10,6 @@ import {
   DialogTitle,
   DialogTrigger,
 } from "@/components/ui/dialog";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
 import { Checkbox } from "@/components/ui/checkbox";
 import { formatINR } from "@/lib/format";
 import { merchantKey } from "@/lib/recurring";
@@ -26,16 +19,7 @@ import { toDrafts, type Draft, type ImportSource, type RawRow } from "@/lib/impo
 import { parseSms } from "@/lib/importers/sms";
 import { downloadFile, sampleCsv, samplePdf, sampleSms } from "@/lib/importers/samples";
 import { cn } from "@/lib/utils";
-
-const CATEGORIES: Category[] = [
-  "Food",
-  "Groceries",
-  "Transport",
-  "Shopping",
-  "Bills",
-  "Entertainment",
-  "Other",
-];
+import { CategorySelect } from "./category-select";
 
 const SOURCES: { id: ImportSource; label: string; hint: string; icon: typeof FileText }[] = [
   { id: "pdf", label: "Statement PDF", hint: "HDFC, ICICI, SBI, Axis, Kotak", icon: FileText },
@@ -120,7 +104,7 @@ function Pick({
   /** `sample` is true for the built-in sample files, which assume a salary. */
   onParsed: (drafts: Draft[], name: string, sample: boolean) => void;
 }) {
-  const { transactions, rules } = useStore();
+  const { transactions, ownRules } = useStore();
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState("");
   const [sms, setSms] = useState("");
@@ -133,7 +117,7 @@ function Pick({
       setError("No transactions found. Check that this is a statement with dates and amounts.");
       return;
     }
-    onParsed(toDrafts(rows, transactions, rules), name, sample);
+    onParsed(toDrafts(rows, transactions, ownRules), name, sample);
   };
 
   const readFile = async (file: File, pdfPassword?: string) => {
@@ -402,7 +386,7 @@ function Review({
   onBack: () => void;
   onDone: () => void;
 }) {
-  const { addMany, learn, ownIncomeSet, assumeSampleIncome, askIncome } = useStore();
+  const { addMany, learnRule, ownRules, ownIncomeSet, assumeSampleIncome, askIncome } = useStore();
   const navigate = useNavigate();
   const [showCredits, setShowCredits] = useState(false);
   const [view, setView] = useState<View>("all");
@@ -436,8 +420,10 @@ function Review({
       ),
     );
     setEdited(new Set(edited).add(d.key));
-    // Remember it right away, so it sticks even if this import is cancelled.
-    if (learn(d.merchant, category)) {
+    // Remember it right away in the user's own data, so it sticks even if this import is cancelled.
+    const known = ownRules.find((r) => r.key === mk);
+    if (known?.category !== category) {
+      learnRule(d.merchant, category, "own");
       toast(`Munshi will file ${d.merchant} under ${category} from now on`);
     }
   };
@@ -526,7 +512,7 @@ function Review({
           <li
             key={d.key}
             className={cn(
-              "grid grid-cols-[auto_minmax(0,1fr)_auto] items-center gap-x-3 gap-y-2 py-3 sm:grid-cols-[auto_minmax(0,1fr)_9.5rem_6rem]",
+              "grid grid-cols-[auto_minmax(0,1fr)_auto] items-center gap-x-3 gap-y-2 py-3 sm:grid-cols-[auto_minmax(0,1fr)_12rem_6rem]",
               !d.selected && "opacity-50",
               needsLook(d) && "-mx-6 bg-amber-400/5 px-6",
             )}
@@ -575,23 +561,17 @@ function Review({
               {formatINR(d.amount)}
             </span>
             <div className="col-start-2 sm:col-start-auto">
-              <Select value={d.category} onValueChange={(v) => setCategory(d, v as Category)}>
-                <SelectTrigger className="h-8 w-full rounded-lg bg-card text-xs">
-                  <span className="flex items-center gap-2">
-                    <span
-                      className={cn("size-1.5 shrink-0 rounded-full", CONFIDENCE_DOT[d.confidence])}
-                    />
-                    <SelectValue />
-                  </span>
-                </SelectTrigger>
-                <SelectContent>
-                  {CATEGORIES.map((c) => (
-                    <SelectItem key={c} value={c} className="text-xs">
-                      {c}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
+              <div className="flex h-8 items-center gap-2 rounded-lg border bg-card pl-2.5 pr-1 text-xs">
+                <span
+                  className={cn("size-1.5 shrink-0 rounded-full", CONFIDENCE_DOT[d.confidence])}
+                />
+                <CategorySelect
+                  value={d.category}
+                  onChange={(c) => setCategory(d, c)}
+                  label={`Category for ${d.merchant}`}
+                  className="min-w-0 flex-1 truncate"
+                />
+              </div>
             </div>
           </li>
         ))}

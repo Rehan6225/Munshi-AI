@@ -17,19 +17,20 @@ import { cn } from "@/lib/utils";
  * through the store, so an import or any "Add your income" button can bring it up.
  */
 export function IncomePrompt() {
-  const { incomePrompt, closeIncomePrompt, setIncome, income, incomeAssumed } = useStore();
+  const { incomePrompt, closeIncomePrompt, updateProfile, profile, incomeAssumed } = useStore();
+  const income = profile.income;
   const [value, setValue] = useState("");
 
   useEffect(() => {
     if (!incomePrompt) return;
-    const start = incomePrompt.suggested ?? (incomeAssumed ? null : income);
+    const start = incomePrompt.suggested ?? (incomeAssumed || !income ? null : income);
     setValue(start ? String(start) : "");
   }, [incomePrompt]); // eslint-disable-line react-hooks/exhaustive-deps
 
   const amount = Number(value) || 0;
   const save = () => {
     if (amount <= 0) return;
-    setIncome(amount);
+    updateProfile({ income: amount });
     closeIncomePrompt();
     toast.success(`Monthly income set to ${formatINR(amount)}`);
   };
@@ -44,7 +45,7 @@ export function IncomePrompt() {
           <DialogTitle className="text-xl">What's your monthly salary?</DialogTitle>
           <DialogDescription>
             Your take-home pay after tax. Munshi uses it for your savings rate, Plan Ahead and
-            reports. It stays on this device.
+            reports. It stays on this device. You can change it later in Money profile.
           </DialogDescription>
         </DialogHeader>
         <form
@@ -102,7 +103,8 @@ export function IncomePrompt() {
  * on its own and doesn't change any page layout. Shows once each time that salary comes into use.
  */
 export function AssumedIncomeToast() {
-  const { hydrated, income, incomeAssumed, mode, askIncome } = useStore();
+  const { hydrated, profile, incomeAssumed, mode, askIncome } = useStore();
+  const income = profile.income > 0 ? profile.income : null;
   const shown = useRef<string | null>(null);
   useEffect(() => {
     if (!hydrated || !incomeAssumed || income === null) {

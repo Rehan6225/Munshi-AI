@@ -29,17 +29,28 @@ describe("cleanMerchant and categorize", () => {
   });
 
   it("uses the user's own rule before the known list", () => {
-    expect(categorize("Swiggy", "")).toEqual({ category: "Food", confidence: "high" });
-    expect(categorize("Swiggy", "", { swiggy: "Groceries" })).toEqual({
+    expect(categorize("Swiggy", "")).toEqual({ category: "Food & Dining", confidence: "high" });
+    expect(
+      categorize("Swiggy", "", [
+        {
+          id: "r1",
+          key: "swiggy",
+          merchant: "Swiggy",
+          category: "Groceries",
+          applied: 0,
+          createdAt: "",
+        },
+      ]),
+    ).toEqual({
       category: "Groceries",
       confidence: "high",
       remembered: true,
     });
     expect(categorize("Swiggy Instamart", "").category).toBe("Groceries");
     // Bills keywords match whole words: "premium" isn't an EMI, "current" isn't rent.
-    expect(categorize("Youtube Premium", "").category).toBe("Entertainment");
+    expect(categorize("Youtube Premium", "").category).toBe("Subscriptions");
     expect(categorize("Current Account Charges", "").category).toBe("Other");
-    expect(categorize("House Rent", "").category).toBe("Bills");
+    expect(categorize("House Rent", "").category).toBe("Rent & Housing");
     expect(categorize("Ramesh Kumar", "UPI-RAMESH KUMAR-9845@ybl")).toEqual({
       category: "Other",
       confidence: "low",
@@ -166,7 +177,7 @@ describe("toDrafts", () => {
         {
           id: "x",
           merchant: "Swiggy",
-          category: "Food",
+          category: "Food & Dining",
           amount: 486,
           date: "2026-10-24T18:30:00.000Z",
         },

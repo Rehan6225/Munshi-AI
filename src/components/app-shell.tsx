@@ -1,10 +1,28 @@
 import { Link, useRouterState } from "@tanstack/react-router";
 import { useState, type ReactNode } from "react";
-import { LayoutDashboard, ArrowLeftRight, Repeat, Target, Sparkles, CalendarCheck, MessageCircle } from "lucide-react";
 import {
-  Sidebar, SidebarContent, SidebarGroup, SidebarGroupContent, SidebarHeader, SidebarMenu,
-  SidebarMenuButton, SidebarMenuItem, SidebarProvider, SidebarTrigger,
+  LayoutDashboard,
+  ArrowLeftRight,
+  Repeat,
+  Target,
+  Sparkles,
+  CalendarCheck,
+  MessageCircle,
+  UserRound,
+} from "lucide-react";
+import {
+  Sidebar,
+  SidebarContent,
+  SidebarGroup,
+  SidebarGroupContent,
+  SidebarHeader,
+  SidebarMenu,
+  SidebarMenuButton,
+  SidebarMenuItem,
+  SidebarProvider,
+  SidebarTrigger,
 } from "@/components/ui/sidebar";
+import { MunshiAvatar } from "./munshi";
 import { VoiceBar } from "./voice-bar";
 import { Onboarding } from "./onboarding";
 import { useStore } from "@/lib/store";
@@ -12,6 +30,17 @@ import { ArrowLeftRight as Swap, LogOut, Trash2 } from "lucide-react";
 import { ImportDialog } from "./import-dialog";
 import { AssumedIncomeToast, IncomePrompt } from "./income-dialog";
 import { SidebarFooter } from "@/components/ui/sidebar";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from "@/components/ui/alert-dialog";
 
 const NAV = [
   { title: "Dashboard", url: "/", icon: LayoutDashboard },
@@ -21,17 +50,31 @@ const NAV = [
   { title: "Plan Ahead", url: "/plan-ahead", icon: Sparkles },
   { title: "Monthly Review", url: "/monthly-review", icon: CalendarCheck },
   { title: "Coach", url: "/coach", icon: MessageCircle },
+  { title: "Money profile", url: "/profile", icon: UserRound },
 ] as const;
 
 function AppSidebar() {
   const path = useRouterState({ select: (r) => r.location.pathname });
+  const { mode } = useStore();
   return (
     <Sidebar collapsible="icon">
       <SidebarHeader className="px-4 py-5">
-        <Link to="/welcome" className="flex items-center gap-2.5 rounded-xl transition hover:opacity-80">
-          <div className="grid size-8 shrink-0 place-items-center rounded-xl bg-primary font-bold text-primary-foreground">₹</div>
-          <span className="text-lg font-semibold tracking-tight group-data-[collapsible=icon]:hidden">Munshi AI</span>
-        </Link>
+        <div className="flex items-center gap-2.5">
+          <Link
+            to="/welcome"
+            className="flex items-center gap-2.5 rounded-xl transition hover:opacity-80"
+          >
+            <MunshiAvatar size="sm" />
+            <span className="text-lg font-semibold tracking-tight group-data-[collapsible=icon]:hidden">
+              Munshi AI
+            </span>
+          </Link>
+          {mode === "demo" && (
+            <span className="rounded-full bg-accent px-2 py-0.5 text-[10px] font-medium uppercase tracking-wide text-accent-foreground group-data-[collapsible=icon]:hidden">
+              Demo
+            </span>
+          )}
+        </div>
       </SidebarHeader>
       <SidebarContent>
         <SidebarGroup>
@@ -39,7 +82,12 @@ function AppSidebar() {
             <SidebarMenu className="gap-1">
               {NAV.map((item) => (
                 <SidebarMenuItem key={item.url}>
-                  <SidebarMenuButton asChild isActive={path === item.url} tooltip={item.title} className="h-10 rounded-xl">
+                  <SidebarMenuButton
+                    asChild
+                    isActive={path === item.url}
+                    tooltip={item.title}
+                    className="h-10 rounded-xl"
+                  >
                     <Link to={item.url}>
                       <item.icon className="size-4" />
                       <span>{item.title}</span>
@@ -60,7 +108,7 @@ function AppSidebar() {
 
 /** Switches between the demo and the user's own data, which are kept apart. */
 function ResetButton() {
-  const { mode, hasOwnData, loadDemo, showMine, reset } = useStore();
+  const { mode, hasOwnData, loadDemo, startOwn, reset } = useStore();
   const [confirming, setConfirming] = useState(false);
   if (!mode) return null;
   const item = "h-10 rounded-xl text-muted-foreground";
@@ -68,7 +116,7 @@ function ResetButton() {
     return (
       <SidebarMenu className="gap-1">
         {hasOwnData && (
-          <SidebarMenuButton onClick={showMine} tooltip="Switch to my data" className={item}>
+          <SidebarMenuButton onClick={startOwn} tooltip="Switch to my data" className={item}>
             <Swap className="size-4" />
             <span>Switch to my data</span>
           </SidebarMenuButton>
@@ -86,32 +134,34 @@ function ResetButton() {
         <Swap className="size-4" />
         <span>View the demo</span>
       </SidebarMenuButton>
-      {confirming ? (
-        <SidebarMenuButton
-          onClick={() => {
-            reset();
-            setConfirming(false);
-          }}
-          onBlur={() => setConfirming(false)}
-          tooltip="Tap again to delete all your data"
-          className="h-10 rounded-xl bg-destructive/15 text-destructive hover:bg-destructive/25 hover:text-destructive"
-        >
-          <Trash2 className="size-4" />
-          <span>Tap again to delete</span>
-        </SidebarMenuButton>
-      ) : (
-        <SidebarMenuButton onClick={() => setConfirming(true)} tooltip="Clear my data" className={item}>
-          <Trash2 className="size-4" />
-          <span>Clear my data</span>
-        </SidebarMenuButton>
-      )}
+      <AlertDialog open={confirming} onOpenChange={setConfirming}>
+        <AlertDialogTrigger asChild>
+          <SidebarMenuButton tooltip="Clear my data" className={item}>
+            <Trash2 className="size-4" />
+            <span>Clear my data</span>
+          </SidebarMenuButton>
+        </AlertDialogTrigger>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Delete your data?</AlertDialogTitle>
+            <AlertDialogDescription>
+              This deletes your transactions, profile, goals and learned rules from this browser.
+              The demo isn't affected. It can't be undone.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Keep my data</AlertDialogCancel>
+            <AlertDialogAction onClick={reset}>Delete</AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </SidebarMenu>
   );
 }
 
-/** Makes it obvious when the numbers on screen are the demo's, not the user's. */
+/** Makes it obvious when the numbers on screen are the demo's, with a way to your own. */
 function DemoBadge() {
-  const { mode, hasOwnData, showMine } = useStore();
+  const { mode, hasOwnData, startOwn } = useStore();
   if (mode !== "demo") return null;
   return (
     <div className="ml-auto flex items-center gap-2 rounded-full border border-primary/30 bg-accent px-3 py-1 text-xs text-accent-foreground">
@@ -119,7 +169,7 @@ function DemoBadge() {
       <span>Demo data</span>
       <span className="text-muted-foreground">·</span>
       {hasOwnData ? (
-        <button onClick={showMine} className="font-medium underline-offset-2 hover:underline">
+        <button onClick={startOwn} className="font-medium underline-offset-2 hover:underline">
           Switch to mine
         </button>
       ) : (
@@ -149,7 +199,12 @@ export function AppShell({ children }: { children: ReactNode }) {
             <DemoBadge />
           </header>
           <main className="flex-1 px-4 pb-12 md:px-8">
-            <div key={path} className="mx-auto max-w-6xl animate-in fade-in slide-in-from-bottom-2 duration-500">{children}</div>
+            <div
+              key={path}
+              className="mx-auto max-w-6xl animate-in fade-in slide-in-from-bottom-2 duration-500"
+            >
+              {children}
+            </div>
           </main>
           <VoiceBar />
         </div>
@@ -160,7 +215,15 @@ export function AppShell({ children }: { children: ReactNode }) {
   );
 }
 
-export function PageHeader({ title, subtitle, action }: { title: string; subtitle?: string | undefined; action?: ReactNode }) {
+export function PageHeader({
+  title,
+  subtitle,
+  action,
+}: {
+  title: string;
+  subtitle?: string | undefined;
+  action?: ReactNode;
+}) {
   return (
     <div className="mb-8 flex items-start justify-between gap-4">
       <div className="min-w-0">

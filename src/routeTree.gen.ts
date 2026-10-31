@@ -14,6 +14,7 @@ import { Route as CoachRouteImport } from './routes/coach'
 import { Route as GoalsRouteImport } from './routes/goals'
 import { Route as MonthlyReviewRouteImport } from './routes/monthly-review'
 import { Route as PlanAheadRouteImport } from './routes/plan-ahead'
+import { Route as ProfileRouteImport } from './routes/profile'
 import { Route as SubscriptionsRouteImport } from './routes/subscriptions'
 import { Route as TransactionsRouteImport } from './routes/transactions'
 import { Route as WelcomeRouteImport } from './routes/welcome'
@@ -44,6 +45,11 @@ const PlanAheadRoute = PlanAheadRouteImport.update({
   path: '/plan-ahead',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ProfileRoute = ProfileRouteImport.update({
+  id: '/profile',
+  path: '/profile',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const SubscriptionsRoute = SubscriptionsRouteImport.update({
   id: '/subscriptions',
   path: '/subscriptions',
@@ -71,6 +77,7 @@ export interface FileRoutesByFullPath {
   '/goals': typeof GoalsRoute
   '/monthly-review': typeof MonthlyReviewRoute
   '/plan-ahead': typeof PlanAheadRoute
+  '/profile': typeof ProfileRoute
   '/subscriptions': typeof SubscriptionsRoute
   '/transactions': typeof TransactionsRoute
   '/welcome': typeof WelcomeRoute
@@ -82,6 +89,7 @@ export interface FileRoutesByTo {
   '/goals': typeof GoalsRoute
   '/monthly-review': typeof MonthlyReviewRoute
   '/plan-ahead': typeof PlanAheadRoute
+  '/profile': typeof ProfileRoute
   '/subscriptions': typeof SubscriptionsRoute
   '/transactions': typeof TransactionsRoute
   '/welcome': typeof WelcomeRoute
@@ -94,6 +102,7 @@ export interface FileRoutesById {
   '/goals': typeof GoalsRoute
   '/monthly-review': typeof MonthlyReviewRoute
   '/plan-ahead': typeof PlanAheadRoute
+  '/profile': typeof ProfileRoute
   '/subscriptions': typeof SubscriptionsRoute
   '/transactions': typeof TransactionsRoute
   '/welcome': typeof WelcomeRoute
@@ -107,6 +116,7 @@ export interface FileRouteTypes {
     | '/goals'
     | '/monthly-review'
     | '/plan-ahead'
+    | '/profile'
     | '/subscriptions'
     | '/transactions'
     | '/welcome'
@@ -118,6 +128,7 @@ export interface FileRouteTypes {
     | '/goals'
     | '/monthly-review'
     | '/plan-ahead'
+    | '/profile'
     | '/subscriptions'
     | '/transactions'
     | '/welcome'
@@ -129,6 +140,7 @@ export interface FileRouteTypes {
     | '/goals'
     | '/monthly-review'
     | '/plan-ahead'
+    | '/profile'
     | '/subscriptions'
     | '/transactions'
     | '/welcome'
@@ -141,6 +153,7 @@ export interface RootRouteChildren {
   GoalsRoute: typeof GoalsRoute
   MonthlyReviewRoute: typeof MonthlyReviewRoute
   PlanAheadRoute: typeof PlanAheadRoute
+  ProfileRoute: typeof ProfileRoute
   SubscriptionsRoute: typeof SubscriptionsRoute
   TransactionsRoute: typeof TransactionsRoute
   WelcomeRoute: typeof WelcomeRoute
@@ -184,6 +197,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof PlanAheadRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/profile': {
+      id: '/profile'
+      path: '/profile'
+      fullPath: '/profile'
+      preLoaderRoute: typeof ProfileRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/subscriptions': {
       id: '/subscriptions'
       path: '/subscriptions'
@@ -221,6 +241,7 @@ const rootRouteChildren: RootRouteChildren = {
   GoalsRoute: GoalsRoute,
   MonthlyReviewRoute: MonthlyReviewRoute,
   PlanAheadRoute: PlanAheadRoute,
+  ProfileRoute: ProfileRoute,
   SubscriptionsRoute: SubscriptionsRoute,
   TransactionsRoute: TransactionsRoute,
   WelcomeRoute: WelcomeRoute,

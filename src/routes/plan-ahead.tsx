@@ -21,8 +21,9 @@ import {
   simulate,
   type Baseline,
   type Scenario,
-} from "@/lib/plan";
-import { useStore, type Category, type Goal } from "@/lib/store";
+} from "@/lib/simulate";
+import type { GoalPlan } from "@/lib/plan";
+import { useStore, type Category } from "@/lib/store";
 import { cn } from "@/lib/utils";
 
 export const Route = createFileRoute("/plan-ahead")({
@@ -46,7 +47,8 @@ export const Route = createFileRoute("/plan-ahead")({
 const SUBTITLE = "Try a change and see what it does to your savings and goals.";
 
 function Page() {
-  const { hydrated, transactions, loadDemo, income, askIncome } = useStore();
+  const { hydrated, transactions, loadDemo, profile, askIncome } = useStore();
+  const income = profile.income > 0 ? profile.income : null;
   if (!hydrated) {
     return (
       <>
@@ -116,12 +118,12 @@ interface Idea {
 }
 
 function Simulator({ income }: { income: number }) {
-  const { transactions, subscriptions, goals, setIncome } = useStore();
+  const { transactions, subscriptions, goals, profile, updateProfile } = useStore();
   const base = useMemo(
-    () => buildBaseline(income, transactions, subscriptions),
-    [income, transactions, subscriptions],
+    () => buildBaseline(profile, transactions, subscriptions),
+    [profile, transactions, subscriptions],
   );
-  const openGoals = goals.filter((g) => g.status !== "Reached");
+  const openGoals = goals.filter((g) => g.status !== "Done");
   const [scenario, setScenario] = useState<Scenario>(() => ({
     ...EMPTY_SCENARIO,
     goalId: (openGoals.find((g) => g.status === "At risk") ?? openGoals[0])?.id ?? null,
@@ -208,7 +210,12 @@ function Simulator({ income }: { income: number }) {
         }
       />
 
-      <TodayStrip base={base} left={out.leftBefore} spend={out.spendBefore} onIncome={setIncome} />
+      <TodayStrip
+        base={base}
+        left={out.leftBefore}
+        spend={out.spendBefore}
+        onIncome={(v) => updateProfile({ income: v })}
+      />
 
       <section className="mt-6">
         <p className="mb-3 text-xs font-medium uppercase tracking-wider text-muted-foreground">
@@ -383,10 +390,10 @@ function Simulator({ income }: { income: number }) {
           <div className="card-soft p-6">
             <div className="flex flex-wrap items-center justify-between gap-2">
               <h3 className="font-semibold">Your goals</h3>
-              {openGoals.length > 0 && (
+              {openGoals.length > 0 && scenario.purchase > 0 && (
                 <Select value={scenario.goalId ?? ""} onValueChange={(v) => set({ goalId: v })}>
                   <SelectTrigger className="h-8 w-auto gap-2 rounded-lg bg-card text-xs">
-                    <span className="text-muted-foreground">Difference goes to</span>
+                    <span className="text-muted-foreground">Purchase paid from</span>
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent>
@@ -399,6 +406,9 @@ function Simulator({ income }: { income: number }) {
                 </Select>
               )}
             </div>
+            <p className="mt-1 text-xs text-muted-foreground">
+              What's left each month is shared across your goals.
+            </p>
             {goals.length === 0 ? (
               <p className="mt-3 text-sm text-muted-foreground">
                 <Link to="/goals" className="font-medium text-primary hover:underline">
@@ -413,7 +423,7 @@ function Simulator({ income }: { income: number }) {
                     <div className="min-w-0">
                       <p className="truncate text-sm font-medium">{goal.name}</p>
                       <p className="flex items-center gap-1.5 text-xs text-muted-foreground">
-                        {goal.status === "Reached" ? (
+                        {goal.status === "Done" ? (
                           "Already reached"
                         ) : (
                           <>
@@ -426,7 +436,13 @@ function Simulator({ income }: { income: number }) {
                                 </span>
                               </>
                             )}
-                            <span>· due {formatMonth(goal.due)}</span>
+                            <span>
+                              · due{" "}
+                              {new Date(goal.due).toLocaleDateString("en-IN", {
+                                month: "short",
+                                year: "numeric",
+                              })}
+                            </span>
                           </>
                         )}
                       </p>
@@ -658,7 +674,15 @@ function Bars({ before, after }: { before: number; after: number }) {
 }
 
 /** The scenario in plain words, so it's clear what the number is made of. */
-function Changes({ base, scenario, goals }: { base: Baseline; scenario: Scenario; goals: Goal[] }) {
+function Changes({
+  base,
+  scenario,
+  goals,
+}: {
+  base: Baseline;
+  scenario: Scenario;
+  goals: GoalPlan[];
+}) {
   const goal = goals.find((g) => g.id === scenario.goalId);
   const lines: string[] = [];
   if (scenario.incomeChange) {
