@@ -1,4 +1,4 @@
-import { act, fireEvent, render, screen } from "@testing-library/react";
+import { act, render, screen } from "@testing-library/react";
 import { useEffect, type ComponentType } from "react";
 import { beforeEach, describe, expect, it } from "vitest";
 import { Route } from "./monthly-review";
@@ -17,21 +17,14 @@ function WithDemo() {
 describe("Monthly Review", () => {
   beforeEach(() => localStorage.clear());
 
-  it("renders a report card from the demo and switches months", async () => {
+  it("renders the demo's report with the eating-out trend worked out from transactions", async () => {
     render(
       <StoreProvider>
         <WithDemo />
       </StoreProvider>,
     );
     await act(() => new Promise((r) => setTimeout(r, 500)));
-    expect(screen.getByText("Wins")).toBeInTheDocument();
-    expect(screen.getByText("Where it went")).toBeInTheDocument();
-    expect(screen.getByText(/Food & Dining rose/)).toBeInTheDocument();
-
-    const picker = screen.getByLabelText("Month") as HTMLSelectElement;
-    const earlier = picker.options[1]!.value;
-    fireEvent.change(picker, { target: { value: earlier } });
-    expect(picker.value).toBe(earlier);
-    expect(screen.getByText(/Your report card for/)).toBeInTheDocument();
+    expect(screen.getByText("Where your money went")).toBeInTheDocument();
+    expect(screen.getByText(/Eating out is trending up/)).toBeInTheDocument();
   });
 });

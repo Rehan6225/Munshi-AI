@@ -42,7 +42,7 @@ Speak naturally, filler words and self-corrections included. Dictate with **Wisp
 | 🔁 | **Subscription radar** | Catches **forgotten subscriptions** (Hotstar unused for 4 months) and **sneaky price hikes** (Netflix ₹499 → ₹649) |
 | 🎯 | **Goals that talk back** | Emergency fund, Goa trip, new laptop: each one marked *On track*, *At risk* or *Ahead*, with the monthly amount you need |
 | 📅 | **Monthly review** | A report card for the month: where your money went and what changed |
-| 🔮 | **What-If simulator** | *"What if my rent goes up by ₹3,000?"*: see how your goals shift *(in progress)* |
+| 🔮 | **Plan Ahead** | *"What if my rent goes up by ₹3,000?"*: see how your savings and goals shift |
 | 🤖 | **Coach** | Ask *"can I afford a ₹40k phone in March?"* and get answers based on your real numbers *(in progress)* |
 
 ### 🛡️ Guardrails
@@ -85,7 +85,7 @@ src/
 │   ├── transactions.tsx   → Transactions
 │   ├── subscriptions.tsx  → Subscription radar
 │   ├── goals.tsx          → Goals
-│   ├── what-if.tsx        → What-If simulator
+│   ├── plan-ahead.tsx     → Plan Ahead simulator
 │   ├── monthly-review.tsx → Monthly review
 │   └── coach.tsx          → Coach chat
 ├── components/
@@ -106,7 +106,7 @@ src/
 - [x] Detection of forgotten subscriptions and price hikes
 - [ ] AI parsing for self-corrections ("450, no wait, 480") and multiple expenses in one sentence
 - [ ] Learns from corrections: fix a category once and Munshi remembers it as a rule
-- [ ] What-If simulator with goal-timeline charts
+- [ ] Plan Ahead: goal-timeline charts
 - [ ] Coach chat grounded in your own data
 - [ ] 🔊 Munshi talks back, with Hinglish voice replies (*"Ho gaya! ₹480 Swiggy pe add kar diya."*)
 - [ ] Import bank CSV / PDF / transaction SMS

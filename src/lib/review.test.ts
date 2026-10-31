@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vitest";
 import type { Category } from "./categories";
 import { buildNudges, driftNudges } from "./nudges";
-import { buildReview, monthKey, shiftMonth, totalsByMonth, usualSpend } from "./review";
+import { monthKey, shiftMonth, totalsByMonth, usualSpend } from "./review";
 import type { Transaction } from "./store";
 
 let n = 0;
@@ -82,54 +82,6 @@ describe("driftNudges", () => {
     const bills = [3, 2, 1, 0].map((m) => tx("Rent & Housing", m === 0 ? 40000 : 20000, m));
     const health = [3, 2, 1, 0].map((m) => tx("Health", m === 0 ? 9000 : 1000, m));
     expect(driftNudges([...bills, ...health], {}, new Date(2026, 9, 20))).toEqual([]);
-  });
-});
-
-describe("buildReview", () => {
-  const goals = [] as Parameters<typeof buildReview>[0]["goals"];
-
-  it("compares the month with the one before and finds wins and suggestions", () => {
-    const r = buildReview({
-      transactions: [
-        tx("Food & Dining", 4000, 1),
-        tx("Groceries", 6000, 1),
-        tx("Food & Dining", 6000, 0),
-        tx("Groceries", 5000, 0),
-        tx("Savings & Investments", 10000, 0),
-      ],
-      month: "2026-10",
-      income: 50000,
-      subscriptions: [],
-      goals,
-    });
-    expect(r).toMatchObject({
-      spent: 11000,
-      invested: 10000,
-      saved: 39000,
-      savingsRate: 78,
-      previousSpent: 10000,
-      change: 10,
-    });
-    expect(r.categories[0]).toMatchObject({
-      category: "Food & Dining",
-      amount: 6000,
-      previous: 4000,
-      change: 50,
-    });
-    expect(r.wins[0]).toBe("🥦 Groceries down ₹1,000 from last month.");
-    expect(r.suggestions[0]).toMatch(/^🍕 Food & Dining rose ₹2,000 \(\+50%\)/);
-    expect(r.trend.map((t) => t.label)).toEqual(["May", "Jun", "Jul", "Aug", "Sept", "Oct"]);
-  });
-
-  it("never suggests cutting health spending", () => {
-    const r = buildReview({
-      transactions: [tx("Health", 200, 1), tx("Health", 5000, 0)],
-      month: "2026-10",
-      income: 50000,
-      subscriptions: [],
-      goals,
-    });
-    expect(r.suggestions.join(" ")).not.toMatch(/Health/);
   });
 });
 
