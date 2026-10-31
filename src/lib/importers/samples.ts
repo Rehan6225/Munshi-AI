@@ -38,8 +38,9 @@ const MONTHLY: [string, number[], number][] = [
 
 /**
  * Everyday spends: [narration, amount, days ago]. Eating out is well above the two months
- * before, and Shopping is past the demo's budget. Meghana Foods is a local place the bank
- * text only hints at, so those rows need a look, and one is filed apart from the rest.
+ * before, and Shopping is past the demo's budget. Some rows need a look: Meghana Foods is a local
+ * place the bank text only hints at (one order is filed apart from the rest), and a payment
+ * to a person and a cash withdrawal say nothing about what they were for.
  */
 const SPENDS: [string, number, number][] = [
   // This month
@@ -52,7 +53,8 @@ const SPENDS: [string, number, number][] = [
   ["UPI-TRUFFLES CAFE-truffles@okicici", 980, 6],
   ["UPI-MYNTRA-myntra@icici", 2899, 7],
   ["UPI-SOCIAL RESTAURANT INDIRANAGAR-social@ybl", 2350, 8],
-  ["UPI-LOOKS SALON-looks.salon@okicici", 700, 9],
+  // Paid to a person: the bank text gives no clue what for.
+  ["UPI-RAMESH KUMAR-ramesh.kumar@ybl", 700, 9],
   ["POS 4581XXXX9014 INDIAN OIL COCO BLR", 2500, 10],
   ["UPI-TOIT BREWPUB RESTAURANT-toit@ybl", 1450, 11],
   ["POS 4581XXXX9014 DMART HSR LAYOUT", 3150, 14],
@@ -65,8 +67,9 @@ const SPENDS: [string, number, number][] = [
   ["UPI-ZOMATO-zomato@hdfcbank", 1400, 45],
   ["POS 4581XXXX9014 INDIAN OIL COCO BLR", 2100, 47],
   ["UPI-MEGHANA FOODS-meghana@ybl", 420, 50],
+  // Cash: where it went is anyone's guess.
+  ["ATW-ATM CASH WDL-HSR LAYOUT", 3000, 53],
   ["UPI-BLINKIT-blinkit@hdfcbank", 2200, 52],
-  ["ECOM-AMAZON PAY INDIA-AMZN0981", 2200, 55],
   // The month before
   ["UPI-SWIGGY-swiggy@icici", 2100, 66],
   ["POS 4581XXXX9014 DMART HSR LAYOUT", 3200, 70],

@@ -59,8 +59,14 @@ describe("sample files", () => {
     expect(sample).toHaveLength(68);
     // What the review step lists under "need a look".
     const unsure = spends.filter((d) => !d.duplicate && d.confidence !== "high");
-    expect(unsure.length).toBeGreaterThanOrEqual(3);
-    expect(unsure.length).toBeLessThanOrEqual(4);
+    expect(unsure.map((d) => d.merchant).sort()).toEqual([
+      "ATM cash withdrawal",
+      "Meghana Foods",
+      "Meghana Foods",
+      "Meghana Foods",
+      "Meghana Foods",
+      "Ramesh Kumar",
+    ]);
     const salary = drafts.filter(
       (d) => d.direction === "credit" && d.amount === DEMO_PROFILE.income,
     );
@@ -99,6 +105,12 @@ describe("sample files", () => {
     const { header, opening, lines } = sampleStatementLines(NOW);
     const fromPdf = imported(parseStatementLines([header, opening, ...lines]));
     expect(fromPdf).toHaveLength(68);
+    // The same rows need a look, whichever file is imported.
+    const unsure = (rows: ReturnType<typeof parseCsv>) =>
+      toDrafts(rows, []).filter((d) => d.direction === "debit" && d.confidence !== "high").length;
+    expect(unsure(parseStatementLines([header, opening, ...lines]))).toBe(
+      unsure(parseCsv(sampleCsv(NOW))),
+    );
     expect(fromPdf.map((t) => [t.merchant, t.category, t.amount])).toEqual(
       sample.map((t) => [t.merchant, t.category, t.amount]),
     );
