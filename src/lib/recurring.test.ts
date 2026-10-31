@@ -64,8 +64,32 @@ describe("detectRecurring", () => {
     ).toEqual([]);
   });
 
-  it("needs at least two charges", () => {
-    expect(detectRecurring([tx("Netflix", 649, 2)], {}, NOW)).toEqual([]);
+  it("needs two charges for an unknown merchant", () => {
+    expect(detectRecurring([tx("Sharma Traders", 4200, 2, "Other")], {}, NOW)).toEqual([]);
+  });
+
+  it("doesn't mistake two different-sized orders a month apart for a subscription", () => {
+    expect(
+      detectRecurring([tx("Zomato", 520, 26, "Food"), tx("Zomato", 690, 1, "Food")], {}, NOW),
+    ).toEqual([]);
+  });
+
+  it("lists known services and autopay payments from a single charge", () => {
+    const found = detectRecurring(
+      [
+        tx("Netflix", 649, 2),
+        tx("Amazon Prime", 1499, 10, "Shopping"),
+        { ...tx("Society Maintenance", 3500, 5, "Bills"), recurring: true },
+      ],
+      {},
+      NOW,
+    );
+    expect(found.map((r) => [r.name, r.cycle, r.kind, r.alerts])).toEqual([
+      ["Society Maintenance", "Monthly", "bill", []],
+      // Most expensive first: Netflix is ₹7,788 a year, Prime ₹1,499.
+      ["Netflix", "Monthly", "subscription", []],
+      ["Amazon Prime", "Yearly", "subscription", []],
+    ]);
   });
 
   it("detects yearly renewals", () => {

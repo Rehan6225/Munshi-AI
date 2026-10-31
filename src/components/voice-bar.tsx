@@ -4,14 +4,14 @@ import { toast } from "sonner";
 import { parseCommand } from "@/lib/parse-command";
 import { useStore } from "@/lib/store";
 import { formatINR } from "@/lib/format";
-import { parseUsageCommand, yearlyCost } from "@/lib/recurring";
+import { merchantKey, parseUsageCommand, yearlyCost } from "@/lib/recurring";
 import { cn } from "@/lib/utils";
 
 export function VoiceBar() {
   const [text, setText] = useState("");
   const [listening, setListening] = useState(false);
   const ref = useRef<HTMLTextAreaElement>(null);
-  const { add, subscriptions, cancelSub, markUsed, markUnused } = useStore();
+  const { add, rules, subscriptions, cancelSub, markUsed, markUnused } = useStore();
 
   const submit = () => {
     const value = text.trim();
@@ -48,14 +48,16 @@ export function VoiceBar() {
       });
       return;
     }
+    // A category the user taught Munshi beats the keyword guess.
+    const category = rules[merchantKey(p.merchant)] ?? p.category;
     add({
       merchant: p.merchant,
-      category: p.category,
+      category,
       amount: p.amount,
       date: new Date(Date.now() - p.daysAgo * 86400000).toISOString(),
       note: value,
     });
-    toast.success(`Logged ${formatINR(p.amount)} · ${p.merchant}`, { description: p.category });
+    toast.success(`Logged ${formatINR(p.amount)} · ${p.merchant}`, { description: category });
     setText("");
   };
 

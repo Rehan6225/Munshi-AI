@@ -71,7 +71,7 @@ function Page() {
         <EmptyState
           icon={Repeat}
           title="No recurring payments yet"
-          text="Munshi spots monthly and yearly charges like Netflix or rent once it sees them repeat."
+          text="Munshi spots charges like Netflix or rent when they repeat, or straight away when your bank marks them as autopay."
         />
       ) : (
         <>
@@ -142,7 +142,7 @@ function Card({ s }: { s: Recurring }) {
         )}
       </p>
       <p className="mt-1 text-xs text-muted-foreground">
-        {s.cycle} · next {shortDate(s.next)} · {s.charges} charges seen
+        {s.cycle} · next {shortDate(s.next)} · {s.charges} charge{s.charges === 1 ? "" : "s"} seen
       </p>
       {s.kind === "subscription" && (
         <p className="mt-1 text-xs text-muted-foreground">

@@ -2,7 +2,7 @@ import { createFileRoute, Link } from "@tanstack/react-router";
 import { Cell, Pie, PieChart, ResponsiveContainer, Tooltip } from "recharts";
 import { Lightbulb, TrendingUp, Repeat, ShieldAlert, Tag, Receipt } from "lucide-react";
 import { PageHeader } from "@/components/app-shell";
-import { DEMO_EATING_OUT, MONTHLY_INCOME, useStore } from "@/lib/store";
+import { DEMO_EATING_OUT, useStore } from "@/lib/store";
 import { daysSince, yearlyCost } from "@/lib/recurring";
 import { formatINR, formatINRShort } from "@/lib/format";
 import { Progress } from "@/components/ui/progress";
@@ -10,6 +10,8 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { TxList } from "@/components/tx-list";
 import { CardSkeletons, EmptyState, ListSkeleton } from "@/components/states";
 import { StatusBadge } from "@/components/status-badge";
+import { AddIncomeButton } from "@/components/income-dialog";
+import type { ReactNode } from "react";
 
 export const Route = createFileRoute("/")({
   head: () => ({
@@ -40,7 +42,7 @@ const COLORS = [
 ];
 
 function Dashboard() {
-  const { hydrated, transactions, subscriptions, goals } = useStore();
+  const { hydrated, transactions, subscriptions, goals, income } = useStore();
   const now = new Date();
 
   if (!hydrated) {
@@ -81,7 +83,8 @@ function Dashboard() {
     return d.getMonth() === now.getMonth() && d.getFullYear() === now.getFullYear();
   });
   const spend = month.reduce((s, t) => s + t.amount, 0);
-  const savingsRate = Math.max(0, Math.round(((MONTHLY_INCOME - spend) / MONTHLY_INCOME) * 100));
+  const savingsRate =
+    income === null ? null : Math.max(0, Math.round(((income - spend) / income) * 100));
   const ef = goals.find((g) => g.name === "Emergency fund");
   const efPct = ef ? Math.round((ef.saved / ef.target) * 100) : 0;
   const goal = goals.find((g) => g !== ef);
@@ -150,13 +153,15 @@ function Dashboard() {
         <Stat
           label="This month's spend"
           value={formatINR(spend)}
-          hint={`of ${formatINRShort(MONTHLY_INCOME)} income`}
+          hint={
+            income === null ? "Add your income to compare" : `of ${formatINRShort(income)} income`
+          }
         />
         <Stat
           label="Savings rate"
-          value={`${savingsRate}%`}
-          hint="Target 30%"
-          accent={savingsRate >= 30}
+          value={savingsRate === null ? "—" : `${savingsRate}%`}
+          hint={savingsRate === null ? <AddIncomeButton /> : "Target 30%"}
+          accent={savingsRate !== null && savingsRate >= 30}
         />
         {ef && (
           <Link to="/goals" className="card-soft p-6 transition hover:shadow-glow">
@@ -284,7 +289,7 @@ function Stat({
 }: {
   label: string;
   value: string;
-  hint: string;
+  hint: ReactNode;
   accent?: boolean;
 }) {
   return (
@@ -293,7 +298,7 @@ function Stat({
       <p className={`mt-2 text-2xl font-semibold tabular-nums ${accent ? "text-primary" : ""}`}>
         {value}
       </p>
-      <p className="mt-2 text-xs text-muted-foreground">{hint}</p>
+      <div className="mt-2 text-xs text-muted-foreground">{hint}</div>
     </div>
   );
 }

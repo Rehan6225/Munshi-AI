@@ -1,5 +1,8 @@
 import { createContext, useContext, useEffect, useMemo, useState, type ReactNode } from "react";
-import { detectRecurring, type Recurring, type Usage } from "./recurring";
+import { detectRecurring, merchantKey, type Recurring, type Usage } from "./recurring";
+import type { Rules } from "./importers/categorize";
+import { monthFrom, planGoal } from "./plan";
+import type { ImportSource } from "./importers/rows";
 
 export type Category =
   "Food" | "Groceries" | "Transport" | "Shopping" | "Bills" | "Entertainment" | "Other";
@@ -13,15 +16,27 @@ export interface Transaction {
   note?: string;
   /** Category the coach thinks is correct, if the current one looks wrong. */
   suggestedCategory?: Category | undefined;
+  /** Set on rows brought in from a statement, CSV or SMS. */
+  source?: ImportSource | undefined;
+  /** The bank marked it as autopay (SI, mandate, ACH), so it repeats even if seen once. */
+  recurring?: boolean | undefined;
 }
 
-export interface Goal {
+/** What the user tells Munshi about a goal. */
+export interface GoalInput {
   id: string;
   name: string;
   saved: number;
   target: number;
+  /** Month to reach it by, "2027-03". */
   due: string;
-  status: "On track" | "At risk" | "Ahead";
+  /** What the user puts aside for it each month. */
+  monthly: number;
+}
+
+/** A goal with its status and advice worked out from the inputs. */
+export interface Goal extends GoalInput {
+  status: "On track" | "At risk" | "Ahead" | "Reached";
   note: string;
 }
 
@@ -90,33 +105,31 @@ const DEMO_USAGE: Usage = {
 
 const DEMO_ALL_TX = [...DEMO_TX, ...DEMO_RECURRING].sort((a, b) => b.date.localeCompare(a.date));
 
-const DEMO_GOALS: Goal[] = [
+/** Due dates are relative to today so the demo always tells the same story. */
+const demoGoals = (now = new Date()): GoalInput[] => [
   {
     id: "g1",
     name: "Emergency fund",
     saved: 85000,
     target: 300000,
-    due: "Mar 2027",
-    status: "At risk",
-    note: "Needs ₹43,000/month — you're saving ₹12,000.",
+    due: monthFrom(now, 5),
+    monthly: 12000,
   },
   {
     id: "g2",
     name: "Goa trip",
     saved: 28000,
     target: 45000,
-    due: "Dec 2026",
-    status: "On track",
-    note: "₹8,500/month gets you there.",
+    due: monthFrom(now, 2),
+    monthly: 8500,
   },
   {
     id: "g3",
     name: "New laptop",
     saved: 52000,
     target: 120000,
-    due: "Jun 2027",
-    status: "Ahead",
-    note: "A month ahead of plan.",
+    due: monthFrom(now, 8),
+    monthly: 9800,
   },
 ];
 
@@ -130,84 +143,288 @@ export const DEMO_EATING_OUT = [
   { month: "Oct", amount: 6950 },
 ];
 
+/** The salary the demo and the sample files assume. Real data asks the user instead. */
 export const MONTHLY_INCOME = 95000;
+
+/** One set of money data. The demo and the user's own data are kept apart. */
+interface Workspace {
+  transactions: Transaction[];
+  usage: Usage;
+  cancelled: string[];
+  goals: GoalInput[];
+  /** Monthly take-home pay; null until the user tells us. */
+  income: number | null;
+  /** The income is a stand-in (demo or sample data), not something the user entered. */
+  incomeAssumed: boolean;
+}
+
+export type Mode = "demo" | "mine";
+
+const emptyWorkspace = (): Workspace => ({
+  transactions: [],
+  usage: {},
+  cancelled: [],
+  goals: [],
+  income: null,
+  incomeAssumed: false,
+});
+
+const demoWorkspace = (): Workspace => ({
+  transactions: DEMO_ALL_TX,
+  usage: DEMO_USAGE,
+  cancelled: [],
+  goals: demoGoals(),
+  income: MONTHLY_INCOME,
+  incomeAssumed: true,
+});
 
 interface Ctx {
   hydrated: boolean;
-  demo: boolean;
+  /** Which data is on screen; null until the user tries the demo or adds their own. */
+  mode: Mode | null;
+  /** True when the user has data of their own, whatever is on screen. */
+  hasOwnData: boolean;
   transactions: Transaction[];
   /** Recurring payments detected from transactions. */
   subscriptions: Recurring[];
   goals: Goal[];
+  /** Take-home pay per month; null when the user hasn't said yet. */
+  income: number | null;
+  /** True when income is the demo's or sample's stand-in rather than the user's own. */
+  incomeAssumed: boolean;
+  /** The user's own figure. */
+  setIncome: (income: number) => void;
+  /** Uses the stand-in salary for sample data, unless the user already gave theirs. */
+  assumeSampleIncome: () => void;
+  /** True once the user has told us their own salary. */
+  ownIncomeSet: boolean;
+  /** Set while the "what's your monthly salary?" dialog should be open. */
+  incomePrompt: { suggested: number | null } | null;
+  askIncome: (suggested?: number | null) => void;
+  closeIncomePrompt: () => void;
+  addGoal: (g: Omit<GoalInput, "id">) => void;
+  updateGoal: (id: string, patch: Partial<Omit<GoalInput, "id">>) => void;
+  removeGoal: (id: string) => void;
+  /** Categories the user picked by hand, by merchant. Applied to imports and voice entries. */
+  rules: Rules;
   add: (t: Omit<Transaction, "id">) => void;
+  /**
+   * Adds imported rows to the user's own data, never the demo.
+   * Returns true when that meant switching away from the demo.
+   */
+  addMany: (txs: Omit<Transaction, "id">[]) => boolean;
+  /** Remembers a merchant's category for next time. Returns false if it already knew. */
+  learn: (merchant: string, category: Category) => boolean;
+  /** Fixes one transaction's category and remembers it for that merchant. */
   recategorize: (id: string, category: Category) => void;
   cancelSub: (key: string) => void;
   markUsed: (key: string) => void;
   markUnused: (key: string) => void;
+  /** Shows a fresh copy of the demo. The user's own data is untouched. */
   loadDemo: () => void;
+  /** Switches to the user's own data. */
+  showMine: () => void;
+  /** Leaves the demo, or deletes the user's own data when that's on screen. */
   reset: () => void;
 }
 const StoreCtx = createContext<Ctx | null>(null);
-const KEY = "munshi-ai-demo";
+/** Which data was on screen last time. */
+const MODE_KEY = "munshi-ai-mode";
+/** Before demo and own data were separate, this flag meant "showing the demo". */
+const LEGACY_DEMO_KEY = "munshi-ai-demo";
+/** The user's own data, so imports and logged spends survive a reload. */
+const DATA_KEY = "munshi-ai-data";
 
 export function StoreProvider({ children }: { children: ReactNode }) {
   const [hydrated, setHydrated] = useState(false);
-  const [demo, setDemo] = useState(false);
-  const [transactions, setTx] = useState<Transaction[]>([]);
-  const [usage, setUsage] = useState<Usage>({});
-  const [cancelled, setCancelled] = useState<string[]>([]);
+  const [mode, setMode] = useState<Mode | null>(null);
+  const [spaces, setSpaces] = useState<Record<Mode, Workspace>>(() => ({
+    demo: emptyWorkspace(),
+    mine: emptyWorkspace(),
+  }));
+  const [rules, setRules] = useState<Rules>({});
+  const [incomePrompt, setIncomePrompt] = useState<Ctx["incomePrompt"]>(null);
+
+  const active = spaces[mode ?? "mine"];
+  const { transactions, usage, cancelled, income, incomeAssumed } = active;
   const subscriptions = useMemo(
     () => detectRecurring(transactions, usage).filter((r) => !cancelled.includes(r.key)),
     [transactions, usage, cancelled],
   );
-  const [goals, setGoals] = useState<Goal[]>([]);
+  const goals = useMemo(
+    () => active.goals.map((g): Goal => ({ ...g, ...planGoal(g) })),
+    [active.goals],
+  );
+
+  /** Changes the data on screen. With nothing on screen yet, that starts the user's own. */
+  const update = (fn: (w: Workspace) => Partial<Workspace>, target: Mode = mode ?? "mine") => {
+    setSpaces((prev) => ({ ...prev, [target]: { ...prev[target], ...fn(prev[target]) } }));
+    if (!mode) setMode(target);
+  };
 
   const loadDemo = () => {
-    setTx(DEMO_ALL_TX);
-    setUsage(DEMO_USAGE);
-    setCancelled([]);
-    setGoals(DEMO_GOALS);
-    setDemo(true);
-    localStorage.setItem(KEY, "1");
+    setSpaces((prev) => ({ ...prev, demo: demoWorkspace() }));
+    setMode("demo");
   };
 
   useEffect(() => {
     // brief delay so skeletons are visible while "syncing"
     const t = setTimeout(() => {
-      if (localStorage.getItem(KEY)) loadDemo();
+      const saved = readSaved();
+      if (saved) {
+        setSpaces((prev) => ({ ...prev, mine: saved.workspace }));
+        setRules(saved.rules);
+      }
+      const last = readMode();
+      if (last === "demo") loadDemo();
+      else if (last === "mine" || saved?.workspace.transactions.length) setMode("mine");
       setHydrated(true);
     }, 450);
     return () => clearTimeout(t);
   }, []);
 
+  useEffect(() => {
+    if (!hydrated) return;
+    try {
+      if (mode) localStorage.setItem(MODE_KEY, mode);
+      else localStorage.removeItem(MODE_KEY);
+      localStorage.removeItem(LEGACY_DEMO_KEY);
+      localStorage.setItem(DATA_KEY, JSON.stringify({ ...spaces.mine, rules }));
+    } catch {
+      // Storage full or blocked: the session still works, it just won't survive a reload.
+    }
+  }, [hydrated, mode, spaces.mine, rules]);
+
+  const learn = (merchant: string, category: Category) => {
+    const key = merchantKey(merchant);
+    if (!key || rules[key] === category) return false;
+    setRules((prev) => ({ ...prev, [key]: category }));
+    return true;
+  };
+
   const value: Ctx = {
     hydrated,
-    demo,
+    mode,
+    hasOwnData: spaces.mine.transactions.length > 0 || spaces.mine.goals.length > 0,
     transactions,
     subscriptions,
     goals,
-    add: (t) => {
-      setTx((prev) => [{ ...t, id: crypto.randomUUID() }, ...prev]);
-      setDemo(true);
-    },
-    recategorize: (id, category) =>
-      setTx((prev) =>
-        prev.map((t) => (t.id === id ? { ...t, category, suggestedCategory: undefined } : t)),
+    income,
+    incomeAssumed,
+    setIncome: (v) => update(() => ({ income: v, incomeAssumed: false })),
+    assumeSampleIncome: () =>
+      setSpaces((prev) =>
+        prev.mine.income !== null && !prev.mine.incomeAssumed
+          ? prev
+          : { ...prev, mine: { ...prev.mine, income: MONTHLY_INCOME, incomeAssumed: true } },
       ),
-    cancelSub: (key) => setCancelled((prev) => [...prev, key]),
-    markUsed: (key) => setUsage((prev) => ({ ...prev, [key]: new Date().toISOString() })),
-    markUnused: (key) => setUsage((prev) => ({ ...prev, [key]: null })),
+    ownIncomeSet: spaces.mine.income !== null && !spaces.mine.incomeAssumed,
+    incomePrompt,
+    askIncome: (suggested = null) => setIncomePrompt({ suggested }),
+    closeIncomePrompt: () => setIncomePrompt(null),
+    addGoal: (g) => update((w) => ({ goals: [...w.goals, { ...g, id: crypto.randomUUID() }] })),
+    updateGoal: (id, patch) =>
+      update((w) => ({ goals: w.goals.map((g) => (g.id === id ? { ...g, ...patch } : g)) })),
+    removeGoal: (id) => update((w) => ({ goals: w.goals.filter((g) => g.id !== id) })),
+    rules,
+    add: (t) =>
+      update((w) => ({ transactions: [{ ...t, id: crypto.randomUUID() }, ...w.transactions] })),
+    addMany: (txs) => {
+      const rows = txs.map((t) => ({ ...t, id: crypto.randomUUID() }));
+      update(
+        (w) => ({
+          transactions: [...rows, ...w.transactions].sort((a, b) => b.date.localeCompare(a.date)),
+        }),
+        "mine",
+      );
+      setMode("mine");
+      return mode === "demo";
+    },
+    learn,
+    recategorize: (id, category) => {
+      const t = transactions.find((x) => x.id === id);
+      if (t) learn(t.merchant, category);
+      update((w) => ({
+        transactions: w.transactions.map((t) =>
+          t.id === id ? { ...t, category, suggestedCategory: undefined } : t,
+        ),
+      }));
+    },
+    cancelSub: (key) => update((w) => ({ cancelled: [...w.cancelled, key] })),
+    markUsed: (key) => update((w) => ({ usage: { ...w.usage, [key]: new Date().toISOString() } })),
+    markUnused: (key) => update((w) => ({ usage: { ...w.usage, [key]: null } })),
     loadDemo,
+    showMine: () => setMode("mine"),
     reset: () => {
-      localStorage.removeItem(KEY);
-      setTx([]);
-      setUsage({});
-      setCancelled([]);
-      setGoals([]);
-      setDemo(false);
+      if (mode === "demo") {
+        setSpaces((prev) => ({ ...prev, demo: emptyWorkspace() }));
+        setMode(spaces.mine.transactions.length > 0 ? "mine" : null);
+      } else {
+        setSpaces((prev) => ({ ...prev, mine: emptyWorkspace() }));
+        setRules({});
+        setMode(null);
+      }
     },
   };
   return <StoreCtx.Provider value={value}>{children}</StoreCtx.Provider>;
+}
+
+function readMode(): Mode | null {
+  try {
+    const m = localStorage.getItem(MODE_KEY);
+    if (m === "demo" || m === "mine") return m;
+    return localStorage.getItem(LEGACY_DEMO_KEY) ? "demo" : null;
+  } catch {
+    return null;
+  }
+}
+
+/** Ids the demo uses, so demo rows saved by older versions can be left out of the user's data. */
+const DEMO_IDS = new Set([...DEMO_ALL_TX.map((t) => t.id), "g1", "g2", "g3"]);
+
+function readSaved(): { workspace: Workspace; rules: Rules } | null {
+  try {
+    const raw = localStorage.getItem(DATA_KEY);
+    if (!raw) return null;
+    const s = JSON.parse(raw) as Partial<Workspace> & { rules?: Rules };
+    if (!Array.isArray(s.transactions)) return null;
+    return {
+      workspace: {
+        transactions: s.transactions.filter((t) => !DEMO_IDS.has(t.id)),
+        usage: s.usage ?? {},
+        cancelled: s.cancelled ?? [],
+        goals: (s.goals ?? []).map(toGoalInput).filter((g) => !DEMO_IDS.has(g.id)),
+        // Before income was asked for, everyone silently got the stand-in; treat that as unknown.
+        income:
+          typeof s.income === "number" &&
+          (s.incomeAssumed !== undefined || s.income !== MONTHLY_INCOME)
+            ? s.income
+            : null,
+        incomeAssumed: s.incomeAssumed ?? false,
+      },
+      rules: s.rules ?? {},
+    };
+  } catch {
+    return null;
+  }
+}
+
+/** Accepts goals saved before due dates were "2027-03" and monthly amounts existed. */
+function toGoalInput(g: Partial<GoalInput>): GoalInput {
+  const due = /^\d{4}-\d{2}$/.test(g.due ?? "")
+    ? g.due!
+    : (() => {
+        const d = new Date(`1 ${g.due}`);
+        return isNaN(d.getTime()) ? monthFrom(new Date(), 12) : monthFrom(d, 0);
+      })();
+  return {
+    id: g.id ?? crypto.randomUUID(),
+    name: g.name ?? "Goal",
+    saved: g.saved ?? 0,
+    target: g.target ?? 0,
+    due,
+    monthly: g.monthly ?? 0,
+  };
 }
 
 export function useStore() {

@@ -13,8 +13,10 @@ import { Route as IndexRouteImport } from './routes/index'
 import { Route as CoachRouteImport } from './routes/coach'
 import { Route as GoalsRouteImport } from './routes/goals'
 import { Route as MonthlyReviewRouteImport } from './routes/monthly-review'
+import { Route as PlanAheadRouteImport } from './routes/plan-ahead'
 import { Route as SubscriptionsRouteImport } from './routes/subscriptions'
 import { Route as TransactionsRouteImport } from './routes/transactions'
+import { Route as WelcomeRouteImport } from './routes/welcome'
 import { Route as WhatIfRouteImport } from './routes/what-if'
 
 const IndexRoute = IndexRouteImport.update({
@@ -37,6 +39,11 @@ const MonthlyReviewRoute = MonthlyReviewRouteImport.update({
   path: '/monthly-review',
   getParentRoute: () => rootRouteImport,
 } as any)
+const PlanAheadRoute = PlanAheadRouteImport.update({
+  id: '/plan-ahead',
+  path: '/plan-ahead',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const SubscriptionsRoute = SubscriptionsRouteImport.update({
   id: '/subscriptions',
   path: '/subscriptions',
@@ -45,6 +52,11 @@ const SubscriptionsRoute = SubscriptionsRouteImport.update({
 const TransactionsRoute = TransactionsRouteImport.update({
   id: '/transactions',
   path: '/transactions',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const WelcomeRoute = WelcomeRouteImport.update({
+  id: '/welcome',
+  path: '/welcome',
   getParentRoute: () => rootRouteImport,
 } as any)
 const WhatIfRoute = WhatIfRouteImport.update({
@@ -58,8 +70,10 @@ export interface FileRoutesByFullPath {
   '/coach': typeof CoachRoute
   '/goals': typeof GoalsRoute
   '/monthly-review': typeof MonthlyReviewRoute
+  '/plan-ahead': typeof PlanAheadRoute
   '/subscriptions': typeof SubscriptionsRoute
   '/transactions': typeof TransactionsRoute
+  '/welcome': typeof WelcomeRoute
   '/what-if': typeof WhatIfRoute
 }
 export interface FileRoutesByTo {
@@ -67,8 +81,10 @@ export interface FileRoutesByTo {
   '/coach': typeof CoachRoute
   '/goals': typeof GoalsRoute
   '/monthly-review': typeof MonthlyReviewRoute
+  '/plan-ahead': typeof PlanAheadRoute
   '/subscriptions': typeof SubscriptionsRoute
   '/transactions': typeof TransactionsRoute
+  '/welcome': typeof WelcomeRoute
   '/what-if': typeof WhatIfRoute
 }
 export interface FileRoutesById {
@@ -77,8 +93,10 @@ export interface FileRoutesById {
   '/coach': typeof CoachRoute
   '/goals': typeof GoalsRoute
   '/monthly-review': typeof MonthlyReviewRoute
+  '/plan-ahead': typeof PlanAheadRoute
   '/subscriptions': typeof SubscriptionsRoute
   '/transactions': typeof TransactionsRoute
+  '/welcome': typeof WelcomeRoute
   '/what-if': typeof WhatIfRoute
 }
 export interface FileRouteTypes {
@@ -88,8 +106,10 @@ export interface FileRouteTypes {
     | '/coach'
     | '/goals'
     | '/monthly-review'
+    | '/plan-ahead'
     | '/subscriptions'
     | '/transactions'
+    | '/welcome'
     | '/what-if'
   fileRoutesByTo: FileRoutesByTo
   to:
@@ -97,8 +117,10 @@ export interface FileRouteTypes {
     | '/coach'
     | '/goals'
     | '/monthly-review'
+    | '/plan-ahead'
     | '/subscriptions'
     | '/transactions'
+    | '/welcome'
     | '/what-if'
   id:
     | '__root__'
@@ -106,8 +128,10 @@ export interface FileRouteTypes {
     | '/coach'
     | '/goals'
     | '/monthly-review'
+    | '/plan-ahead'
     | '/subscriptions'
     | '/transactions'
+    | '/welcome'
     | '/what-if'
   fileRoutesById: FileRoutesById
 }
@@ -116,8 +140,10 @@ export interface RootRouteChildren {
   CoachRoute: typeof CoachRoute
   GoalsRoute: typeof GoalsRoute
   MonthlyReviewRoute: typeof MonthlyReviewRoute
+  PlanAheadRoute: typeof PlanAheadRoute
   SubscriptionsRoute: typeof SubscriptionsRoute
   TransactionsRoute: typeof TransactionsRoute
+  WelcomeRoute: typeof WelcomeRoute
   WhatIfRoute: typeof WhatIfRoute
 }
 
@@ -151,6 +177,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof MonthlyReviewRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/plan-ahead': {
+      id: '/plan-ahead'
+      path: '/plan-ahead'
+      fullPath: '/plan-ahead'
+      preLoaderRoute: typeof PlanAheadRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/subscriptions': {
       id: '/subscriptions'
       path: '/subscriptions'
@@ -163,6 +196,13 @@ declare module '@tanstack/react-router' {
       path: '/transactions'
       fullPath: '/transactions'
       preLoaderRoute: typeof TransactionsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/welcome': {
+      id: '/welcome'
+      path: '/welcome'
+      fullPath: '/welcome'
+      preLoaderRoute: typeof WelcomeRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/what-if': {
@@ -180,8 +220,10 @@ const rootRouteChildren: RootRouteChildren = {
   CoachRoute: CoachRoute,
   GoalsRoute: GoalsRoute,
   MonthlyReviewRoute: MonthlyReviewRoute,
+  PlanAheadRoute: PlanAheadRoute,
   SubscriptionsRoute: SubscriptionsRoute,
   TransactionsRoute: TransactionsRoute,
+  WelcomeRoute: WelcomeRoute,
   WhatIfRoute: WhatIfRoute,
 }
 export const routeTree = rootRouteImport

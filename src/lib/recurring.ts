@@ -32,6 +32,19 @@ const UNUSED_AFTER_DAYS = 45;
 const NEW_WITHIN_DAYS = 70;
 const PRICE_CHANGE_WITHIN_DAYS = 95;
 
+/** Services that bill on a cycle by nature, so a single charge is enough to list them. */
+const KNOWN_RECURRING =
+  /netflix|spotify|hotstar|disney|amazon prime|prime video|youtube premium|cult\.? ?fit|zee5|sonyliv|jiocinema|audible|gaana|wynk|apple music|icloud|google one|\brent\b|broadband|fibernet|fiber|hathway|tata play|insurance|\blic\b/i;
+
+/** How banks mark a payment that repeats on its own: standing instructions and mandates. */
+export const AUTOPAY =
+  /\b(si|e-?mandate|mandate|autopay|auto pay|auto-debit|ach|nach|standing instruction)\b/i;
+
+/** True when one charge is enough to call this a subscription or bill. */
+export function looksRecurring(t: Pick<Transaction, "merchant" | "recurring">) {
+  return Boolean(t.recurring) || KNOWN_RECURRING.test(t.merchant);
+}
+
 export function merchantKey(name: string) {
   return name.toLowerCase().replace(/[^a-z0-9]/g, "");
 }
@@ -53,20 +66,36 @@ export function detectRecurring(
 
   const found: Recurring[] = [];
   for (const [key, txs] of groups) {
-    if (txs.length < 2) continue;
+    // One statement shows each subscription once; trust known services and autopay marks.
+    const single = txs.length === 1;
+    if (single && !looksRecurring(txs[0]!)) continue;
     const sorted = [...txs].sort((a, b) => a.date.localeCompare(b.date));
     const times = sorted.map((t) => new Date(t.date).getTime());
     const gaps = times.slice(1).map((t, i) => (t - times[i]!) / DAY);
 
-    const cycle = gaps.every((g) => g >= 25 && g <= 35)
-      ? "Monthly"
-      : gaps.every((g) => g >= 350 && g <= 380)
+    const cycle = single
+      ? /prime|annual|yearly/i.test(sorted[0]!.merchant) && sorted[0]!.amount >= 999
         ? "Yearly"
-        : null;
+        : "Monthly"
+      : gaps.every((g) => g >= 25 && g <= 35)
+        ? "Monthly"
+        : gaps.every((g) => g >= 350 && g <= 380)
+          ? "Yearly"
+          : null;
     if (!cycle) continue;
+    // Two food orders a month apart aren't a subscription; with so little history, the
+    // amounts must match too unless it's a service we know repeats.
+    if (sorted.length === 2 && !sorted.some(looksRecurring)) {
+      const [a, b] = sorted.map((t) => t.amount) as [number, number];
+      if (Math.abs(a - b) / Math.max(a, b) > 0.1) continue;
+    }
 
     const last = sorted.at(-1)!;
-    const avgGap = gaps.reduce((s, g) => s + g, 0) / gaps.length;
+    const avgGap = single
+      ? cycle === "Yearly"
+        ? 365
+        : 30
+      : gaps.reduce((s, g) => s + g, 0) / gaps.length;
     const kind = last.category === "Bills" ? "bill" : "subscription";
     const lastUsed = usage[key];
 
@@ -87,7 +116,8 @@ export function detectRecurring(
         (lastUsed && now - new Date(lastUsed).getTime() > UNUSED_AFTER_DAYS * DAY))
     )
       alerts.push("unused");
-    if (now - times[0]! < NEW_WITHIN_DAYS * DAY) alerts.push("new");
+    // With a single charge we can't tell a new sign-up from history we haven't seen.
+    if (!single && now - times[0]! < NEW_WITHIN_DAYS * DAY) alerts.push("new");
 
     found.push({
       key,

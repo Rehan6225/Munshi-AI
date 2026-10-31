@@ -1,5 +1,7 @@
-import { Mic, Radar, Target, ArrowRight } from "lucide-react";
+import { Mic, Radar, Target, ArrowRight, Upload } from "lucide-react";
+import { Link, useNavigate } from "@tanstack/react-router";
 import { useStore } from "@/lib/store";
+import { ImportDialog } from "./import-dialog";
 
 const FEATURES = [
   { icon: Mic, title: "Just say it", text: "“Spent 480 on Swiggy last night” — logged, categorised, done." },
@@ -8,7 +10,8 @@ const FEATURES = [
 ];
 
 export function Onboarding() {
-  const { loadDemo } = useStore();
+  const { mode, loadDemo } = useStore();
+  const navigate = useNavigate();
   return (
     <div className="relative min-h-screen overflow-hidden">
       <div className="pointer-events-none absolute left-1/2 top-[-20%] h-[600px] w-[900px] max-w-[160vw] -translate-x-1/2 rounded-full bg-primary/15 blur-3xl" />
@@ -29,14 +32,34 @@ export function Onboarding() {
             Say what you spent the way you'd tell a friend. Munshi AI keeps the books and tells you what to do next.
           </p>
           <div className="mt-10 flex flex-col items-center justify-center gap-3 sm:flex-row">
-            <button
-              onClick={loadDemo}
-              className="group inline-flex items-center gap-2 rounded-2xl bg-primary px-6 py-3.5 font-medium text-primary-foreground shadow-glow transition hover:opacity-90"
-            >
-              Try with demo data
-              <ArrowRight className="size-4 transition group-hover:translate-x-0.5" />
-            </button>
+            {mode ? (
+              <Link
+                to="/"
+                className="group inline-flex items-center gap-2 rounded-2xl bg-primary px-6 py-3.5 font-medium text-primary-foreground shadow-glow transition hover:opacity-90"
+              >
+                Open dashboard
+                <ArrowRight className="size-4 transition group-hover:translate-x-0.5" />
+              </Link>
+            ) : (
+              <button
+                onClick={() => {
+                  loadDemo();
+                  void navigate({ to: "/" });
+                }}
+                className="group inline-flex items-center gap-2 rounded-2xl bg-primary px-6 py-3.5 font-medium text-primary-foreground shadow-glow transition hover:opacity-90"
+              >
+                Try with demo data
+                <ArrowRight className="size-4 transition group-hover:translate-x-0.5" />
+              </button>
+            )}
+            <ImportDialog>
+              <button className="inline-flex items-center gap-2 rounded-2xl border border-primary/35 bg-card px-6 py-3.5 font-medium transition hover:border-primary/60">
+                <Upload className="size-4 text-primary" />
+                Import my transactions
+              </button>
+            </ImportDialog>
           </div>
+          <p className="mt-4 text-xs text-muted-foreground">Bank statement PDF, CSV or SMS · read on your device</p>
         </section>
 
         <section className="mt-24 grid gap-5 pb-12 md:grid-cols-3">

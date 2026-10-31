@@ -14,7 +14,14 @@ export function TxList({ items }: { items: Transaction[] }) {
                 {t.merchant.charAt(0)}
               </div>
               <div className="min-w-0">
-                <p className="truncate font-medium">{t.merchant}</p>
+                <p className="truncate font-medium">
+                  {t.merchant}
+                  {t.source && (
+                    <span className="ml-2 rounded-md bg-muted px-1.5 py-0.5 align-middle text-[10px] font-medium uppercase text-muted-foreground">
+                      {t.source}
+                    </span>
+                  )}
+                </p>
                 <p className="truncate text-xs text-muted-foreground">
                   {t.category} · {new Date(t.date).toLocaleDateString("en-IN", { day: "numeric", month: "short" })}
                 </p>

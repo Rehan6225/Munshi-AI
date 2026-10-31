@@ -1,23 +1,8 @@
-import { createFileRoute } from "@tanstack/react-router";
-import { PageHeader } from "@/components/app-shell";
+import { createFileRoute, redirect } from "@tanstack/react-router";
 
+// Old address for Plan Ahead, kept so saved links still work.
 export const Route = createFileRoute("/what-if")({
-  head: () => ({
-    meta: [
-      { title: "What If — Munshi AI" },
-      { name: "description", content: "Play out scenarios like a raise, a new EMI or cutting food delivery." },
-      { property: "og:title", content: "What If — Munshi AI" },
-      { property: "og:description", content: "Play out scenarios like a raise, a new EMI or cutting food delivery." },
-    ],
-  }),
-  component: Page,
+  beforeLoad: () => {
+    throw redirect({ to: "/plan-ahead", replace: true });
+  },
 });
-
-function Page() {
-  return (
-    <>
-      <PageHeader title="What If" subtitle="Play out scenarios like a raise, a new EMI or cutting food delivery." />
-      <div className="card-soft p-10 text-center text-muted-foreground">Coming soon.</div>
-    </>
-  );
-}
