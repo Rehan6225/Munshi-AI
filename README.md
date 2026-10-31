@@ -8,6 +8,10 @@
 
 `Voice-first` · `Built for India 🇮🇳` · `₹ / lakh-crore formatting` · `Built by voice with Wispr Flow`
 
+### 🚀 [Try it live → munshi-ai.finance-coach.workers.dev](https://munshi-ai.finance-coach.workers.dev)
+
+Click **Try with demo data**, or **Import my transactions → Use sample** to bring in a sample bank statement.
+
 </div>
 
 ---
@@ -53,7 +57,7 @@ Munshi **educates and models scenarios. It never recommends specific stocks, mut
 - **Framework:** React 19 + [TanStack Start](https://tanstack.com/start) (file-based routing, SSR)
 - **UI:** Tailwind CSS, shadcn/ui (Radix), Lucide icons, Recharts
 - **Voice in:** [Wispr Flow](https://wisprflow.ai) dictation, plus the browser Web Speech API (`en-IN`)
-- **Build / deploy:** Vite + Nitro, targeting Cloudflare
+- **Build / deploy:** Vite + Nitro on Cloudflare Workers (free plan), auto-deployed from `main` via Cloudflare Workers Builds. Live at https://munshi-ai.finance-coach.workers.dev
 - **Tests:** Vitest + Testing Library
 
 ## 🚀 Run it locally
