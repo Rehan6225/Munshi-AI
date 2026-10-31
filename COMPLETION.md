@@ -3,7 +3,7 @@
 Everything needed to finish Munshi AI for **The Product Space AI Hackathon** (problem statement **#04: Personal Finance Coach with a Living Money Model**).
 
 **Deadline:** 31 Oct, 11:59 PM IST
-**Overall progress:** about 72%
+**Overall progress:** about 80%
 **Rule:** everything must be **dynamic**. Every number, alert and status is calculated from real data, never hardcoded.
 
 Legend: 🔴 not started · 🟡 in progress · 🟢 done
@@ -19,8 +19,8 @@ Legend: 🔴 not started · 🟡 in progress · 🟢 done
 | 3 | Recurring payments and subscriptions, with alerts on change or non-use | 🟢 | 90% | Detected from transactions, with price-hike, unused and new alerts, voice commands and buttons | Lost on refresh (no saving yet) |
 | 4 | Persistent profile: income, fixed costs, emergency fund, goals with target dates | 🟢 | 95% | ✅ Money profile page: income, fixed costs (detected bills + your own), emergency fund (3–12 months of spending), goals with target, saved and date. Everything saves across refreshes | Nothing major |
 | 5 | Goal planner with what-if simulation ("cut dining by 30%", "rent goes up") | 🟡 | 35% | ✅ Goal status (Ahead / On track / At risk / Done) and advice calculated from income, spending and deadlines | What-If page still says "Coming soon" |
-| 6 | Nudges when spending drifts off plan | 🟡 | 40% | Subscription nudges are calculated | "Eating out +117%" comes from a fixed array. No budget plan to compare against |
-| 7 | Monthly review report | 🟡 | 15% | One bar chart | Chart uses fixed demo numbers. No real report (income, spend, top categories, wins, suggestions) |
+| 6 | Nudges when spending drifts off plan | 🟢 | 100% | ✅ Each flexible category is compared with your plan: a budget you set in Money profile, or else your usual (average of the last 3 months). Nudges at 80% of a budget, when you go over, and when the month is heading 15%+ above your usual. Never for bills or health. Plus subscription, category and goal heads-ups | — |
+| 7 | Monthly review report | 🟢 | 100% | ✅ Report card for any month: income, spent (vs last month), invested, saved, savings rate; every category with % change; 6-month trend chart; goals; subscription changes; 3 wins + 3 suggestions; Save as PDF (prints on white) | — |
 | 8 | Guardrails: educate and model scenarios, never recommend specific securities | 🟢 | 100% | ✅ Coach chat answers from your real numbers (Gemini, or on-device without a key). 3 guardrail layers: questions asking for stock/fund/crypto picks are refused before any AI runs, the AI is told never to name securities, and answers that do are blocked. Refusals teach instead (emergency fund, index funds vs stocks) and point to a SEBI-registered adviser | — |
 
 ## 🎙️ Hackathon must-haves
@@ -47,7 +47,7 @@ Legend: 🔴 not started · 🟡 in progress · 🟢 done
 | Item | Status | Details |
 |---|---|---|
 | Save data across refreshes | 🟢 | ✅ Transactions, profile, goals, learned rules, subscription check-ins and cancellations all saved in the browser |
-| Remove hardcoded values | 🟡 | ✅ `MONTHLY_INCOME`, goal `status`/`note` text and demo `suggestedCategory` removed. Still left: `DEMO_EATING_OUT` (task 4) |
+| Remove hardcoded values | 🟢 | ✅ All removed, including `DEMO_EATING_OUT`. The demo now has 5 earlier months of real spending history |
 | **18 categories** in 4 groups (Commitments, Essentials, Lifestyle, Money moves) | 🟢 | ✅ Voice parser, Gemini prompt, learned rules, bill vs subscription detection, fixed costs, goals and demo data all use them. Investments count as saving, not spending |
 
 ---
@@ -59,7 +59,7 @@ Legend: 🔴 not started · 🟡 in progress · 🟢 done
 | 1 | Save data + profile form (#4), replacing the fixed income and goal text | No | 1 hr | 🟢 |
 | 2 | Correction loop with real learned rules (#2) | No | 45 min | 🟢 |
 | 3 | Calculated goal status + What-If simulator (#5) | No | 1.5 hr | 🟡 Goal status done; What-If left |
-| 4 | Calculated nudges + monthly review from real transactions (#6, #7) | No | 1 hr | 🔴 |
+| 4 | Calculated nudges + monthly review from real transactions (#6, #7) | No | 1 hr | 🟢 |
 | 5 | AI voice parsing + U1 "What Munshi heard" | **Yes** | 1 hr | 🟢 Built; add the key to enable Gemini |
 | 6 | Import: CSV + SMS paste with AI categories (#1); PDF only if time allows | **Yes** | 1 hr | 🔴 |
 | 7 | Coach with guardrails (#8) | **Yes** | 45 min | 🟢 Built; add the key for Gemini answers |
@@ -91,3 +91,4 @@ Newest last. Every finished task gets a line here, along with whether it has bee
 | 6:34 PM | **Fix: Coach page crash.** The auto-scroll effect returned the Promise that newer Chrome gives back from scrollIntoView, which React then tried to call as a cleanup. Effect now returns nothing; the test stub mimics Chrome so this is caught | ⏳ Not yet |
 | 6:40 PM | **Coach voice: amounts in English.** When a Coach answer is read aloud, numbers are spelled out as English words first ("₹1,980" → "one thousand nine hundred and eighty rupees"), so the Hindi voice no longer says them in Hindi. Coach page only; nothing else changed; 11 tests | ⏳ Not yet |
 | 6:49 PM | **Coach audio + navigation fix:** Coach answers are read aloud automatically (amounts in English words), with a 🔊/🔇 mute button in the Coach header; any speech (e.g. the dashboard summary) stops when you switch pages; 2 tests | ⏳ Not yet |
+| 6:57 PM | **Task 4, calculated nudges + monthly review (#6, #7):** "off plan" nudges against your budget or your usual spend; optional monthly budgets in Money profile; full monthly report card with month picker, trend chart, wins and suggestions, Save as PDF; demo gets 5 months of history; fixed "eating out" numbers removed; 11 tests | ⏳ Not yet |

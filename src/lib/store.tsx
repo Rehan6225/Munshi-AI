@@ -65,6 +65,9 @@ const DEMO_TX: Transaction[] = [
   { id: "14", merchant: "Zomato", category: "Food & Dining", amount: 690, date: d(12) },
   { id: "15", merchant: "DMart", category: "Groceries", amount: 3150, date: d(14) },
   { id: "16", merchant: "Swiggy", category: "Food & Dining", amount: 560, date: d(16) },
+  // Two dinners out push eating out well above the usual, so a drift nudge shows up.
+  { id: "18", merchant: "Toit", category: "Food & Dining", amount: 1450, date: d(11) },
+  { id: "19", merchant: "Truffles", category: "Food & Dining", amount: 980, date: d(6) },
   { id: "17", merchant: "Sent to Mom", category: "Family support", amount: 5000, date: d(18) },
 ];
 
@@ -114,9 +117,56 @@ const DEMO_USAGE: Usage = {
   youtubepremium: d(2),
 };
 
-const DEMO_ALL_TX = [...DEMO_TX, ...DEMO_RECURRING].sort((a, b) => b.date.localeCompare(a.date));
+/**
+ * Five earlier months of everyday spending, so trends and "your usual" are real.
+ * Eating out creeps up each month. Merchants land on alternating days of the month,
+ * so one-off spends never look like a monthly subscription.
+ */
+function demoHistory(now = new Date()): Transaction[] {
+  const months = [
+    { ago: 5, food: 3200, groceries: 5400, transport: 3100, shopping: 1500 },
+    { ago: 4, food: 3900, groceries: 5100, transport: 2800, shopping: 3200 },
+    { ago: 3, food: 4400, groceries: 5600, transport: 3300, shopping: 1900 },
+    { ago: 2, food: 5100, groceries: 5200, transport: 2900, shopping: 2600 },
+    { ago: 1, food: 5800, groceries: 5500, transport: 3000, shopping: 2200 },
+  ];
+  const out: Transaction[] = [];
+  for (const m of months) {
+    const odd = m.ago % 2 === 1;
+    const on = (day: number) =>
+      new Date(now.getFullYear(), now.getMonth() - m.ago, day, 13).toISOString();
+    const spend = (merchant: string, category: Category, amount: number, day: number) =>
+      out.push({
+        id: `h${m.ago}-${merchant}-${day}`,
+        merchant,
+        category,
+        amount: Math.round(amount),
+        date: on(day),
+      });
+    spend("Swiggy", "Food & Dining", m.food * 0.3, odd ? 4 : 9);
+    spend("Zomato", "Food & Dining", m.food * 0.25, odd ? 11 : 26);
+    spend("Swiggy", "Food & Dining", m.food * 0.25, odd ? 19 : 23);
+    spend("Social, Indiranagar", "Food & Dining", m.food * 0.2, odd ? 27 : 6);
+    spend("DMart", "Groceries", m.groceries * 0.6, odd ? 6 : 21);
+    spend("Blinkit", "Groceries", m.groceries * 0.4, odd ? 18 : 3);
+    spend("Petrol", "Transport", m.transport * 0.7, odd ? 8 : 24);
+    spend("Uber", "Transport", m.transport * 0.3, odd ? 22 : 12);
+    spend(odd ? "Myntra" : "Amazon", "Shopping", m.shopping, odd ? 14 : 17);
+  }
+  return out;
+}
 
-const DEMO_PROFILE: Profile = { income: 120000, emergencyMonths: 6, extraFixedCosts: [] };
+const DEMO_ALL_TX = [...DEMO_TX, ...DEMO_RECURRING, ...demoHistory()].sort((a, b) =>
+  b.date.localeCompare(a.date),
+);
+
+const DEMO_PROFILE: Profile = {
+  income: 120000,
+  emergencyMonths: 6,
+  extraFixedCosts: [],
+  // A shopping budget, so the demo shows both kinds of nudge: budget and "over your usual".
+  budgets: { Shopping: 2500 },
+};
 
 /** Targets and saved amounts only; status and advice are calculated in plan.ts. */
 const DEMO_GOALS: Goal[] = [
@@ -132,7 +182,7 @@ const DEMO_GOALS: Goal[] = [
   { id: "g3", name: "New laptop", target: 120000, saved: 52000, due: monthsFromNow(8) },
 ];
 
-const EMPTY_PROFILE: Profile = { income: 0, emergencyMonths: 6, extraFixedCosts: [] };
+const EMPTY_PROFILE: Profile = { income: 0, emergencyMonths: 6, extraFixedCosts: [], budgets: {} };
 const EMPTY_GOALS: Goal[] = [
   {
     id: "emergency",
@@ -142,16 +192,6 @@ const EMPTY_GOALS: Goal[] = [
     saved: 0,
     due: monthsFromNow(12),
   },
-];
-
-/** Eating-out spend over the last 6 months — trending up. */
-export const DEMO_EATING_OUT = [
-  { month: "May", amount: 3200 },
-  { month: "Jun", amount: 3900 },
-  { month: "Jul", amount: 4400 },
-  { month: "Aug", amount: 5100 },
-  { month: "Sep", amount: 5800 },
-  { month: "Oct", amount: 6950 },
 ];
 
 export type Mode = "demo" | "own";
@@ -191,7 +231,9 @@ function load(): Saved {
   try {
     const raw = localStorage.getItem(STORAGE_KEY);
     if (!raw) return EMPTY;
-    const saved = { ...EMPTY, ...(JSON.parse(raw) as Partial<Saved>) };
+    const parsed = JSON.parse(raw) as Partial<Saved>;
+    // Fields added in later versions (like budgets) get their defaults.
+    const saved = { ...EMPTY, ...parsed, profile: { ...EMPTY_PROFILE, ...parsed.profile } };
     // Data saved before the 18 categories used names like "Food" and "Bills".
     return {
       ...saved,

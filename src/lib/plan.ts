@@ -1,4 +1,4 @@
-import { isSaving } from "./categories";
+import { isSaving, type Category } from "./categories";
 import { formatINR } from "./format";
 import { yearlyCost, type Recurring } from "./recurring";
 import type { Transaction } from "./store";
@@ -18,6 +18,8 @@ export interface Profile {
   emergencyMonths: number;
   /** Fixed costs Munshi can't see in transactions, e.g. an EMI paid from another account. */
   extraFixedCosts: FixedCost[];
+  /** Optional monthly limits; nudges compare against these, else against the usual spend. */
+  budgets: Partial<Record<Category, number>>;
 }
 
 export interface Goal {

@@ -81,6 +81,20 @@ export function isFixed(c: Category) {
   return CATEGORY_INFO[c].group === "Commitments";
 }
 
+/**
+ * Spends you can reasonably cut back on. Essentials like groceries and transport can drift,
+ * but Munshi never suggests cutting health spending, and bills aren't a "drift".
+ */
+export function isFlexible(c: Category) {
+  const { group } = CATEGORY_INFO[c];
+  return group === "Lifestyle" || c === "Groceries" || c === "Transport";
+}
+
+/** Lifestyle spends: the first place to look when cutting back. */
+export function isLifestyle(c: Category) {
+  return CATEGORY_INFO[c].group === "Lifestyle";
+}
+
 /** Money moved into savings or investments isn't spending. */
 export function isSaving(c: Category) {
   return c === "Savings & Investments";
