@@ -15,7 +15,7 @@ export function Onboarding() {
       <div className="relative mx-auto flex max-w-5xl flex-col px-5 py-8 sm:px-8">
         <div className="flex items-center gap-2.5">
           <div className="grid size-8 place-items-center rounded-xl bg-primary font-bold text-primary-foreground">₹</div>
-          <span className="text-lg font-semibold tracking-tight">Pesa Pilot</span>
+          <span className="text-lg font-semibold tracking-tight">Munshi AI</span>
         </div>
 
         <section className="mx-auto mt-20 max-w-3xl text-center animate-in fade-in slide-in-from-bottom-4 duration-700 sm:mt-28">
@@ -26,7 +26,7 @@ export function Onboarding() {
             Talk to your <span className="text-primary">money.</span>
           </h1>
           <p className="mx-auto mt-6 max-w-xl text-lg leading-relaxed text-muted-foreground">
-            Say what you spent the way you'd tell a friend. Pesa Pilot keeps the books and tells you what to do next.
+            Say what you spent the way you'd tell a friend. Munshi AI keeps the books and tells you what to do next.
           </p>
           <div className="mt-10 flex flex-col items-center justify-center gap-3 sm:flex-row">
             <button

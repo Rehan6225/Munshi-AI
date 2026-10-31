@@ -13,9 +13,9 @@ import { StatusBadge } from "@/components/status-badge";
 export const Route = createFileRoute("/")({
   head: () => ({
     meta: [
-      { title: "Dashboard — Pesa Pilot" },
+      { title: "Dashboard — Munshi AI" },
       { name: "description", content: "Your month at a glance: spend, savings rate, emergency fund and goals in ₹." },
-      { property: "og:title", content: "Dashboard — Pesa Pilot" },
+      { property: "og:title", content: "Dashboard — Munshi AI" },
       { property: "og:description", content: "Your month at a glance: spend, savings rate, emergency fund and goals in ₹." },
     ],
   }),
@@ -50,7 +50,7 @@ function Dashboard() {
     return (
       <>
         <PageHeader title="Namaste 👋" />
-        <EmptyState icon={Receipt} title="Nothing logged yet" text="Type or dictate your first spend in the bar below — or load the demo to see Pesa Pilot in action." />
+        <EmptyState icon={Receipt} title="Nothing logged yet" text="Type or dictate your first spend in the bar below — or load the demo to see Munshi AI in action." />
       </>
     );
   }

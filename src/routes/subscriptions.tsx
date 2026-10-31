@@ -10,9 +10,9 @@ import { cn } from "@/lib/utils";
 export const Route = createFileRoute("/subscriptions")({
   head: () => ({
     meta: [
-      { title: "Subscriptions — Pesa Pilot" },
+      { title: "Subscriptions — Munshi AI" },
       { name: "description", content: "All your recurring payments and upcoming renewals in one place." },
-      { property: "og:title", content: "Subscriptions — Pesa Pilot" },
+      { property: "og:title", content: "Subscriptions — Munshi AI" },
       { property: "og:description", content: "All your recurring payments and upcoming renewals in one place." },
     ],
   }),

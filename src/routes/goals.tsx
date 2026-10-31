@@ -10,9 +10,9 @@ import { formatINR } from "@/lib/format";
 export const Route = createFileRoute("/goals")({
   head: () => ({
     meta: [
-      { title: "Goals — Pesa Pilot" },
+      { title: "Goals — Munshi AI" },
       { name: "description", content: "Track savings goals from a Goa trip to your emergency fund." },
-      { property: "og:title", content: "Goals — Pesa Pilot" },
+      { property: "og:title", content: "Goals — Munshi AI" },
       { property: "og:description", content: "Track savings goals from a Goa trip to your emergency fund." },
     ],
   }),

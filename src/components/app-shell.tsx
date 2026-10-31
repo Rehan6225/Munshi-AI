@@ -28,7 +28,7 @@ function AppSidebar() {
       <SidebarHeader className="px-4 py-5">
         <div className="flex items-center gap-2.5">
           <div className="grid size-8 shrink-0 place-items-center rounded-xl bg-primary font-bold text-primary-foreground">₹</div>
-          <span className="text-lg font-semibold tracking-tight group-data-[collapsible=icon]:hidden">Pesa Pilot</span>
+          <span className="text-lg font-semibold tracking-tight group-data-[collapsible=icon]:hidden">Munshi AI</span>
         </div>
       </SidebarHeader>
       <SidebarContent>
@@ -78,7 +78,7 @@ export function AppShell({ children }: { children: ReactNode }) {
         <div className="relative flex min-w-0 flex-1 flex-col">
           <header className="flex h-14 items-center gap-2 px-4 md:px-8">
             <SidebarTrigger />
-            <span className="font-semibold tracking-tight md:hidden">Pesa Pilot</span>
+            <span className="font-semibold tracking-tight md:hidden">Munshi AI</span>
           </header>
           <main className="flex-1 px-4 pb-12 md:px-8">
             <div key={path} className="mx-auto max-w-6xl animate-in fade-in slide-in-from-bottom-2 duration-500">{children}</div>

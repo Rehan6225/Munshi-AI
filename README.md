@@ -116,11 +116,3 @@ src/
 **The Product Space AI Hackathon**, problem statement **04: Personal Finance Coach with a Living Money Model**.
 
 The whole app was built **by voice**: every prompt, spec and fix was dictated with **Wispr Flow**.
-
----
-
-<div align="center">
-
-Made with ☕ and a lot of talking by **[Rehan Singh](https://github.com/Rehan6225)**
-
-</div>

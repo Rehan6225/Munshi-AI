@@ -59,7 +59,7 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
     meta: [
       { charSet: "utf-8" },
       { name: "viewport", content: "width=device-width, initial-scale=1" },
-      { title: "Pesa Pilot — Your personal finance coach" },
+      { title: "Munshi AI — Your personal finance coach" },
       { name: "description", content: "Track spends, savings and goals in rupees with a voice-first finance coach." },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary_large_image" },

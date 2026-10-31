@@ -93,7 +93,7 @@ interface Ctx {
   reset: () => void;
 }
 const StoreCtx = createContext<Ctx | null>(null);
-const KEY = "pesa-pilot-demo";
+const KEY = "munshi-ai-demo";
 
 export function StoreProvider({ children }: { children: ReactNode }) {
   const [hydrated, setHydrated] = useState(false);

@@ -4,9 +4,9 @@ import { PageHeader } from "@/components/app-shell";
 export const Route = createFileRoute("/what-if")({
   head: () => ({
     meta: [
-      { title: "What If — Pesa Pilot" },
+      { title: "What If — Munshi AI" },
       { name: "description", content: "Play out scenarios like a raise, a new EMI or cutting food delivery." },
-      { property: "og:title", content: "What If — Pesa Pilot" },
+      { property: "og:title", content: "What If — Munshi AI" },
       { property: "og:description", content: "Play out scenarios like a raise, a new EMI or cutting food delivery." },
     ],
   }),

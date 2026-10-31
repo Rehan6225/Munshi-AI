@@ -4,9 +4,9 @@ import { PageHeader } from "@/components/app-shell";
 export const Route = createFileRoute("/coach")({
   head: () => ({
     meta: [
-      { title: "Coach — Pesa Pilot" },
+      { title: "Coach — Munshi AI" },
       { name: "description", content: "Ask your finance coach anything about your money." },
-      { property: "og:title", content: "Coach — Pesa Pilot" },
+      { property: "og:title", content: "Coach — Munshi AI" },
       { property: "og:description", content: "Ask your finance coach anything about your money." },
     ],
   }),
