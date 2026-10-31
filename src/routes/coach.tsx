@@ -7,6 +7,7 @@ import { askCoach } from "@/lib/coach.functions";
 import { answerLocally, buildSnapshot } from "@/lib/coach";
 import { asksForSecurities, guardrailAnswer } from "@/lib/guardrails";
 import { speak } from "@/lib/speech";
+import { spokenEnglish } from "@/lib/spoken-english";
 import { useStore } from "@/lib/store";
 import { cn } from "@/lib/utils";
 
@@ -147,7 +148,10 @@ function Page() {
                   <div className="mt-2 flex items-center gap-2 text-[11px] text-muted-foreground">
                     <SourceBadge source={m.source} />
                     <button
-                      onClick={() => speak(m.text, { force: true })}
+                      onClick={() =>
+                        // English answer, so numbers are spoken as English words too.
+                        speak({ text: m.text, hindi: spokenEnglish(m.text) }, { force: true })
+                      }
                       aria-label="Read this answer aloud"
                       className="grid size-6 place-items-center rounded-md transition hover:bg-secondary hover:text-foreground"
                     >
