@@ -1,11 +1,14 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { Cell, Pie, PieChart, ResponsiveContainer, Tooltip } from "recharts";
-import { Lightbulb, TrendingDown, Repeat, PiggyBank } from "lucide-react";
+import { Lightbulb, TrendingUp, Repeat, ShieldAlert, Tag, Receipt } from "lucide-react";
 import { PageHeader } from "@/components/app-shell";
-import { PROFILE, useStore } from "@/lib/store";
+import { DEMO_EATING_OUT, MONTHLY_INCOME, useStore } from "@/lib/store";
 import { formatINR, formatINRShort } from "@/lib/format";
 import { Progress } from "@/components/ui/progress";
+import { Skeleton } from "@/components/ui/skeleton";
 import { TxList } from "@/components/tx-list";
+import { CardSkeletons, EmptyState, ListSkeleton } from "@/components/states";
+import { StatusBadge } from "@/components/status-badge";
 
 export const Route = createFileRoute("/")({
   head: () => ({
@@ -22,18 +25,46 @@ export const Route = createFileRoute("/")({
 const COLORS = ["var(--chart-1)", "var(--chart-2)", "var(--chart-3)", "var(--chart-4)", "var(--chart-5)", "var(--muted-foreground)", "var(--secondary)"];
 
 function Dashboard() {
-  const { transactions } = useStore();
+  const { hydrated, transactions, subscriptions, goals } = useStore();
   const now = new Date();
+
+  if (!hydrated) {
+    return (
+      <>
+        <div className="mb-8 space-y-2">
+          <Skeleton className="h-8 w-48" />
+          <Skeleton className="h-4 w-32" />
+        </div>
+        <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-4">
+          <CardSkeletons />
+        </div>
+        <div className="mt-5 grid gap-5 lg:grid-cols-5">
+          <div className="card-soft h-80 lg:col-span-3" />
+          <div className="card-soft h-80 p-6 lg:col-span-2"><ListSkeleton rows={3} /></div>
+        </div>
+      </>
+    );
+  }
+
+  if (transactions.length === 0) {
+    return (
+      <>
+        <PageHeader title="Namaste 👋" />
+        <EmptyState icon={Receipt} title="Nothing logged yet" text="Type or dictate your first spend in the bar below — or load the demo to see Pesa Pilot in action." />
+      </>
+    );
+  }
+
   const month = transactions.filter((t) => {
     const d = new Date(t.date);
     return d.getMonth() === now.getMonth() && d.getFullYear() === now.getFullYear();
   });
   const spend = month.reduce((s, t) => s + t.amount, 0);
-  const savingsRate = Math.max(0, Math.round(((PROFILE.monthlyIncome - spend) / PROFILE.monthlyIncome) * 100));
-  const ef = PROFILE.emergencyFund;
-  const efPct = Math.round((ef.saved / ef.target) * 100);
-  const goal = PROFILE.goals[0]!;
-  const goalPct = Math.round((goal.saved / goal.target) * 100);
+  const savingsRate = Math.max(0, Math.round(((MONTHLY_INCOME - spend) / MONTHLY_INCOME) * 100));
+  const ef = goals.find((g) => g.name === "Emergency fund");
+  const efPct = ef ? Math.round((ef.saved / ef.target) * 100) : 0;
+  const goal = goals.find((g) => g !== ef);
+  const goalPct = goal ? Math.round((goal.saved / goal.target) * 100) : 0;
 
   const byCat = Object.entries(
     month.reduce<Record<string, number>>((acc, t) => ((acc[t.category] = (acc[t.category] ?? 0) + t.amount), acc), {}),
@@ -41,44 +72,58 @@ function Dashboard() {
     .map(([name, value]) => ({ name, value }))
     .sort((a, b) => b.value - a.value);
 
-  const food = byCat.find((c) => c.name === "Food")?.value ?? 0;
+  const hotstar = subscriptions.find((s) => s.flag === "forgotten");
+  const netflix = subscriptions.find((s) => s.flag === "price-hike");
+  const miscat = transactions.find((t) => t.suggestedCategory);
+  const eo = DEMO_EATING_OUT;
+  const eoFirst = eo[0]!.amount;
+  const eoLast = eo[eo.length - 1]!.amount;
   const nudges = [
-    { icon: TrendingDown, text: `Food delivery is at ${formatINR(food)} this month. Cooking twice a week could save ~${formatINR(food * 0.3)}.` },
-    { icon: Repeat, text: "Cult.fit renews on 18 Nov — you checked in only twice last month." },
-    { icon: PiggyBank, text: `Move ${formatINR(5000)} to your emergency fund to hit ${efPct + 2}% this week.` },
-  ];
+    { icon: TrendingUp, text: `Eating out is up ${Math.round(((eoLast - eoFirst) / eoFirst) * 100)}% since May — ${formatINR(eoLast)} this month.`, to: "/monthly-review" as const },
+    hotstar && { icon: Repeat, text: `${hotstar.name} renews ${hotstar.next}. You haven't watched in ${hotstar.lastUsed.replace(" ago", "")}.`, to: "/subscriptions" as const },
+    netflix && netflix.previousAmount && { icon: Repeat, text: `Netflix went from ${formatINR(netflix.previousAmount)} to ${formatINR(netflix.amount)}. That's ${formatINR((netflix.amount - netflix.previousAmount) * 12)} more a year.`, to: "/subscriptions" as const },
+    miscat && { icon: Tag, text: `A ${miscat.merchant} order was filed under ${miscat.category}. Fix it so your food spend is honest.`, to: "/transactions" as const },
+    ef?.status === "At risk" && { icon: ShieldAlert, text: `Emergency fund is at risk. ${ef.note}`, to: "/goals" as const },
+  ].filter(Boolean) as { icon: typeof Repeat; text: string; to: "/" }[];
 
   return (
     <>
       <PageHeader title="Namaste 👋" subtitle={now.toLocaleDateString("en-IN", { month: "long", year: "numeric" })} />
 
       <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-4">
-        <Stat label="This month's spend" value={formatINR(spend)} hint={`of ${formatINRShort(PROFILE.monthlyIncome)} income`} />
+        <Stat label="This month's spend" value={formatINR(spend)} hint={`of ${formatINRShort(MONTHLY_INCOME)} income`} />
         <Stat label="Savings rate" value={`${savingsRate}%`} hint="Target 30%" accent={savingsRate >= 30} />
-        <div className="card-soft p-6">
-          <p className="text-sm text-muted-foreground">Emergency fund</p>
-          <p className="mt-2 text-2xl font-semibold">{formatINRShort(ef.saved)}</p>
-          <Progress value={efPct} className="mt-4 h-1.5" />
-          <p className="mt-2 text-xs text-muted-foreground">{efPct}% of {formatINRShort(ef.target)}</p>
-        </div>
-        <Link to="/goals" className="card-soft p-6 transition hover:shadow-glow">
-          <p className="text-sm text-muted-foreground">Next goal</p>
-          <p className="mt-2 text-2xl font-semibold">{goal.name}</p>
-          <Progress value={goalPct} className="mt-4 h-1.5" />
-          <p className="mt-2 text-xs text-muted-foreground">
-            {formatINR(goal.saved)} / {formatINR(goal.target)} · {goal.due}
-          </p>
-        </Link>
+        {ef && (
+          <Link to="/goals" className="card-soft p-6 transition hover:shadow-glow">
+            <div className="flex items-center justify-between gap-2">
+              <p className="text-sm text-muted-foreground">Emergency fund</p>
+              <StatusBadge status={ef.status} />
+            </div>
+            <p className="mt-2 text-2xl font-semibold tabular-nums">{formatINRShort(ef.saved)}</p>
+            <Progress value={efPct} className="mt-4 h-1.5" />
+            <p className="mt-2 text-xs text-muted-foreground">{efPct}% of {formatINRShort(ef.target)}</p>
+          </Link>
+        )}
+        {goal && (
+          <Link to="/goals" className="card-soft p-6 transition hover:shadow-glow">
+            <p className="text-sm text-muted-foreground">Next goal</p>
+            <p className="mt-2 truncate text-2xl font-semibold">{goal.name}</p>
+            <Progress value={goalPct} className="mt-4 h-1.5" />
+            <p className="mt-2 text-xs text-muted-foreground">
+              {formatINR(goal.saved)} / {formatINR(goal.target)} · {goal.due}
+            </p>
+          </Link>
+        )}
       </div>
 
       <div className="mt-5 grid gap-5 lg:grid-cols-5">
-        <section className="card-soft p-6 lg:col-span-3">
+        <section className="card-soft min-w-0 p-6 lg:col-span-3">
           <h2 className="font-semibold">Spending by category</h2>
           <div className="mt-4 flex flex-col items-center gap-6 sm:flex-row">
-            <div className="relative h-56 w-56 shrink-0">
+            <div className="relative size-52 shrink-0 sm:size-56">
               <ResponsiveContainer width="100%" height="100%">
                 <PieChart>
-                  <Pie data={byCat} dataKey="value" innerRadius={70} outerRadius={100} paddingAngle={3} stroke="none">
+                  <Pie data={byCat} dataKey="value" innerRadius="70%" outerRadius="100%" paddingAngle={3} stroke="none">
                     {byCat.map((_, i) => (
                       <Cell key={i} fill={COLORS[i % COLORS.length]} />
                     ))}
@@ -99,27 +144,34 @@ function Dashboard() {
             </div>
             <ul className="w-full space-y-2.5">
               {byCat.map((c, i) => (
-                <li key={c.name} className="flex items-center justify-between text-sm">
-                  <span className="flex items-center gap-2.5">
-                    <span className="size-2.5 rounded-full" style={{ background: COLORS[i % COLORS.length] }} />
-                    {c.name}
+                <li key={c.name} className="flex items-center justify-between gap-3 text-sm">
+                  <span className="flex min-w-0 items-center gap-2.5">
+                    <span className="size-2.5 shrink-0 rounded-full" style={{ background: COLORS[i % COLORS.length] }} />
+                    <span className="truncate">{c.name}</span>
                   </span>
-                  <span className="tabular-nums text-muted-foreground">{formatINR(c.value)}</span>
+                  <span className="shrink-0 tabular-nums text-muted-foreground">{formatINR(c.value)}</span>
                 </li>
               ))}
             </ul>
           </div>
         </section>
 
-        <section className="card-soft p-6 lg:col-span-2">
+        <section className="card-soft min-w-0 p-6 lg:col-span-2">
           <h2 className="flex items-center gap-2 font-semibold">
             <Lightbulb className="size-4 text-primary" /> Nudges
+            <span className="ml-auto rounded-full bg-accent px-2 py-0.5 text-xs text-accent-foreground">{nudges.length}</span>
           </h2>
           <ul className="mt-4 space-y-3">
             {nudges.map((n, i) => (
-              <li key={i} className="flex gap-3 rounded-xl bg-secondary/60 p-4 text-sm leading-relaxed">
-                <n.icon className="mt-0.5 size-4 shrink-0 text-primary" />
-                {n.text}
+              <li key={i}>
+                <Link
+                  to={n.to}
+                  className="flex gap-3 rounded-xl bg-secondary/60 p-4 text-sm leading-relaxed transition hover:bg-secondary animate-in fade-in slide-in-from-right-2 fill-mode-both duration-500"
+                  style={{ animationDelay: `${i * 80}ms` }}
+                >
+                  <n.icon className="mt-0.5 size-4 shrink-0 text-primary" />
+                  {n.text}
+                </Link>
               </li>
             ))}
           </ul>
@@ -148,4 +200,3 @@ function Stat({ label, value, hint, accent }: { label: string; value: string; hi
     </div>
   );
 }
-
