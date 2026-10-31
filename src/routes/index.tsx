@@ -84,7 +84,7 @@ function Dashboard() {
     netflix && netflix.previousAmount && { icon: Repeat, text: `Netflix went from ${formatINR(netflix.previousAmount)} to ${formatINR(netflix.amount)}. That's ${formatINR((netflix.amount - netflix.previousAmount) * 12)} more a year.`, to: "/subscriptions" as const },
     miscat && { icon: Tag, text: `A ${miscat.merchant} order was filed under ${miscat.category}. Fix it so your food spend is honest.`, to: "/transactions" as const },
     ef?.status === "At risk" && { icon: ShieldAlert, text: `Emergency fund is at risk. ${ef.note}`, to: "/goals" as const },
-  ].filter(Boolean) as { icon: typeof Repeat; text: string; to: "/" }[];
+  ].filter(Boolean) as unknown as { icon: typeof Repeat; text: string; to: "/" }[];
 
   return (
     <>

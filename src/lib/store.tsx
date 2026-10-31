@@ -10,7 +10,7 @@ export interface Transaction {
   date: string; // ISO
   note?: string;
   /** Category the coach thinks is correct, if the current one looks wrong. */
-  suggestedCategory?: Category;
+  suggestedCategory?: Category | undefined;
 }
 
 export interface Subscription {
