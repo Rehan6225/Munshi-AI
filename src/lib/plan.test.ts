@@ -43,6 +43,7 @@ describe("fixedCosts", () => {
       income: 0,
       emergencyMonths: 6,
       extraFixedCosts: [{ id: "emi", name: "Car EMI", amount: 8000 }],
+      budgets: {},
     });
     // Netflix is a subscription, not a fixed cost.
     expect(items.map((i) => i.name)).toEqual(["House rent", "Car EMI"]);

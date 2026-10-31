@@ -28,6 +28,7 @@ describe("store: correction loop", () => {
 
   it("learns a rule, refiles the past and categorises the future", async () => {
     const { result } = await demoStore();
+    const orders = swiggy(result.current).length;
 
     let changed = 0;
     act(() => {
@@ -39,7 +40,7 @@ describe("store: correction loop", () => {
     );
     expect(result.current.suggestions.size).toBe(0);
     expect(result.current.rules).toMatchObject([
-      { merchant: "Swiggy", category: "Food & Dining", applied: 3 },
+      { merchant: "Swiggy", category: "Food & Dining", applied: orders },
     ]);
 
     // A new spend the parser guessed wrong gets fixed by the rule.
@@ -54,7 +55,7 @@ describe("store: correction loop", () => {
     });
     expect(added).toMatchObject({ category: "Food & Dining" });
     expect(added.ruleId).toBeTruthy();
-    expect(result.current.rules[0]!.applied).toBe(4);
+    expect(result.current.rules[0]!.applied).toBe(orders + 1);
   });
 
   it("forgetting a rule keeps categories but drops the learned badge", async () => {

@@ -20,7 +20,7 @@ const netflix = {
   cycle: "Monthly",
   amount: 649,
 } as Recurring;
-const profile = { income: 50000, emergencyMonths: 6, extraFixedCosts: [] };
+const profile = { income: 50000, emergencyMonths: 6, extraFixedCosts: [], budgets: {} };
 
 describe("buildBaseline", () => {
   it("uses the last 30 days, keeps recurring payments apart and counts SIPs as saving", () => {

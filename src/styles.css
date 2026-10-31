@@ -104,3 +104,26 @@
   border: 1px solid var(--color-border);
   box-shadow: var(--shadow-soft);
 }
+
+/* "Save as PDF" on Monthly Review: print on white paper with dark text. */
+@media print {
+  :root {
+    --background: oklch(1 0 0);
+    --foreground: oklch(0.2 0.01 160);
+    --card: oklch(1 0 0);
+    --popover: oklch(1 0 0);
+    --secondary: oklch(0.96 0.005 160);
+    --muted-foreground: oklch(0.45 0.01 160);
+    --accent: oklch(0.95 0.03 158);
+    --accent-foreground: oklch(0.35 0.1 158);
+    --primary: oklch(0.55 0.15 158);
+    --border: oklch(0 0 0 / 12%);
+  }
+  body {
+    background: var(--background);
+  }
+  .card-soft {
+    box-shadow: none;
+    break-inside: avoid;
+  }
+}

@@ -15,9 +15,10 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { DEMO_EATING_OUT, useStore } from "@/lib/store";
+import { useStore } from "@/lib/store";
 import { formatINR } from "@/lib/format";
 import { buildMonthReport, monthLabel, monthsWithData } from "@/lib/report";
+import { shiftMonth, totalsByMonth } from "@/lib/review";
 import { cn } from "@/lib/utils";
 
 export const Route = createFileRoute("/monthly-review")({
@@ -117,8 +118,23 @@ function Review() {
   };
 
   const maxCat = Math.max(...report.categories.map((c) => c.amount), 1);
-  const eoFirst = DEMO_EATING_OUT[0]!.amount;
-  const eoLast = DEMO_EATING_OUT.at(-1)!.amount;
+  // Eating out over the 6 months up to this one, from the transactions themselves.
+  const eatingOut = useMemo(() => {
+    const totals = totalsByMonth(transactions);
+    return [-5, -4, -3, -2, -1, 0].map((i) => {
+      const m = shiftMonth(month, i);
+      return {
+        label: monthLabel(m, "short"),
+        amount: totals.get(m)?.byCategory.get("Food & Dining") ?? 0,
+      };
+    });
+  }, [transactions, month]);
+  const eoMonths = eatingOut.filter((e) => e.amount > 0);
+  const eoFirst = eoMonths[0];
+  const eoLast = eatingOut.at(-1)!;
+  const eoChange = eoFirst
+    ? Math.round(((eoLast.amount - eoFirst.amount) / eoFirst.amount) * 100)
+    : 0;
 
   return (
     <>
@@ -321,18 +337,22 @@ function Review() {
         </section>
       )}
 
-      {mode === "demo" && (
+      {eoFirst && eoMonths.length >= 3 && (
         <section className="card-soft mt-5 p-6">
-          <h2 className="font-semibold">Eating out is trending up</h2>
+          <h2 className="font-semibold">
+            Eating out is{" "}
+            {eoChange >= 10 ? "trending up" : eoChange <= -10 ? "trending down" : "holding steady"}
+          </h2>
           <p className="mt-1 text-sm text-muted-foreground">
-            {formatINR(eoFirst)} in May → {formatINR(eoLast)} in October (+
-            {Math.round(((eoLast - eoFirst) / eoFirst) * 100)}%).
+            {formatINR(eoFirst.amount)} in {eoFirst.label} → {formatINR(eoLast.amount)} in{" "}
+            {eoLast.label} ({eoChange >= 0 ? "+" : ""}
+            {eoChange}%).
           </p>
           <div className="mt-6 h-64">
             <ResponsiveContainer width="100%" height="100%">
-              <BarChart data={DEMO_EATING_OUT}>
+              <BarChart data={eatingOut}>
                 <XAxis
-                  dataKey="month"
+                  dataKey="label"
                   axisLine={false}
                   tickLine={false}
                   tick={{ fill: "var(--muted-foreground)", fontSize: 12 }}

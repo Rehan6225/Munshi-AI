@@ -1,5 +1,5 @@
 import { Link, useRouterState } from "@tanstack/react-router";
-import { useState, type ReactNode } from "react";
+import { useEffect, useState, type ReactNode } from "react";
 import {
   LayoutDashboard,
   ArrowLeftRight,
@@ -25,6 +25,7 @@ import {
 import { MunshiAvatar } from "./munshi";
 import { VoiceBar } from "./voice-bar";
 import { Onboarding } from "./onboarding";
+import { stopSpeaking } from "@/lib/speech";
 import { useStore } from "@/lib/store";
 import { ArrowLeftRight as Swap, LogOut, Trash2 } from "lucide-react";
 import { ImportDialog } from "./import-dialog";
@@ -184,6 +185,10 @@ function DemoBadge() {
 export function AppShell({ children }: { children: ReactNode }) {
   const path = useRouterState({ select: (r) => r.location.pathname });
   const { hydrated, mode } = useStore();
+  // Leaving a page stops whatever Munshi was saying there (e.g. the dashboard summary).
+  useEffect(() => {
+    stopSpeaking();
+  }, [path]);
   // The landing page: always at /welcome, and at / until there's data to show.
   if (path === "/welcome" || (hydrated && !mode && path === "/")) return <Onboarding />;
   return (
@@ -206,7 +211,8 @@ export function AppShell({ children }: { children: ReactNode }) {
               {children}
             </div>
           </main>
-          <VoiceBar />
+          {/* The Coach page has its own question box. */}
+          {path !== "/coach" && <VoiceBar />}
         </div>
       </div>
       <IncomePrompt />

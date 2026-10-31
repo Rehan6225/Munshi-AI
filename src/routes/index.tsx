@@ -1,14 +1,14 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { Cell, Pie, PieChart, ResponsiveContainer, Tooltip } from "recharts";
-import { Lightbulb, TrendingUp, Repeat, ShieldAlert, Tag, Receipt } from "lucide-react";
+import { Lightbulb, TrendingUp, Repeat, ShieldAlert, Tag, Receipt, Wallet } from "lucide-react";
 import { useState } from "react";
 import { PageHeader } from "@/components/app-shell";
 import { MunshiAvatar } from "@/components/munshi";
 import { dailySummary, type Line } from "@/lib/munshi";
 import { speak, useSpeech } from "@/lib/speech";
-import { DEMO_EATING_OUT, useStore } from "@/lib/store";
+import { useStore } from "@/lib/store";
+import { buildNudges, type NudgeKind } from "@/lib/nudges";
 import { isSaving } from "@/lib/categories";
-import { daysSince, yearlyCost } from "@/lib/recurring";
 import { formatINR, formatINRShort } from "@/lib/format";
 import { Progress } from "@/components/ui/progress";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -43,6 +43,14 @@ const COLORS = [
   "var(--muted-foreground)",
   "var(--secondary)",
 ];
+
+const NUDGE_ICONS: Record<NudgeKind, typeof Repeat> = {
+  drift: TrendingUp,
+  budget: Wallet,
+  subscription: Repeat,
+  category: Tag,
+  goal: ShieldAlert,
+};
 
 function Dashboard() {
   const { hydrated, transactions, subscriptions, goals, profile, suggestions } = useStore();
@@ -109,48 +117,13 @@ function Dashboard() {
     .map(([name, value]) => ({ name, value }))
     .sort((a, b) => b.value - a.value);
 
-  const unused = subscriptions.find((s) => s.alerts.includes("unused"));
-  const hike = subscriptions.find((s) => s.alerts.includes("price-up"));
-  const fresh = subscriptions.find((s) => s.alerts.includes("new"));
-  const renews = (iso: string) =>
-    new Date(iso).toLocaleDateString("en-IN", { day: "numeric", month: "short" });
-  const miscat = transactions.find((t) => suggestions.has(t.id));
-  const eo = DEMO_EATING_OUT;
-  const eoFirst = eo[0]!.amount;
-  const eoLast = eo[eo.length - 1]!.amount;
-  const nudges = [
-    {
-      icon: TrendingUp,
-      text: `Eating out is up ${Math.round(((eoLast - eoFirst) / eoFirst) * 100)}% since May — ${formatINR(eoLast)} this month.`,
-      to: "/monthly-review" as const,
-    },
-    unused && {
-      icon: Repeat,
-      text: `${unused.name} renews ${renews(unused.next)}${unused.lastUsed ? `. You haven't used it in ${daysSince(unused.lastUsed)} days` : ", and you said you don't use it"}. Cancel to save ${formatINR(yearlyCost(unused))} a year.`,
-      to: "/subscriptions" as const,
-    },
-    hike &&
-      hike.previousAmount && {
-        icon: Repeat,
-        text: `${hike.name} went from ${formatINR(hike.previousAmount)} to ${formatINR(hike.amount)}. That's ${formatINR(yearlyCost({ ...hike, amount: hike.amount - hike.previousAmount }))} more a year.`,
-        to: "/subscriptions" as const,
-      },
-    fresh && {
-      icon: Repeat,
-      text: `New autopay: ${fresh.name} at ${formatINR(fresh.amount)}/${fresh.cycle === "Yearly" ? "year" : "month"}. Did you mean to sign up?`,
-      to: "/subscriptions" as const,
-    },
-    miscat && {
-      icon: Tag,
-      text: `A ${miscat.merchant} spend is under ${miscat.category}, but you usually file it as ${suggestions.get(miscat.id)}. Fix it so your numbers stay honest.`,
-      to: "/transactions" as const,
-    },
-    ef?.status === "At risk" && {
-      icon: ShieldAlert,
-      text: `Emergency fund is at risk. ${ef.note}`,
-      to: "/goals" as const,
-    },
-  ].filter(Boolean) as unknown as { icon: typeof Repeat; text: string; to: "/" }[];
+  const nudges = buildNudges({
+    transactions,
+    subscriptions,
+    suggestions,
+    goals,
+    budgets: profile.budgets,
+  });
 
   return (
     <>
@@ -263,18 +236,21 @@ function Dashboard() {
             </span>
           </h2>
           <ul className="mt-4 space-y-3">
-            {nudges.map((n, i) => (
-              <li key={i}>
-                <Link
-                  to={n.to}
-                  className="flex gap-3 rounded-xl bg-secondary/60 p-4 text-sm leading-relaxed transition hover:bg-secondary animate-in fade-in slide-in-from-right-2 fill-mode-both duration-500"
-                  style={{ animationDelay: `${i * 80}ms` }}
-                >
-                  <n.icon className="mt-0.5 size-4 shrink-0 text-primary" />
-                  {n.text}
-                </Link>
-              </li>
-            ))}
+            {nudges.map((n, i) => {
+              const Icon = NUDGE_ICONS[n.kind];
+              return (
+                <li key={i}>
+                  <Link
+                    to={n.to}
+                    className="flex gap-3 rounded-xl bg-secondary/60 p-4 text-sm leading-relaxed transition hover:bg-secondary animate-in fade-in slide-in-from-right-2 fill-mode-both duration-500"
+                    style={{ animationDelay: `${i * 80}ms` }}
+                  >
+                    <Icon className="mt-0.5 size-4 shrink-0 text-primary" />
+                    {n.text}
+                  </Link>
+                </li>
+              );
+            })}
           </ul>
         </section>
       </div>

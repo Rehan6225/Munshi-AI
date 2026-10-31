@@ -7,6 +7,8 @@ import { StatusBadge } from "@/components/status-badge";
 import { Input } from "@/components/ui/input";
 import { useStore } from "@/lib/store";
 import { formatINR } from "@/lib/format";
+import { CATEGORIES, CATEGORY_INFO, isFlexible, type Category } from "@/lib/categories";
+import { monthKey, totalsByMonth, usualSpend } from "@/lib/review";
 
 export const Route = createFileRoute("/profile")({
   head: () => ({
@@ -32,6 +34,7 @@ const fromMonth = (v: string) => (v ? new Date(`${v}-01T00:00:00`).toISOString()
 function Page() {
   const {
     hydrated,
+    transactions,
     profile,
     spend,
     invested,
@@ -126,6 +129,17 @@ function Page() {
         </Card>
       </div>
 
+      <Budgets
+        budgets={profile.budgets}
+        usual={(c) => usualSpend(totalsByMonth(transactions), monthKey(new Date()), c)}
+        onChange={(c, amount) => {
+          const budgets = { ...profile.budgets };
+          if (amount > 0) budgets[c] = amount;
+          else delete budgets[c];
+          updateProfile({ budgets });
+        }}
+      />
+
       <section className="mt-8">
         <div className="mb-4 flex items-center justify-between">
           <h2 className="text-lg font-semibold">Goals</h2>
@@ -205,6 +219,41 @@ function Page() {
   );
 }
 
+/** Optional monthly limits. Without one, nudges compare against what you usually spend. */
+function Budgets({
+  budgets,
+  usual,
+  onChange,
+}: {
+  budgets: Partial<Record<Category, number>>;
+  usual: (c: Category) => number;
+  onChange: (c: Category, amount: number) => void;
+}) {
+  return (
+    <section className="card-soft mt-5 p-6">
+      <h2 className="font-semibold">Monthly budgets</h2>
+      <p className="mb-4 mt-1 text-sm text-muted-foreground">
+        Optional. Munshi nudges you at 80% and when you go over. Left empty, he compares with what
+        you usually spend.
+      </p>
+      <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
+        {CATEGORIES.filter(isFlexible).map((c) => {
+          const typical = Math.round(usual(c));
+          return (
+            <Field key={c} label={`${CATEGORY_INFO[c].emoji} ${c}`}>
+              <AmountInput
+                value={budgets[c] ?? 0}
+                onChange={(amount) => onChange(c, amount)}
+                placeholder={typical ? `usual ${formatINR(typical)}` : "no limit"}
+              />
+            </Field>
+          );
+        })}
+      </div>
+    </section>
+  );
+}
+
 function Card({ title, hint, children }: { title: string; hint: string; children: ReactNode }) {
   return (
     <section className="card-soft p-6">
@@ -241,10 +290,12 @@ function AmountInput({
   value,
   onChange,
   className,
+  placeholder = "0",
 }: {
   value: number;
   onChange: (v: number) => void;
   className?: string;
+  placeholder?: string;
 }) {
   return (
     <div className={`relative ${className ?? ""}`}>
@@ -254,7 +305,7 @@ function AmountInput({
       <Input
         inputMode="numeric"
         value={value ? value.toLocaleString("en-IN") : ""}
-        placeholder="0"
+        placeholder={placeholder}
         onChange={(e) => onChange(toAmount(e.target.value))}
         className="pl-7 tabular-nums"
       />
