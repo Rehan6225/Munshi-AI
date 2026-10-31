@@ -1,0 +1,169 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 240 240" role="img" aria-labelledby="mjTitle">
+  <title id="mjTitle">Munshi Ji – cartoon accountant recording a transaction in her ledger</title>
+  <defs>
+    <linearGradient id="mjBg" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#14CA80"/><stop offset="1" stop-color="#047857"/>
+    </linearGradient>
+    <filter id="mjBlur" x="-20%" y="-20%" width="140%" height="140%"><feGaussianBlur stdDeviation="2.5"/></filter>
+    <clipPath id="mjClip"><circle cx="120" cy="120" r="118"/></clipPath>
+  </defs>
+  <style>
+    /* 10s cycle: write entry (0–28%) · ₹ (28–31%) · peer over glasses (34–55%) ·
+       glasses back up (55–58%) · two nods (60–74%) · grab corner and turn page (74–92%) · hand returns */
+    .mj-head,.mj-features,.mj-specs,.mj-brows,.mj-look,.mj-glint,.mj-ink,.mj-amount,.mj-content{transform-box:view-box}
+    .mj-head{transform-origin:120px 140px;animation:mj-head 10s ease-in-out infinite}
+    @keyframes mj-head{0%,30%{transform:translateY(0) rotate(0)}35%,53%{transform:translateY(2px) rotate(0)}58%{transform:translateY(0) rotate(0)}62%{transform:translateY(4px) rotate(-1deg)}66%{transform:translateY(0) rotate(0)}70%{transform:translateY(4px) rotate(1deg)}74%{transform:translateY(0) rotate(0)}80%,88%{transform:translateY(1px) rotate(-2deg)}94%,100%{transform:translateY(0) rotate(0)}}
+    .mj-features{animation:mj-features 10s ease-in-out infinite}
+    @keyframes mj-features{0%,30%,58%,66%,74%,100%{transform:translate(0,0)}35%,53%{transform:translate(0,1px)}62%,70%{transform:translate(0,2.5px)}80%,88%{transform:translate(-1.5px,1px)}94%{transform:translate(0,0)}}
+    .mj-specs{animation:mj-specs 10s ease-in-out infinite}
+    @keyframes mj-specs{0%,32%{transform:translateY(0)}38%,52%{transform:translateY(7px)}57%,100%{transform:translateY(0)}}
+    .mj-brows{animation:mj-brows 10s ease-in-out infinite}
+    @keyframes mj-brows{0%,34%{transform:translateY(0)}39%,52%{transform:translateY(-3px)}57%,100%{transform:translateY(0)}}
+    .mj-look{animation:mj-look 10s ease-in-out infinite}
+    @keyframes mj-look{0%,34%{transform:translate(0,0)}39%,52%{transform:translate(0,2px)}57%,76%{transform:translate(0,0)}80%,88%{transform:translate(-2px,1.5px)}93%,100%{transform:translate(0,0)}}
+    .mj-glint{opacity:0;animation:mj-glint 10s ease-in-out infinite}
+    @keyframes mj-glint{0%,56%{opacity:0}59%{opacity:.95}63%,100%{opacity:0}}
+    .mj-eye{transform-box:fill-box;transform-origin:center;animation:mj-blink 4.5s infinite}
+    @keyframes mj-blink{0%,92%,100%{transform:scaleY(1)}95%{transform:scaleY(.1)}}
+    .mj-ink{stroke-dasharray:32;stroke-dashoffset:32;animation:mj-ink 10s linear infinite}
+    @keyframes mj-ink{0%,3%{stroke-dashoffset:32}28%,100%{stroke-dashoffset:0}}
+    .mj-amount{opacity:0;animation:mj-amount 10s linear infinite}
+    @keyframes mj-amount{0%,28.5%{opacity:0}31%,100%{opacity:1}}
+    .mj-content{animation:mj-content 10s linear infinite}
+    @keyframes mj-content{0%,78%{opacity:1}79.5%,100%{opacity:0}}
+    @media (prefers-reduced-motion:reduce){
+      .mj-head,.mj-features,.mj-specs,.mj-brows,.mj-look,.mj-glint,.mj-eye,.mj-ink,.mj-amount,.mj-content{animation:none}
+      .mj-ink{stroke-dashoffset:0}.mj-amount{opacity:1}
+    }
+  </style>
+
+  <!-- Background (delete these two shapes for a transparent background) -->
+  <circle cx="120" cy="120" r="118" fill="url(#mjBg)"/>
+  <circle cx="120" cy="120" r="114" fill="none" stroke="#0B0F0C" stroke-opacity=".25" stroke-width="3"/>
+
+  <g clip-path="url(#mjClip)">
+  <!-- Body: black blouse, green saree pallu -->
+  <path d="M54 240C54 180 82 152 120 152C158 152 186 180 186 240Z" fill="#151A17"/>
+  <path d="M144 154C160 160 172 172 178 188L138 240L112 240Z" fill="#34D399"/>
+  <path d="M144 154C160 160 172 172 178 188L174 194C168 180 156 168 141 161Z" fill="#064E3B"/>
+  <path d="M112 240L138 240L141 236L115 236Z" fill="#064E3B"/>
+
+  <!-- Neck + necklace -->
+  <rect x="110" y="132" width="20" height="26" rx="8" fill="#C4825A"/>
+  <path d="M104 154Q120 170 136 154" fill="none" stroke="#E2B13C" stroke-width="3.2" stroke-linecap="round"/>
+  <circle cx="120" cy="164" r="4" fill="#E2B13C"/>
+
+  <!-- Desk (black with green edge) -->
+  <polygon points="34,188 206,188 222,220 18,220" fill="#1E2420"/>
+  <line x1="34" y1="188" x2="206" y2="188" stroke="#14CA80" stroke-width="2"/>
+  <rect x="18" y="220" width="204" height="20" fill="#0B0F0C"/>
+  <line x1="18" y1="220" x2="222" y2="220" stroke="#14CA80" stroke-width="2"/>
+
+  <!-- Ink pot -->
+  <path d="M190 192h14l2 12h-18z" fill="#0B0F0C" stroke="#2E3A33" stroke-width="1"/>
+  <rect x="193" y="187" width="8" height="6" rx="1.5" fill="#14CA80"/>
+
+  <!-- Ledger cover -->
+  <polygon points="48,180 192,180 198,216 42,216" fill="#064E3B"/>
+  <polygon points="48,180 192,180 193,184 47,184" fill="#047857"/>
+
+  <!-- Left page (static) -->
+  <polygon points="58,182 119,184 119,212 50,212" fill="#FFF6E0"/>
+  <g stroke="#E3C9A0" stroke-width="1.2">
+    <line x1="58" y1="190" x2="117" y2="191"/><line x1="56" y1="197" x2="117" y2="198"/><line x1="54" y1="204" x2="117" y2="205"/>
+  </g>
+  <g fill="none" stroke="#0B0F0C" stroke-width="2" stroke-linecap="round">
+    <path d="M62 188q4-3 8 0t8 0t8 0"/><path d="M60 195q4-3 8 0t8 0"/><path d="M58 202q4-3 8 0t8 0t8 0t8 0"/>
+  </g>
+  <g font-family="Arial, sans-serif" font-size="9" font-weight="700" fill="#047857">
+    <text x="99" y="191">₹</text><text x="99" y="198">₹</text><text x="99" y="205">₹</text>
+  </g>
+
+  <!-- Right page underneath (fresh) -->
+  <polygon points="121,184 182,182 190,212 121,212" fill="#FFF6E0"/>
+  <g stroke="#E3C9A0" stroke-width="1.2">
+    <line x1="123" y1="191" x2="183" y2="190"/><line x1="123" y1="198" x2="185" y2="197"/><line x1="123" y1="205" x2="187" y2="204"/>
+  </g>
+
+  <!-- Shadow cast by the turning page -->
+  <path d="M120 184 L182 183 L190 212 L120 212Z" fill="#0B0F0C" opacity="0" filter="url(#mjBlur)">
+    <animate attributeName="d" dur="10s" repeatCount="indefinite" calcMode="linear" keyTimes="0;0.78;0.785;0.79;0.795;0.8;0.805;0.81;0.815;0.82;0.825;0.83;0.835;0.84;0.845;0.85;0.855;0.86;0.865;0.87;0.875;0.88;0.885;0.89;0.895;0.9;0.905;0.91;0.915;0.92;0.925;0.93;0.935;0.94;0.945;0.95;0.955;0.96;0.965;0.97;1" values="M120 184 L182 183 L190 212 L120 212Z;M120 184 L182 183 L190 212 L120 212Z;M120 184 L181.99 183 L189.95 212 L120 212Z;M120 184 L181.94 183 L189.48 212 L120 212Z;M120 184 L181.83 183 L188.52 212 L120 212Z;M120 184 L181.76 183 L187.92 212 L120 212Z;M120 184 L181.4 183 L186.43 212 L120 212Z;M120 184 L180.03 183 L181.81 212 L120 212Z;M120 184 L177.87 183 L175.44 212 L120 212Z;M120 184 L176.64 183 L172.02 212 L120 212Z;M120 184 L174.55 183 L167.46 212 L120 212Z;M120 184 L168.86 183 L156.05 212 L120 212Z;M120 184 L161.79 183 L143.15 212 L120 212Z;M120 184 L158.17 183 L136.93 212 L120 212Z;M120 184 L154.05 183 L131.7 212 L120 212Z;M120 184 L144.23 183 L120 212 L120 212Z;M120 184 L133.62 183 L108.3 212 L120 212Z;M120 184 L128.63 183 L103.07 212 L120 212Z;M120 184 L123.93 183 L98.67 212 L120 212Z;M120 184 L112.68 183 L88.58 212 L120 212Z;M120 184 L99.59 183 L77.55 212 L120 212Z;M120 184 L89.35 183 L69.43 212 L120 212Z;M120 184 L85.33 183 L66.38 212 L120 212Z;M120 184 L79.68 183 L62.66 212 L120 212Z;M120 184 L69.21 183 L56.05 212 L120 212Z;M120 184 L61.95 183 L51.79 212 L120 212Z;M120 184 L59.84 183 L50.68 212 L120 212Z;M120 184 L58.46 183 L50.17 212 L120 212Z;M120 184 L58 183 L50 212 L120 212Z;M120 184 L58 183 L50 212 L120 212Z;M120 184 L58 183 L50 212 L120 212Z;M120 184 L58 183 L50 212 L120 212Z;M120 184 L58 183 L50 212 L120 212Z;M120 184 L58 183 L50 212 L120 212Z;M120 184 L58 183 L50 212 L120 212Z;M120 184 L58 183 L50 212 L120 212Z;M120 184 L58 183 L50 212 L120 212Z;M120 184 L58 183 L50 212 L120 212Z;M120 184 L58 183 L50 212 L120 212Z;M120 184 L58 183 L50 212 L120 212Z;M120 184 L58 183 L50 212 L120 212Z"/>
+    <animate attributeName="opacity" dur="10s" repeatCount="indefinite" calcMode="linear" keyTimes="0;0.78;0.785;0.79;0.795;0.8;0.805;0.81;0.815;0.82;0.825;0.83;0.835;0.84;0.845;0.85;0.855;0.86;0.865;0.87;0.875;0.88;0.885;0.89;0.895;0.9;0.905;0.91;0.915;0.92;0.925;0.93;0.935;0.94;0.945;0.95;0.955;0.96;0.965;0.97;1" values="0;0;0.01;0.02;0.04;0.05;0.06;0.1;0.14;0.15;0.17;0.21;0.24;0.25;0.26;0.27;0.28;0.28;0.28;0.27;0.25;0.22;0.21;0.19;0.14;0.08;0.05;0.03;0;0;0;0;0;0;0;0;0;0;0;0;0"/>
+  </path>
+
+  <!-- Turning page (curls over the spine) -->
+  <path d="M120 184 Q151 183 182 182 L190 212 Q155 212 120 212Z" fill="#FFF6E0" stroke="#D9C39A" stroke-width=".8">
+    <animate attributeName="d" dur="10s" repeatCount="indefinite" calcMode="linear" keyTimes="0;0.78;0.785;0.79;0.795;0.8;0.805;0.81;0.815;0.82;0.825;0.83;0.835;0.84;0.845;0.85;0.855;0.86;0.865;0.87;0.875;0.88;0.885;0.89;0.895;0.9;0.905;0.91;0.915;0.92;0.925;0.93;0.935;0.94;0.945;0.95;0.955;0.96;0.965;0.97;1" values="M120 184 Q151 183 182 182 L190 212 Q155 212 120 212Z;M120 184 Q151 183 182 182 L190 212 Q155 212 120 212Z;M120 184 Q151 182.7 181.99 181.59 L189.95 210.78 Q154.97 210.97 120 212Z;M120 184 Q150.97 182.04 181.94 180.69 L189.48 208.1 Q154.74 208.71 120 212Z;M120 184 Q150.92 181.38 181.83 179.79 L188.52 205.45 Q154.26 206.47 120 212Z;M120 184 Q150.88 181.08 181.76 179.39 L187.92 204.26 Q153.96 205.47 120 212Z;M120 184 Q150.7 179.95 181.4 177.84 L186.43 201.91 Q153.22 203.49 120 212Z;M120 184 Q150.01 177.49 180.03 174.49 L181.81 196.98 Q150.9 199.32 120 212Z;M120 184 Q148.93 175.1 177.87 171.23 L175.44 192.46 Q147.72 195.52 120 212Z;M120 184 Q148.32 174.05 176.64 169.8 L172.02 190.59 Q146.01 193.93 120 212Z;M120 184 Q147.28 172.54 174.55 167.74 L167.46 188.48 Q143.73 192.15 120 212Z;M120 184 Q144.43 169.46 168.86 163.53 L156.05 184.57 Q138.03 188.86 120 212Z;M120 184 Q140.89 166.75 161.79 159.84 L143.15 181.8 Q131.58 186.52 120 212Z;M120 184 Q139.09 165.66 158.17 158.36 L136.93 180.95 Q128.47 185.8 120 212Z;M120 184 Q137.03 164.61 154.05 156.93 L131.7 180.45 Q125.85 185.38 120 212Z;M120 184 Q132.11 162.75 144.23 154.38 L120 180 Q120 185 120 212Z;M120 184 Q126.81 161.54 133.62 152.73 L108.3 180.45 Q114.15 185.38 120 212Z;M120 184 Q124.31 161.21 128.63 152.29 L103.07 180.95 Q111.53 185.8 120 212Z;M120 184 Q121.96 161.04 123.93 152.06 L98.67 181.52 Q109.33 186.28 120 212Z;M120 184 Q116.34 161.15 112.68 152.21 L88.58 183.41 Q104.29 187.87 120 212Z;M120 184 Q109.8 162.23 99.59 153.67 L77.55 186.55 Q98.78 190.53 120 212Z;M120 184 Q104.67 163.88 89.35 155.92 L69.43 189.87 Q94.71 193.33 120 212Z;M120 184 Q102.67 164.76 85.33 157.13 L66.38 191.43 Q93.19 194.64 120 212Z;M120 184 Q99.84 166.29 79.68 159.21 L62.66 193.65 Q91.33 196.51 120 212Z;M120 184 Q94.61 170.38 69.21 164.79 L56.05 198.98 Q88.03 201.02 120 212Z;M120 184 Q90.98 175.27 61.95 171.46 L51.79 204.8 Q85.9 205.93 120 212Z;M120 184 Q89.92 177.68 59.84 174.74 L50.68 207.55 Q85.34 208.24 120 212Z;M120 184 Q89.23 180.32 58.46 178.34 L50.17 209.77 Q85.09 210.12 120 212Z;M120 184 Q89 183 58 182 L50 212 Q85 212 120 212Z;M120 184 Q89 183 58 182 L50 212 Q85 212 120 212Z;M120 184 Q89 183 58 182 L50 212 Q85 212 120 212Z;M120 184 Q89 183 58 182 L50 212 Q85 212 120 212Z;M120 184 Q89 183 58 182 L50 212 Q85 212 120 212Z;M120 184 Q89 183 58 182 L50 212 Q85 212 120 212Z;M120 184 Q89 183 58 182 L50 212 Q85 212 120 212Z;M120 184 Q89 183 58 182 L50 212 Q85 212 120 212Z;M120 184 Q89 183 58 182 L50 212 Q85 212 120 212Z;M120 184 Q89 183 58 182 L50 212 Q85 212 120 212Z;M120 184 Q89 183 58 182 L50 212 Q85 212 120 212Z;M120 184 Q89 183 58 182 L50 212 Q85 212 120 212Z;M120 184 Q89 183 58 182 L50 212 Q85 212 120 212Z"/>
+    <animate attributeName="fill" dur="10s" repeatCount="indefinite" calcMode="linear" keyTimes="0;0.78;0.785;0.79;0.795;0.8;0.805;0.81;0.815;0.82;0.825;0.83;0.835;0.84;0.845;0.85;0.855;0.86;0.865;0.87;0.875;0.88;0.885;0.89;0.895;0.9;0.905;0.91;0.915;0.92;0.925;0.93;0.935;0.94;0.945;0.95;0.955;0.96;0.965;0.97;1" values="#fff6e0;#fff6e0;#fff6e0;#fff6e0;#fef5df;#fef5de;#fdf4dd;#fbf0d8;#f7ecd2;#f5e9ce;#f3e6ca;#eddebf;#e7d6b4;#e5d3b0;#e3d0ac;#e0cca7;#dfcba5;#ddc8a1;#ddc9a1;#dfcaa4;#e2cfa9;#e5d3af;#e7d5b1;#e9d8b5;#eedebd;#f1e3c3;#f2e4c5;#f3e5c6;#f3e5c6;#f3e5c6;#f3e5c6;#f3e5c6;#f3e5c6;#f3e5c6;#f3e5c6;#f3e5c6;#f3e5c6;#f3e5c6;#f3e5c6;#f3e5c6;#f3e5c6"/>
+    <animate attributeName="opacity" dur="10s" repeatCount="indefinite" calcMode="linear" keyTimes="0;0.78;0.785;0.79;0.795;0.8;0.805;0.81;0.815;0.82;0.825;0.83;0.835;0.84;0.845;0.85;0.855;0.86;0.865;0.87;0.875;0.88;0.885;0.89;0.895;0.9;0.905;0.91;0.915;0.92;0.925;0.93;0.935;0.94;0.945;0.95;0.955;0.96;0.965;0.97;1" values="1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;0.94;0.8;0.61;0.39;0.2;0.06;0;0;0"/>
+  </path>
+
+  <!-- What she writes on the current page (lifts away at the turn) -->
+  <g class="mj-content">
+    <g stroke="#E3C9A0" stroke-width="1.2">
+      <line x1="123" y1="191" x2="183" y2="190"/><line x1="123" y1="198" x2="185" y2="197"/><line x1="123" y1="205" x2="187" y2="204"/>
+    </g>
+    <path class="mj-ink" d="M128 202q2.5-3.5 5 0t5 0t5 0t5 0" fill="none" stroke="#0B0F0C" stroke-width="2" stroke-linecap="round"/>
+    <text class="mj-amount" x="151" y="205" font-family="Arial, sans-serif" font-size="9" font-weight="700" fill="#047857">₹</text>
+  </g>
+
+  <!-- Spine -->
+  <line x1="120" y1="183" x2="120" y2="213" stroke="#C9AE80" stroke-width="1.6"/>
+
+  <!-- Left hand resting on the page -->
+  <path d="M74 170C66 182 70 196 80 200" fill="none" stroke="#151A17" stroke-width="12" stroke-linecap="round"/>
+  <ellipse cx="84" cy="201" rx="8" ry="5.5" fill="#D99A6C"/>
+
+  <!-- Right arm (bends to follow the hand) -->
+  <path d="M168 168C174 182 168 194 158 198" fill="none" stroke="#151A17" stroke-width="12" stroke-linecap="round">
+    <animate attributeName="d" dur="10s" repeatCount="indefinite" calcMode="linear" keyTimes="0;0.03;0.0456;0.0612;0.0769;0.0925;0.1081;0.1237;0.1394;0.155;0.1706;0.1862;0.2019;0.2175;0.2331;0.2487;0.2644;0.28;0.29;0.3;0.31;0.32;0.74;0.745;0.75;0.755;0.76;0.765;0.77;0.775;0.78;0.785;0.79;0.795;0.8;0.805;0.81;0.815;0.82;0.825;0.83;0.835;0.84;0.845;0.85;0.855;0.86;0.865;0.87;0.875;0.88;0.885;0.89;0.895;0.9;0.905;0.91;0.915;0.92;0.925;0.93;0.935;0.94;0.945;0.95;0.96;1" values="M168 168C174 182 168 194 158 198;M168 168C173 188 156 200 138 198;M168 168C173.09 187.22 157.05 198.17 139.75 196.7;M168 168C173.08 187.74 156.96 200.62 139.6 199.1;M168 168C173.21 186.47 158.55 197.42 142.25 196.7;M168 168C173.21 186.99 158.46 199.87 142.1 199.1;M168 168C173.34 185.72 160.05 196.67 144.75 196.7;M168 168C173.33 186.24 159.96 199.12 144.6 199.1;M168 168C173.46 184.97 161.55 195.92 147.25 196.7;M168 168C173.46 185.49 161.46 198.37 147.1 199.1;M168 168C173.59 184.22 163.05 195.17 149.75 196.7;M168 168C173.58 184.74 162.96 197.62 149.6 199.1;M168 168C173.71 183.47 164.55 194.42 152.25 196.7;M168 168C173.71 183.99 164.46 196.87 152.1 199.1;M168 168C173.84 182.72 166.05 193.67 154.75 196.7;M168 168C173.83 183.24 165.96 196.12 154.6 199.1;M168 168C173.96 181.97 167.55 192.92 157.25 196.7;M168 168C173.96 182.49 167.46 195.37 157.1 199.1;M168 168C174.15 181.7 171 192.5 161 196.5;M168 168C174.35 182.1 175 194.5 165 198.5;M168 168C174.25 181.8 173 193 163 197;M168 168C174.2 182 172 194 162 198;M168 168C174.2 182 172 194 162 198;M168 168C174.26 181.64 173.2 192.22 163.2 196.22;M168 168C174.42 181.53 176.38 191.63 166.38 195.63;M168 168C174.64 181.65 180.86 192.25 170.86 196.25;M168 168C174.9 182 186 194 176 198;M168 168C175.16 182.53 191.14 196.66 181.14 200.66;M168 168C175.38 183.18 195.63 199.88 185.63 203.88;M168 168C175.54 183.84 198.8 203.19 188.8 207.19;M168 168C175.6 184.4 200 206 190 210;M168 168C175.6 184.16 199.95 204.78 189.95 208.78;M168 168C175.57 183.62 199.48 202.1 189.48 206.1;M168 168C175.53 183.09 198.52 199.45 188.52 203.45;M168 168C175.5 182.85 197.92 198.26 187.92 202.26;M168 168C175.42 182.38 196.43 195.91 186.43 199.91;M168 168C175.19 181.4 191.81 190.98 181.81 194.98;M168 168C174.87 180.49 185.44 186.46 175.44 190.46;M168 168C174.7 180.12 182.02 184.59 172.02 188.59;M168 168C174.47 179.7 177.46 182.48 167.46 186.48;M168 168C173.9 179.5 166.83 179.15 156.05 182.57;M168 168C173.26 182.82 159.09 180.26 143.15 179.8;M168 168C172.95 184.51 155.36 181.27 136.93 178.95;M168 168C172.69 185.98 152.22 182.34 131.7 178.45;M168 168C172.1 189.4 145.2 185.4 120 178;M168 168C171.51 193 138.18 189.36 108.3 178.45;M168 168C171.25 194.67 135.04 191.43 103.07 178.95;M168 168C171.28 194.28 135.33 190.06 103.56 177.73;M168 168C171.35 193.69 136.17 188.78 104.95 176.87;M168 168C171.46 192.93 137.48 187.62 107.13 176.36;M168 168C171.6 192.04 139.2 186.61 110 176.21;M168 168C171.77 191.05 141.26 185.79 113.43 176.42;M168 168C171.97 190 143.58 185.17 117.31 176.96;M168 168C172.18 188.91 146.12 184.78 121.53 177.84;M168 168C172.4 187.81 148.78 184.62 125.97 179.02;M168 168C172.63 186.74 151.52 184.72 130.53 180.48;M168 168C172.85 185.71 154.26 185.05 135.09 182.18;M168 168C173.08 184.75 156.92 185.62 139.54 184.08;M168 168C173.29 183.9 159.45 186.41 143.76 186.13;M168 168C173.48 183.16 161.78 187.39 147.64 188.28;M168 168C173.65 182.57 163.84 188.53 151.07 190.45;M168 168C173.8 182.14 165.56 189.81 153.93 192.59;M168 168C173.91 181.89 166.87 191.18 156.12 194.61;M168 168C173.98 181.84 167.71 192.59 157.51 196.44;M168 168C174 182 168 194 158 198;M168 168C174 182 168 194 158 198;M168 168C174 182 168 194 158 198"/>
+  </path>
+  <!-- Right hand + pen -->
+  <g>
+    <animateTransform attributeName="transform" type="translate" dur="10s" repeatCount="indefinite" calcMode="linear" keyTimes="0;0.03;0.0456;0.0612;0.0769;0.0925;0.1081;0.1237;0.1394;0.155;0.1706;0.1862;0.2019;0.2175;0.2331;0.2487;0.2644;0.28;0.29;0.3;0.31;0.32;0.74;0.745;0.75;0.755;0.76;0.765;0.77;0.775;0.78;0.785;0.79;0.795;0.8;0.805;0.81;0.815;0.82;0.825;0.83;0.835;0.84;0.845;0.85;0.855;0.86;0.865;0.87;0.875;0.88;0.885;0.89;0.895;0.9;0.905;0.91;0.915;0.92;0.925;0.93;0.935;0.94;0.945;0.95;0.96;1" values="0 0;-20 0;-18.25 -1.3;-18.4 1.1;-15.75 -1.3;-15.9 1.1;-13.25 -1.3;-13.4 1.1;-10.75 -1.3;-10.9 1.1;-8.25 -1.3;-8.4 1.1;-5.75 -1.3;-5.9 1.1;-3.25 -1.3;-3.4 1.1;-0.75 -1.3;-0.9 1.1;3 -1.5;7 0.5;5 -1;4 0;4 0;5.2 -1.78;8.38 -2.37;12.86 -1.75;18 0;23.14 2.66;27.63 5.88;30.8 9.19;32 12;31.95 10.78;31.48 8.1;30.52 5.45;29.92 4.26;28.43 1.91;23.81 -3.02;17.44 -7.54;14.02 -9.41;9.46 -11.52;-1.95 -15.43;-14.85 -18.2;-21.07 -19.05;-26.3 -19.55;-38 -20;-49.7 -19.55;-54.93 -19.05;-54.44 -20.27;-53.05 -21.13;-50.87 -21.64;-48 -21.79;-44.57 -21.58;-40.69 -21.04;-36.47 -20.16;-32.03 -18.98;-27.47 -17.52;-22.91 -15.82;-18.46 -13.92;-14.24 -11.87;-10.36 -9.72;-6.93 -7.55;-4.07 -5.41;-1.88 -3.39;-0.49 -1.56;0 0;0 0;0 0"/>
+    <line x1="150" y1="200" x2="166" y2="174" stroke="#0B0F0C" stroke-width="3.8" stroke-linecap="round"/>
+    <line x1="162" y1="180" x2="166" y2="174" stroke="#14CA80" stroke-width="4" stroke-linecap="round"/>
+    <polygon points="148,203 150,198 153,201" fill="#0B0F0C"/>
+    <ellipse cx="156" cy="197" rx="7.5" ry="6" fill="#D99A6C"/>
+    <path d="M151 195q3-3 7-1" fill="none" stroke="#B87049" stroke-width="1.3" stroke-linecap="round"/>
+  </g>
+
+  <!-- Head -->
+  <g class="mj-head">
+    <circle cx="120" cy="52" r="16" fill="#1A1210"/>
+    <ellipse cx="120" cy="94" rx="41" ry="36" fill="#1A1210"/>
+    <g fill="#FFFFFF" stroke="#E8DCC6" stroke-width=".8">
+      <circle cx="104" cy="60" r="3.8"/><circle cx="111" cy="64" r="3.8"/><circle cx="120" cy="66" r="3.8"/><circle cx="129" cy="64" r="3.8"/><circle cx="136" cy="60" r="3.8"/>
+    </g>
+    <ellipse cx="84" cy="110" rx="6" ry="9" fill="#C4825A"/>
+    <ellipse cx="156" cy="110" rx="6" ry="9" fill="#C4825A"/>
+    <g fill="#E2B13C">
+      <circle cx="83" cy="121" r="2.4"/><path d="M78 131Q83 121 88 131Z"/>
+      <circle cx="157" cy="121" r="2.4"/><path d="M152 131Q157 121 162 131Z"/>
+    </g>
+    <ellipse cx="120" cy="105" rx="36" ry="38" fill="#D99A6C"/>
+    <path d="M84 106C80 72 100 62 120 64C116 76 102 86 90 102Z" fill="#1A1210"/>
+    <path d="M156 106C160 72 140 62 120 64C124 76 138 86 150 102Z" fill="#1A1210"/>
+    <g class="mj-features">
+      <circle cx="120" cy="88" r="3.2" fill="#C8102E"/>
+      <g class="mj-brows" fill="none" stroke="#1A1210" stroke-width="2.8" stroke-linecap="round">
+        <path d="M98 94q8-5 15-1"/><path d="M127 93q7-4 15 1"/>
+      </g>
+      <g class="mj-eye"><g class="mj-look"><ellipse cx="106" cy="107" rx="4.4" ry="5.4" fill="#1A1210"/><circle cx="107.6" cy="105" r="1.5" fill="#fff"/></g></g>
+      <g class="mj-eye"><g class="mj-look"><ellipse cx="134" cy="107" rx="4.4" ry="5.4" fill="#1A1210"/><circle cx="135.6" cy="105" r="1.5" fill="#fff"/></g></g>
+      <path d="M120 112q-3 6 1 8" fill="none" stroke="#B87049" stroke-width="2" stroke-linecap="round"/>
+      <circle cx="97" cy="123" r="5" fill="#E87A7A" opacity=".4"/><circle cx="143" cy="123" r="5" fill="#E87A7A" opacity=".4"/>
+      <path d="M110 126q10 8 20 0" fill="none" stroke="#7A2E22" stroke-width="2.6" stroke-linecap="round"/>
+      <g class="mj-specs">
+        <g fill="rgba(255,255,255,.22)" stroke="#0B0F0C" stroke-width="3.2">
+          <circle cx="106" cy="108" r="11"/><circle cx="134" cy="108" r="11"/>
+        </g>
+        <path d="M117 107q3-3 6 0" fill="none" stroke="#0B0F0C" stroke-width="2.8"/>
+        <line x1="95" y1="106" x2="86" y2="104" stroke="#0B0F0C" stroke-width="2.6"/>
+        <line x1="145" y1="106" x2="154" y2="104" stroke="#0B0F0C" stroke-width="2.6"/>
+        <path class="mj-glint" d="M99 103l5-4" stroke="#fff" stroke-width="2.4" stroke-linecap="round"/>
+      </g>
+    </g>
+  </g>
+  </g>
+</svg>

@@ -6,7 +6,8 @@ import { suggestCategories } from "../rules";
 import { DEMO_GOALS, DEMO_PROFILE, demoTransactions, demoUsage, type Transaction } from "../store";
 import { parseCsv } from "./csv";
 import { toDrafts } from "./rows";
-import { sampleCsv, sampleSms } from "./samples";
+import { parseStatementLines } from "./pdf";
+import { sampleCsv, sampleSms, sampleStatementLines } from "./samples";
 import { parseSms } from "./sms";
 
 const NOW = new Date(2026, 9, 31, 12);
@@ -92,6 +93,15 @@ describe("sample files", () => {
     expect(kinds(mine.nudges)).toEqual(kinds(theirs.nudges));
     expect(mine.nudges).toHaveLength(theirs.nudges.length);
     expect(mine.goals.map((g) => g.status)).toEqual(theirs.goals.map((g) => g.status));
+  });
+
+  it("the PDF reads back to the same 68 spends as the CSV", () => {
+    const { header, opening, lines } = sampleStatementLines(NOW);
+    const fromPdf = imported(parseStatementLines([header, opening, ...lines]));
+    expect(fromPdf).toHaveLength(68);
+    expect(fromPdf.map((t) => [t.merchant, t.category, t.amount])).toEqual(
+      sample.map((t) => [t.merchant, t.category, t.amount]),
+    );
   });
 
   it("the SMS batch skips the OTP and finds the e-mandates and fixed costs", () => {

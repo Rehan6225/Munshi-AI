@@ -179,40 +179,55 @@ export function sampleSms(now = new Date()): string {
 }
 
 /** A statement PDF laid out like a net-banking download. */
-export async function samplePdf(now = new Date()): Promise<ArrayBuffer> {
-  const { jsPDF } = await import("jspdf");
-  const doc = new jsPDF({ orientation: "landscape", unit: "pt", format: "a4" });
+/** A fixed-width column that always leaves a space before the next one. */
+const col = (s: string, w: number, right = false) =>
+  right ? s.slice(0, w - 1).padStart(w) : s.slice(0, w - 1).padEnd(w);
+
+/** The statement as the PDF prints it, one string per line: the header row, then one per transaction. */
+export function sampleStatementLines(now = new Date()) {
   const rows = statement(now);
-  const col = (s: string, w: number, right = false) =>
-    (right ? s.padStart(w) : s.padEnd(w)).slice(0, w);
   const header =
     col("Date", 10) +
-    col("Narration", 40) +
+    col("Narration", 46) +
     col("Chq./Ref.No.", 16) +
     col("Value Dt", 10) +
     col("Withdrawal Amt.", 16, true) +
     col("Deposit Amt.", 14, true) +
     col("Closing Balance", 17, true);
-  const line = (r: (typeof rows)[number]) =>
-    col(ddmmyy(r.date), 10) +
-    col(r.narration, 40) +
-    col(r.ref, 16) +
-    col(ddmmyy(r.date), 10) +
-    col(r.debit ? money(r.debit) : "", 16, true) +
-    col(r.credit ? money(r.credit) : "", 14, true) +
-    col(money(r.balance), 17, true);
+  const opening =
+    col(ddmmyy(new Date(rows[0]!.date.getTime() - DAY)), 10) +
+    col("OPENING BALANCE", 102) +
+    col(money(OPENING), 17, true);
+  const lines = rows.map(
+    (r) =>
+      col(ddmmyy(r.date), 10) +
+      col(r.narration, 46) +
+      col(r.ref, 16) +
+      col(ddmmyy(r.date), 10) +
+      col(r.debit ? money(r.debit) : "", 16, true) +
+      col(r.credit ? money(r.credit) : "", 14, true) +
+      col(money(r.balance), 17, true),
+  );
+  return { header, opening, lines, from: rows[0]!.date, to: rows.at(-1)!.date };
+}
+
+/** A statement PDF laid out like a net-banking download. */
+export async function samplePdf(now = new Date()): Promise<ArrayBuffer> {
+  const { jsPDF } = await import("jspdf");
+  const doc = new jsPDF({ orientation: "landscape", unit: "pt", format: "a4" });
+  const { header, opening, lines, from, to } = sampleStatementLines(now);
 
   const PER_PAGE = 24;
-  const pages = Array.from({ length: Math.ceil(rows.length / PER_PAGE) }, (_, i) =>
-    rows.slice(i * PER_PAGE, (i + 1) * PER_PAGE),
+  const pages = Array.from({ length: Math.ceil(lines.length / PER_PAGE) }, (_, i) =>
+    lines.slice(i * PER_PAGE, (i + 1) * PER_PAGE),
   );
-  pages.forEach((pageRows, p) => {
+  pages.forEach((pageLines, p) => {
     if (p > 0) doc.addPage();
     doc.setFont("helvetica", "bold").setFontSize(14).text("HDFC BANK LTD", 40, 48);
     doc.setFont("helvetica", "normal").setFontSize(9).setTextColor(120);
     doc.text("SAMPLE STATEMENT FOR TRYING MUNSHI AI. NOT A REAL ACCOUNT.", 40, 64);
     doc.text(
-      `Account No : XXXXXXXX4421   Statement From : ${ddmmyy(rows[0]!.date)} To : ${ddmmyy(rows.at(-1)!.date)}`,
+      `Account No : XXXXXXXX4421   Statement From : ${ddmmyy(from)} To : ${ddmmyy(to)}`,
       40,
       78,
     );
@@ -222,17 +237,11 @@ export async function samplePdf(now = new Date()): Promise<ArrayBuffer> {
     doc.setFont("courier", "normal");
     let y = 130;
     if (p === 0) {
-      doc.text(
-        col(ddmmyy(new Date(rows[0]!.date.getTime() - DAY)), 10) +
-          col("OPENING BALANCE", 92) +
-          col(money(OPENING), 21, true),
-        40,
-        y,
-      );
+      doc.text(opening, 40, y);
       y += 16;
     }
-    for (const r of pageRows) {
-      doc.text(line(r), 40, y);
+    for (const line of pageLines) {
+      doc.text(line, 40, y);
       y += 16;
     }
     doc.setFont("helvetica", "normal").setFontSize(8).setTextColor(120);

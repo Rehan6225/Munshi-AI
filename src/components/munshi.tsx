@@ -1,28 +1,36 @@
-import { NotebookPen, Volume2, VolumeX, X } from "lucide-react";
+import { Volume2, VolumeX, X } from "lucide-react";
 import type { ReactNode } from "react";
 import { setMuted, stopSpeaking, useSpeech } from "@/lib/speech";
 import type { MunshiReply } from "@/lib/munshi";
 import { cn } from "@/lib/utils";
 
-/** Munshi ji: a ledger-and-pen mark that glows and pulses while he's talking. */
+/** Munshi ji at her ledger; pulses while she's talking. */
 export function MunshiAvatar({ size = "md" }: { size?: "sm" | "md" | "lg" }) {
   const { speaking } = useSpeech();
-  const box = { sm: "size-8 rounded-xl", md: "size-10 rounded-xl", lg: "size-14 rounded-2xl" }[
-    size
-  ];
-  const icon = { sm: "size-4", md: "size-5", lg: "size-7" }[size];
+  const box = { sm: "size-8", md: "size-10", lg: "size-14" }[size];
+  // Small avatars show her face, which stays readable at 32px. She writes in her ledger on the
+  // big ones and whenever she's talking; the rest hold still so a chat isn't all motion.
+  const src =
+    size === "sm"
+      ? "/munshi-ji-face.svg"
+      : size === "lg" || speaking
+        ? "/munshi-ji.svg"
+        : "/munshi-ji-still.svg";
   return (
     <span className="relative inline-grid shrink-0" aria-hidden>
-      {speaking && <span className={cn("absolute inset-0 animate-ping bg-primary/40", box)} />}
-      <span
+      {speaking && (
+        <span className={cn("absolute inset-0 animate-ping rounded-full bg-primary/40", box)} />
+      )}
+      <img
+        src={src}
+        alt=""
+        draggable={false}
         className={cn(
-          "relative grid place-items-center bg-gradient-to-br from-primary to-emerald-700 text-primary-foreground shadow-glow transition",
+          "relative rounded-full shadow-glow ring-1 ring-primary/30 transition",
           box,
           speaking && "scale-105",
         )}
-      >
-        <NotebookPen className={icon} />
-      </span>
+      />
     </span>
   );
 }

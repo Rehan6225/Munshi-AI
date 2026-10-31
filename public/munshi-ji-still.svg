@@ -1,0 +1,164 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 240 240" role="img" aria-labelledby="mjTitle">
+  <title id="mjTitle">Munshi Ji – cartoon accountant recording a transaction in her ledger</title>
+  <defs>
+    <linearGradient id="mjBg" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#14CA80"/><stop offset="1" stop-color="#047857"/>
+    </linearGradient>
+    <filter id="mjBlur" x="-20%" y="-20%" width="140%" height="140%"><feGaussianBlur stdDeviation="2.5"/></filter>
+    <clipPath id="mjClip"><circle cx="120" cy="120" r="118"/></clipPath>
+  </defs>
+  <style>
+    /* 10s cycle: write entry (0–28%) · ₹ (28–31%) · peer over glasses (34–55%) ·
+       glasses back up (55–58%) · two nods (60–74%) · grab corner and turn page (74–92%) · hand returns */
+    .mj-head,.mj-features,.mj-specs,.mj-brows,.mj-look,.mj-glint,.mj-ink,.mj-amount,.mj-content{transform-box:view-box}
+    .mj-head{transform-origin:120px 140px;animation:mj-head 10s ease-in-out infinite}
+    @keyframes mj-head{0%,30%{transform:translateY(0) rotate(0)}35%,53%{transform:translateY(2px) rotate(0)}58%{transform:translateY(0) rotate(0)}62%{transform:translateY(4px) rotate(-1deg)}66%{transform:translateY(0) rotate(0)}70%{transform:translateY(4px) rotate(1deg)}74%{transform:translateY(0) rotate(0)}80%,88%{transform:translateY(1px) rotate(-2deg)}94%,100%{transform:translateY(0) rotate(0)}}
+    .mj-features{animation:mj-features 10s ease-in-out infinite}
+    @keyframes mj-features{0%,30%,58%,66%,74%,100%{transform:translate(0,0)}35%,53%{transform:translate(0,1px)}62%,70%{transform:translate(0,2.5px)}80%,88%{transform:translate(-1.5px,1px)}94%{transform:translate(0,0)}}
+    .mj-specs{animation:mj-specs 10s ease-in-out infinite}
+    @keyframes mj-specs{0%,32%{transform:translateY(0)}38%,52%{transform:translateY(7px)}57%,100%{transform:translateY(0)}}
+    .mj-brows{animation:mj-brows 10s ease-in-out infinite}
+    @keyframes mj-brows{0%,34%{transform:translateY(0)}39%,52%{transform:translateY(-3px)}57%,100%{transform:translateY(0)}}
+    .mj-look{animation:mj-look 10s ease-in-out infinite}
+    @keyframes mj-look{0%,34%{transform:translate(0,0)}39%,52%{transform:translate(0,2px)}57%,76%{transform:translate(0,0)}80%,88%{transform:translate(-2px,1.5px)}93%,100%{transform:translate(0,0)}}
+    .mj-glint{opacity:0;animation:mj-glint 10s ease-in-out infinite}
+    @keyframes mj-glint{0%,56%{opacity:0}59%{opacity:.95}63%,100%{opacity:0}}
+    .mj-eye{transform-box:fill-box;transform-origin:center;animation:mj-blink 4.5s infinite}
+    @keyframes mj-blink{0%,92%,100%{transform:scaleY(1)}95%{transform:scaleY(.1)}}
+    .mj-ink{stroke-dasharray:32;stroke-dashoffset:32;animation:mj-ink 10s linear infinite}
+    @keyframes mj-ink{0%,3%{stroke-dashoffset:32}28%,100%{stroke-dashoffset:0}}
+    .mj-amount{opacity:0;animation:mj-amount 10s linear infinite}
+    @keyframes mj-amount{0%,28.5%{opacity:0}31%,100%{opacity:1}}
+    .mj-content{animation:mj-content 10s linear infinite}
+    @keyframes mj-content{0%,78%{opacity:1}79.5%,100%{opacity:0}}
+    @media (prefers-reduced-motion:reduce){
+      .mj-head,.mj-features,.mj-specs,.mj-brows,.mj-look,.mj-glint,.mj-eye,.mj-ink,.mj-amount,.mj-content{animation:none}
+      .mj-ink{stroke-dashoffset:0}.mj-amount{opacity:1}
+    }
+    /* Still version: the finished entry, no motion. */
+    *{animation:none!important}.mj-ink{stroke-dashoffset:0}.mj-amount{opacity:1}
+  </style>
+
+  <!-- Background (delete these two shapes for a transparent background) -->
+  <circle cx="120" cy="120" r="118" fill="url(#mjBg)"/>
+  <circle cx="120" cy="120" r="114" fill="none" stroke="#0B0F0C" stroke-opacity=".25" stroke-width="3"/>
+
+  <g clip-path="url(#mjClip)">
+  <!-- Body: black blouse, green saree pallu -->
+  <path d="M54 240C54 180 82 152 120 152C158 152 186 180 186 240Z" fill="#151A17"/>
+  <path d="M144 154C160 160 172 172 178 188L138 240L112 240Z" fill="#34D399"/>
+  <path d="M144 154C160 160 172 172 178 188L174 194C168 180 156 168 141 161Z" fill="#064E3B"/>
+  <path d="M112 240L138 240L141 236L115 236Z" fill="#064E3B"/>
+
+  <!-- Neck + necklace -->
+  <rect x="110" y="132" width="20" height="26" rx="8" fill="#C4825A"/>
+  <path d="M104 154Q120 170 136 154" fill="none" stroke="#E2B13C" stroke-width="3.2" stroke-linecap="round"/>
+  <circle cx="120" cy="164" r="4" fill="#E2B13C"/>
+
+  <!-- Desk (black with green edge) -->
+  <polygon points="34,188 206,188 222,220 18,220" fill="#1E2420"/>
+  <line x1="34" y1="188" x2="206" y2="188" stroke="#14CA80" stroke-width="2"/>
+  <rect x="18" y="220" width="204" height="20" fill="#0B0F0C"/>
+  <line x1="18" y1="220" x2="222" y2="220" stroke="#14CA80" stroke-width="2"/>
+
+  <!-- Ink pot -->
+  <path d="M190 192h14l2 12h-18z" fill="#0B0F0C" stroke="#2E3A33" stroke-width="1"/>
+  <rect x="193" y="187" width="8" height="6" rx="1.5" fill="#14CA80"/>
+
+  <!-- Ledger cover -->
+  <polygon points="48,180 192,180 198,216 42,216" fill="#064E3B"/>
+  <polygon points="48,180 192,180 193,184 47,184" fill="#047857"/>
+
+  <!-- Left page (static) -->
+  <polygon points="58,182 119,184 119,212 50,212" fill="#FFF6E0"/>
+  <g stroke="#E3C9A0" stroke-width="1.2">
+    <line x1="58" y1="190" x2="117" y2="191"/><line x1="56" y1="197" x2="117" y2="198"/><line x1="54" y1="204" x2="117" y2="205"/>
+  </g>
+  <g fill="none" stroke="#0B0F0C" stroke-width="2" stroke-linecap="round">
+    <path d="M62 188q4-3 8 0t8 0t8 0"/><path d="M60 195q4-3 8 0t8 0"/><path d="M58 202q4-3 8 0t8 0t8 0t8 0"/>
+  </g>
+  <g font-family="Arial, sans-serif" font-size="9" font-weight="700" fill="#047857">
+    <text x="99" y="191">₹</text><text x="99" y="198">₹</text><text x="99" y="205">₹</text>
+  </g>
+
+  <!-- Right page underneath (fresh) -->
+  <polygon points="121,184 182,182 190,212 121,212" fill="#FFF6E0"/>
+  <g stroke="#E3C9A0" stroke-width="1.2">
+    <line x1="123" y1="191" x2="183" y2="190"/><line x1="123" y1="198" x2="185" y2="197"/><line x1="123" y1="205" x2="187" y2="204"/>
+  </g>
+
+  <!-- Shadow cast by the turning page -->
+  <path d="M120 184 L182 183 L190 212 L120 212Z" fill="#0B0F0C" opacity="0" filter="url(#mjBlur)">
+  </path>
+
+  <!-- Turning page (curls over the spine) -->
+  <path d="M120 184 Q151 183 182 182 L190 212 Q155 212 120 212Z" fill="#FFF6E0" stroke="#D9C39A" stroke-width=".8">
+  </path>
+
+  <!-- What she writes on the current page (lifts away at the turn) -->
+  <g class="mj-content">
+    <g stroke="#E3C9A0" stroke-width="1.2">
+      <line x1="123" y1="191" x2="183" y2="190"/><line x1="123" y1="198" x2="185" y2="197"/><line x1="123" y1="205" x2="187" y2="204"/>
+    </g>
+    <path class="mj-ink" d="M128 202q2.5-3.5 5 0t5 0t5 0t5 0" fill="none" stroke="#0B0F0C" stroke-width="2" stroke-linecap="round"/>
+    <text class="mj-amount" x="151" y="205" font-family="Arial, sans-serif" font-size="9" font-weight="700" fill="#047857">₹</text>
+  </g>
+
+  <!-- Spine -->
+  <line x1="120" y1="183" x2="120" y2="213" stroke="#C9AE80" stroke-width="1.6"/>
+
+  <!-- Left hand resting on the page -->
+  <path d="M74 170C66 182 70 196 80 200" fill="none" stroke="#151A17" stroke-width="12" stroke-linecap="round"/>
+  <ellipse cx="84" cy="201" rx="8" ry="5.5" fill="#D99A6C"/>
+
+  <!-- Right arm (bends to follow the hand) -->
+  <path d="M168 168C174 182 168 194 158 198" fill="none" stroke="#151A17" stroke-width="12" stroke-linecap="round">
+  </path>
+  <!-- Right hand + pen -->
+  <g>
+    <line x1="150" y1="200" x2="166" y2="174" stroke="#0B0F0C" stroke-width="3.8" stroke-linecap="round"/>
+    <line x1="162" y1="180" x2="166" y2="174" stroke="#14CA80" stroke-width="4" stroke-linecap="round"/>
+    <polygon points="148,203 150,198 153,201" fill="#0B0F0C"/>
+    <ellipse cx="156" cy="197" rx="7.5" ry="6" fill="#D99A6C"/>
+    <path d="M151 195q3-3 7-1" fill="none" stroke="#B87049" stroke-width="1.3" stroke-linecap="round"/>
+  </g>
+
+  <!-- Head -->
+  <g class="mj-head">
+    <circle cx="120" cy="52" r="16" fill="#1A1210"/>
+    <ellipse cx="120" cy="94" rx="41" ry="36" fill="#1A1210"/>
+    <g fill="#FFFFFF" stroke="#E8DCC6" stroke-width=".8">
+      <circle cx="104" cy="60" r="3.8"/><circle cx="111" cy="64" r="3.8"/><circle cx="120" cy="66" r="3.8"/><circle cx="129" cy="64" r="3.8"/><circle cx="136" cy="60" r="3.8"/>
+    </g>
+    <ellipse cx="84" cy="110" rx="6" ry="9" fill="#C4825A"/>
+    <ellipse cx="156" cy="110" rx="6" ry="9" fill="#C4825A"/>
+    <g fill="#E2B13C">
+      <circle cx="83" cy="121" r="2.4"/><path d="M78 131Q83 121 88 131Z"/>
+      <circle cx="157" cy="121" r="2.4"/><path d="M152 131Q157 121 162 131Z"/>
+    </g>
+    <ellipse cx="120" cy="105" rx="36" ry="38" fill="#D99A6C"/>
+    <path d="M84 106C80 72 100 62 120 64C116 76 102 86 90 102Z" fill="#1A1210"/>
+    <path d="M156 106C160 72 140 62 120 64C124 76 138 86 150 102Z" fill="#1A1210"/>
+    <g class="mj-features">
+      <circle cx="120" cy="88" r="3.2" fill="#C8102E"/>
+      <g class="mj-brows" fill="none" stroke="#1A1210" stroke-width="2.8" stroke-linecap="round">
+        <path d="M98 94q8-5 15-1"/><path d="M127 93q7-4 15 1"/>
+      </g>
+      <g class="mj-eye"><g class="mj-look"><ellipse cx="106" cy="107" rx="4.4" ry="5.4" fill="#1A1210"/><circle cx="107.6" cy="105" r="1.5" fill="#fff"/></g></g>
+      <g class="mj-eye"><g class="mj-look"><ellipse cx="134" cy="107" rx="4.4" ry="5.4" fill="#1A1210"/><circle cx="135.6" cy="105" r="1.5" fill="#fff"/></g></g>
+      <path d="M120 112q-3 6 1 8" fill="none" stroke="#B87049" stroke-width="2" stroke-linecap="round"/>
+      <circle cx="97" cy="123" r="5" fill="#E87A7A" opacity=".4"/><circle cx="143" cy="123" r="5" fill="#E87A7A" opacity=".4"/>
+      <path d="M110 126q10 8 20 0" fill="none" stroke="#7A2E22" stroke-width="2.6" stroke-linecap="round"/>
+      <g class="mj-specs">
+        <g fill="rgba(255,255,255,.22)" stroke="#0B0F0C" stroke-width="3.2">
+          <circle cx="106" cy="108" r="11"/><circle cx="134" cy="108" r="11"/>
+        </g>
+        <path d="M117 107q3-3 6 0" fill="none" stroke="#0B0F0C" stroke-width="2.8"/>
+        <line x1="95" y1="106" x2="86" y2="104" stroke="#0B0F0C" stroke-width="2.6"/>
+        <line x1="145" y1="106" x2="154" y2="104" stroke="#0B0F0C" stroke-width="2.6"/>
+        <path class="mj-glint" d="M99 103l5-4" stroke="#fff" stroke-width="2.4" stroke-linecap="round"/>
+      </g>
+    </g>
+  </g>
+  </g>
+</svg>
