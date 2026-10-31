@@ -53,6 +53,7 @@ const KNOWN: [Category, RegExp][] = [
   ["Personal care", /salon|\bspa\b|urban company|barber|grooming|naturals/i],
   ["Education", /school|college|tuition|coaching|byju|unacademy|udemy|coursera/i],
   ["Household help", /\bmaid\b|\bcook\b|laundry|dhobi|ironing/i],
+  ["Family support", /\b(mom|mum|maa|mother|dad|papa|father|parents|family)\b/i],
 ];
 
 /** Payment-rail noise to strip before reading the merchant name. */

@@ -40,9 +40,14 @@ export interface Transaction {
   recurring?: boolean | undefined;
 }
 
-const d = (daysAgo: number) => new Date(Date.now() - daysAgo * 86400000).toISOString();
+/** ISO date `daysAgo` days before the moment the demo is built for. */
+type DaysAgo = (daysAgo: number) => string;
+const daysBefore =
+  (now: Date): DaysAgo =>
+  (daysAgo) =>
+    new Date(now.getTime() - daysAgo * 86400000).toISOString();
 
-const DEMO_TX: Transaction[] = [
+const demoSpends = (d: DaysAgo): Transaction[] => [
   {
     id: "1",
     merchant: "Swiggy",
@@ -77,49 +82,57 @@ const DEMO_TX: Transaction[] = [
 ];
 
 /** One charge per cycle, oldest amount first, ending `latest` days ago. */
-const charges = (
-  merchant: string,
-  category: Category,
-  amounts: number[],
-  latest: number,
-  every = 30,
-): Transaction[] =>
-  amounts.map((amount, i) => ({
-    id: `${merchant}-${i}`,
-    merchant,
-    category,
-    amount,
-    date: d(latest + (amounts.length - 1 - i) * every),
-  }));
+const charges =
+  (d: DaysAgo) =>
+  (
+    merchant: string,
+    category: Category,
+    amounts: number[],
+    latest: number,
+    every = 30,
+  ): Transaction[] =>
+    amounts.map((amount, i) => ({
+      id: `${merchant}-${i}`,
+      merchant,
+      category,
+      amount,
+      date: d(latest + (amounts.length - 1 - i) * every),
+    }));
 
 const six = (amount: number) => Array<number>(6).fill(amount);
 
 /** Six months of autopay history, so subscriptions and bills are detected rather than hand-entered. */
-const DEMO_RECURRING: Transaction[] = [
-  ...charges("Netflix", "Subscriptions", [499, 499, 499, 499, 649, 649], 2),
-  ...charges("Disney+ Hotstar", "Subscriptions", six(299), 6),
-  ...charges("Spotify", "Subscriptions", six(119), 11),
-  ...charges("Cult.fit", "Subscriptions", [1299, 1299, 1299, 1299], 13),
-  ...charges("YouTube Premium", "Subscriptions", [149, 149], 3),
-  ...charges("Amazon Prime", "Subscriptions", [1499, 1499], 260, 365),
-  ...charges("House rent", "Rent & Housing", six(22000), 4),
-  ...charges("Airtel broadband", "Utilities", six(999), 9),
-  ...charges("BESCOM electricity", "Utilities", [1320, 1480, 1610, 1550, 1390, 1450], 7),
-  ...charges("Bike EMI", "EMIs & Loans", six(3200), 5),
-  ...charges("Star Health insurance", "Insurance", six(1250), 15),
-  ...charges("Maid (Sunita)", "Household help", six(3000), 1),
-  ...charges("Laundry & ironing", "Household help", six(600), 8),
-  ...charges("Groww SIP", "Savings & Investments", six(10000), 5),
-];
+const demoRecurring = (d: DaysAgo): Transaction[] => {
+  const c = charges(d);
+  return [
+    ...c("Netflix", "Subscriptions", [499, 499, 499, 499, 649, 649], 2),
+    ...c("Disney+ Hotstar", "Subscriptions", six(299), 6),
+    ...c("Spotify", "Subscriptions", six(119), 11),
+    ...c("Cult.fit", "Subscriptions", [1299, 1299, 1299, 1299], 13),
+    ...c("YouTube Premium", "Subscriptions", [149, 149], 3),
+    ...c("Amazon Prime", "Subscriptions", [1499, 1499], 260, 365),
+    ...c("House rent", "Rent & Housing", six(22000), 4),
+    ...c("Airtel broadband", "Utilities", six(999), 9),
+    ...c("BESCOM electricity", "Utilities", [1320, 1480, 1610, 1550, 1390, 1450], 7),
+    ...c("Bike EMI", "EMIs & Loans", six(3200), 5),
+    ...c("Star Health insurance", "Insurance", six(1250), 15),
+    ...c("Maid (Sunita)", "Household help", six(3000), 1),
+    ...c("Laundry & ironing", "Household help", six(600), 8),
+    ...c("Groww SIP", "Savings & Investments", six(10000), 5),
+  ];
+};
 
 /** What the user told Munshi about when they last used each service. */
-const DEMO_USAGE: Usage = {
-  disneyhotstar: d(124),
-  netflix: d(1),
-  spotify: d(0),
-  cultfit: d(21),
-  amazonprime: d(7),
-  youtubepremium: d(2),
+export const demoUsage = (now = new Date()): Usage => {
+  const d = daysBefore(now);
+  return {
+    disneyhotstar: d(124),
+    netflix: d(1),
+    spotify: d(0),
+    cultfit: d(21),
+    amazonprime: d(7),
+    youtubepremium: d(2),
+  };
 };
 
 /**
@@ -161,11 +174,15 @@ function demoHistory(now = new Date()): Transaction[] {
   return out;
 }
 
-const DEMO_ALL_TX = [...DEMO_TX, ...DEMO_RECURRING, ...demoHistory()].sort((a, b) =>
-  b.date.localeCompare(a.date),
-);
+/** Every demo transaction, dated relative to `now`. The sample statements are built from these too. */
+export function demoTransactions(now = new Date()) {
+  const d = daysBefore(now);
+  return [...demoSpends(d), ...demoRecurring(d), ...demoHistory(now)].sort((a, b) =>
+    b.date.localeCompare(a.date),
+  );
+}
 
-const DEMO_PROFILE: Profile = {
+export const DEMO_PROFILE: Profile = {
   income: 120000,
   emergencyMonths: 6,
   extraFixedCosts: [],
@@ -174,7 +191,7 @@ const DEMO_PROFILE: Profile = {
 };
 
 /** Targets and saved amounts only; status and advice are calculated in plan.ts. */
-const DEMO_GOALS: Goal[] = [
+export const DEMO_GOALS: Goal[] = [
   {
     id: "g1",
     name: "Emergency fund",
@@ -201,8 +218,8 @@ const EMPTY_GOALS: Goal[] = [
 
 export type Mode = "demo" | "own";
 
-/** The salary the sample files assume. The demo uses its own profile; real data asks. */
-export const SAMPLE_INCOME = 95000;
+/** The salary the sample files assume: the demo's, as the samples hold the demo's spending. Real data asks. */
+export const SAMPLE_INCOME = DEMO_PROFILE.income;
 
 /** One set of money data. The demo and the user's own numbers are kept apart. */
 interface Workspace {
@@ -238,8 +255,8 @@ const emptyWorkspace = (): Workspace => ({
   incomeAssumed: false,
 });
 const demoWorkspace = (): Workspace => ({
-  transactions: DEMO_ALL_TX,
-  usage: DEMO_USAGE,
+  transactions: demoTransactions(),
+  usage: demoUsage(),
   cancelled: [],
   profile: DEMO_PROFILE,
   goals: DEMO_GOALS,
@@ -310,8 +327,11 @@ interface Ctx {
   incomeAssumed: boolean;
   /** True once the user has told us their own salary. */
   ownIncomeSet: boolean;
-  /** Uses the sample files' salary for the user's data, unless they already gave theirs. */
-  assumeSampleIncome: () => void;
+  /**
+   * After a sample file is imported, fills in what the demo has around its transactions:
+   * the salary, budgets, goals and "I don't use it" check-ins. Never overwrites the user's own.
+   */
+  applySampleProfile: () => void;
   /** Set while the "what's your monthly salary?" dialog should be open. */
   incomePrompt: { suggested: number | null } | null;
   askIncome: (suggested?: number | null) => void;
@@ -432,14 +452,22 @@ export function StoreProvider({ children }: { children: ReactNode }) {
     suggestions,
     incomeAssumed: active.incomeAssumed,
     ownIncomeSet: spaces.own.profile.income > 0 && !spaces.own.incomeAssumed,
-    assumeSampleIncome: () =>
-      set(
-        (w) =>
-          w.profile.income > 0 && !w.incomeAssumed
-            ? {}
-            : { profile: { ...w.profile, income: SAMPLE_INCOME }, incomeAssumed: true },
-        "own",
-      ),
+    applySampleProfile: () =>
+      set((w) => {
+        const ownIncome = w.profile.income > 0 && !w.incomeAssumed;
+        // Only the starter emergency fund, untouched: nothing the user made would be lost.
+        const starterGoals = w.goals.every((g) => g.emergency && g.saved === 0);
+        return {
+          profile: {
+            ...w.profile,
+            ...(!ownIncome && { income: SAMPLE_INCOME }),
+            ...(Object.keys(w.profile.budgets).length === 0 && { budgets: DEMO_PROFILE.budgets }),
+          },
+          ...(!ownIncome && { incomeAssumed: true }),
+          ...(starterGoals && { goals: DEMO_GOALS }),
+          usage: { ...demoUsage(), ...w.usage },
+        };
+      }, "own"),
     incomePrompt,
     askIncome: (suggested = null) => setIncomePrompt({ suggested }),
     closeIncomePrompt: () => setIncomePrompt(null),

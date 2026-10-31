@@ -1,49 +1,86 @@
+import { demoTransactions, SAMPLE_INCOME } from "../store";
+
 /**
  * Sample files for people who want to try importing without their own statement.
- * Built fresh from today's date, so the month always looks current, and full of
- * subscriptions and bills so the automatic subscription detection has something to find.
+ * They hold the demo's own spending, written the way a bank prints it, so importing one
+ * gives the same bills, subscriptions, trends and nudges as the demo. Built fresh from
+ * today's date, so the month always looks current.
  */
 
 interface SampleRow {
-  daysAgo: number;
+  date: Date;
   narration: string;
   debit?: number;
   credit?: number;
 }
 
-const ROWS: SampleRow[] = [
-  { daysAgo: 30, narration: "ACH D-HOUSE RENT-SI MANDATE", debit: 22000 },
-  { daysAgo: 29, narration: "UPI-SWIGGY-swiggy@icici", debit: 486 },
-  { daysAgo: 28, narration: "POS 4581XXXX9014 DMART HSR LAYOUT", debit: 3150 },
-  { daysAgo: 27, narration: "NETFLIX.COM SI-MANDATE", debit: 649 },
-  { daysAgo: 26, narration: "UPI-ZOMATO-zomato@hdfcbank", debit: 520 },
-  { daysAgo: 25, narration: "NEFT CR-ACME TECHNOLOGIES PVT LTD-SALARY", credit: 95000 },
-  { daysAgo: 25, narration: "UPI-UBER INDIA-uber@axisbank", debit: 320 },
-  { daysAgo: 24, narration: "AMAZON PRIME SI-MANDATE", debit: 1499 },
-  { daysAgo: 23, narration: "UPI-BLINKIT-blinkit@hdfcbank", debit: 1240 },
-  { daysAgo: 22, narration: "BBPS/BESCOM/0042718831", debit: 1312 },
-  { daysAgo: 21, narration: "SPOTIFY INDIA SI-MANDATE", debit: 119 },
-  { daysAgo: 20, narration: "UPI-RAMESH KUMAR-ramesh.kumar@ybl", debit: 1500 },
-  { daysAgo: 19, narration: "POS 4581XXXX9014 INDIAN OIL COCO BLR", debit: 2500 },
-  { daysAgo: 18, narration: "ACH D-AIRTEL BROADBAND-NACH", debit: 999 },
-  { daysAgo: 17, narration: "UPI-THIRD WAVE COFFEE-twc@okaxis", debit: 410 },
-  { daysAgo: 16, narration: "YOUTUBE PREMIUM SI-MANDATE", debit: 149 },
-  { daysAgo: 15, narration: "ECOM-AMAZON PAY INDIA-AMZN0981", debit: 1899 },
-  { daysAgo: 14, narration: "UPI-ZEPTO-zepto@ybl", debit: 684 },
-  { daysAgo: 13, narration: "DISNEY HOTSTAR SI-MANDATE", debit: 299 },
-  { daysAgo: 12, narration: "UPI-MYNTRA-myntra@icici", debit: 2899 },
-  { daysAgo: 11, narration: "UPI-MYNTRA REFUND-myntra@icici", credit: 899 },
-  { daysAgo: 10, narration: "POS 4581XXXX9014 CROMA INDIRANAGAR", debit: 8990 },
-  { daysAgo: 9, narration: "UPI-CULTFIT-cultfit@hdfcbank-AUTOPAY", debit: 1299 },
-  { daysAgo: 8, narration: "UPI-RAPIDO-rapido@ybl", debit: 146 },
-  { daysAgo: 7, narration: "UPI-BOOKMYSHOW-bms@icici", debit: 760 },
-  { daysAgo: 6, narration: "ATW-ATM CASH WDL-HSR LAYOUT", debit: 5000 },
-  { daysAgo: 5, narration: "UPI-SWIGGY INSTAMART-swiggy@icici", debit: 932 },
-  { daysAgo: 4, narration: "UPI-SOCIAL INDIRANAGAR-social@ybl", debit: 2350 },
-  { daysAgo: 3, narration: "UPI-IRCTC-irctc@sbi", debit: 2140 },
-  { daysAgo: 2, narration: "UPI-PRIYA S-priya.s@okhdfcbank", debit: 800 },
-  { daysAgo: 1, narration: "UPI-ZOMATO-zomato@hdfcbank", debit: 690 },
-];
+const DAY = 86400000;
+
+/** How the bank prints each demo merchant. Rent, EMI, insurance and SIP go by mandate. */
+const NARRATION: Record<string, string> = {
+  Swiggy: "UPI-SWIGGY-swiggy@icici",
+  Zomato: "UPI-ZOMATO-zomato@hdfcbank",
+  Blinkit: "UPI-BLINKIT-blinkit@hdfcbank",
+  Uber: "UPI-UBER INDIA-uber@axisbank",
+  "Third Wave Coffee": "UPI-THIRD WAVE COFFEE-twc@okaxis",
+  "Apollo Pharmacy": "POS 4581XXXX9014 APOLLO PHARMACY HSR",
+  Myntra: "UPI-MYNTRA-myntra@icici",
+  Amazon: "ECOM-AMAZON PAY INDIA-AMZN0981",
+  "Social, Indiranagar": "UPI-SOCIAL RESTAURANT INDIRANAGAR-social@ybl",
+  "Looks Salon": "UPI-LOOKS SALON-looks.salon@okicici",
+  Petrol: "POS 4581XXXX9014 INDIAN OIL COCO BLR",
+  DMart: "POS 4581XXXX9014 DMART HSR LAYOUT",
+  Toit: "UPI-TOIT BREWPUB RESTAURANT-toit@ybl",
+  Truffles: "UPI-TRUFFLES CAFE-truffles@okicici",
+  "Sent to Mom": "UPI-SENT TO MOM-anita.sharma@okhdfcbank",
+  Netflix: "NETFLIX.COM SI-MANDATE",
+  "Disney+ Hotstar": "DISNEY HOTSTAR SI-MANDATE",
+  Spotify: "SPOTIFY INDIA SI-MANDATE",
+  "Cult.fit": "UPI-CULTFIT-cultfit@hdfcbank-AUTOPAY",
+  "YouTube Premium": "YOUTUBE PREMIUM SI-MANDATE",
+  "Amazon Prime": "AMAZON PRIME SI-MANDATE",
+  "House rent": "ACH D-HOUSE RENT-SI MANDATE",
+  "Airtel broadband": "ACH D-AIRTEL BROADBAND-NACH",
+  "BESCOM electricity": "BBPS/BESCOM/0042718831",
+  "Bike EMI": "ACH D-BIKE EMI BAJAJ FIN-NACH",
+  "Star Health insurance": "ACH D-STAR HEALTH INSURANCE-NACH",
+  "Maid (Sunita)": "UPI-SUNITA MAID-sunita.devi@ybl",
+  "Laundry & ironing": "UPI-LAUNDRY RAJU-raju.dhobi@ybl",
+  "Groww SIP": "ACH D-GROWW SIP-NACH",
+};
+export const narrationFor = (merchant: string) =>
+  NARRATION[merchant] ?? `UPI-${merchant.toUpperCase()}-payee@ybl`;
+
+/** The demo's transactions from the last 9 months (enough to catch the yearly Prime renewal), plus salary credits. */
+function sampleRows(now: Date): SampleRow[] {
+  const from = now.getTime() - 270 * DAY;
+  const spends: SampleRow[] = demoTransactions(now)
+    .filter((t) => new Date(t.date).getTime() >= from)
+    .map((t) => ({ date: new Date(t.date), narration: narrationFor(t.merchant), debit: t.amount }));
+  const first = Math.min(...spends.map((r) => r.date.getTime()));
+  const salaries: SampleRow[] = [];
+  for (let m = 0; m < 10; m++) {
+    const date = new Date(now.getFullYear(), now.getMonth() - m, 1, 10);
+    if (date.getTime() > now.getTime() || date.getTime() < first) continue;
+    salaries.push({
+      date,
+      narration: "NEFT CR-ACME TECHNOLOGIES PVT LTD-SALARY",
+      credit: SAMPLE_INCOME,
+    });
+  }
+  // A refund, as real statements have: it's a credit, so the import leaves it out.
+  const myntra = spends.find((r) => r.narration === NARRATION["Myntra"]);
+  const refund: SampleRow[] = myntra
+    ? [
+        {
+          date: new Date(myntra.date.getTime() + 2 * DAY),
+          narration: "UPI-MYNTRA REFUND-myntra@icici",
+          credit: 899,
+        },
+      ].filter((r) => r.date.getTime() <= now.getTime())
+    : [];
+  return [...spends, ...salaries, ...refund].sort((a, b) => a.date.getTime() - b.date.getTime());
+}
 
 const OPENING = 48250;
 const MONTHS = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
@@ -63,22 +100,23 @@ const ddMonyy = (d: Date) =>
 const money = (n: number) =>
   n.toLocaleString("en-IN", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
 
-/** Rows with dates and a running balance, oldest first. */
+/** Rows with a reference number and a running balance, oldest first. */
 function statement(now: Date) {
   let balance = OPENING;
-  return ROWS.map((r, i) => {
+  return sampleRows(now).map((r, i) => {
     balance += (r.credit ?? 0) - (r.debit ?? 0);
-    return { ...r, date: day(now, r.daysAgo), ref: `00004298${12300 + i * 7}`, balance };
+    return { ...r, ref: `00004298${12300 + i * 7}`, balance };
   });
 }
 
 export function sampleCsv(now = new Date()): string {
   const rows = statement(now);
+  const span = `Statement From : ${ddmmyy(rows[0]!.date)} To : ${ddmmyy(rows.at(-1)!.date)}`;
   const q = (s: string) => (/[",]/.test(s) ? `"${s.replace(/"/g, '""')}"` : s);
   return [
     "HDFC BANK LTD - SAMPLE STATEMENT (not a real account),,,,,,",
     "Account No : XXXXXXXX4421,,,,,,",
-    `Statement From : ${ddmmyy(day(now, 30))} To : ${ddmmyy(day(now, 1))},,,,,,`,
+    `${span},,,,,,`,
     ",,,,,,",
     "Date,Narration,Chq./Ref.No.,Value Dt,Withdrawal Amt.,Deposit Amt.,Closing Balance",
     ...rows.map((r) =>
@@ -100,8 +138,10 @@ export function sampleSms(now = new Date()): string {
   return [
     `Your A/c XX4421 is debited with Rs.22,000.00 on ${d(30)} by ACH towards HOUSE RENT. Avl Bal Rs.26,250.00 -HDFC Bank`,
     `Rs.649.00 debited from A/c XX4421 on ${d(27)} towards NETFLIX via e-mandate (SI). Not you? Call 18002586161 -HDFC Bank`,
-    `Rs.95,000.00 credited to A/c XX4421 on ${d(25)} by NEFT from ACME TECHNOLOGIES. Avl Bal Rs.1,18,445.00 -HDFC Bank`,
+    `Rs.${money(SAMPLE_INCOME)} credited to A/c XX4421 on ${d(25)} by NEFT from ACME TECHNOLOGIES. Avl Bal Rs.1,43,445.00 -HDFC Bank`,
+    `Rs.3,200.00 debited from A/c XX4421 on ${d(24)} towards BIKE EMI BAJAJ FIN via NACH. -HDFC Bank`,
     `Rs.1,499.00 debited from A/c XX4421 on ${d(24)} towards AMAZON PRIME via e-mandate (SI). -HDFC Bank`,
+    `Rs.1,450.00 debited from A/c XX4421 on ${d(22)} towards BESCOM ELECTRICITY via BBPS. -HDFC Bank`,
     `Rs.119.00 debited from A/c XX4421 on ${d(21)} towards SPOTIFY via e-mandate (SI). -HDFC Bank`,
     `Sent Rs.1,500.00 from Kotak Bank AC X8812 to ramesh.kumar@ybl on ${d(20)}. UPI Ref 4291XXXX`,
     `INR 2,500.00 spent on ICICI Card XX9014 on ${ddMonyy(day(now, 19))} at IOCL COCO BLR. Avl Lmt: INR 84,210`,
@@ -112,10 +152,11 @@ export function sampleSms(now = new Date()): string {
     `Rs.1,299.00 debited from A/c XX4421 on ${d(9)} towards CULTFIT via autopay. -HDFC Bank`,
     `Rs.932.00 debited from A/c XX4421 on ${d(5)} to VPA swiggy@icici (UPI Ref 4298XXXX). Not you? Call 18002586161 -HDFC Bank`,
     `Rs.690.00 debited from A/c XX4421 on ${d(1)} to VPA zomato@hdfcbank (UPI Ref 4299XXXX). -HDFC Bank`,
+    `Rs.3,000.00 debited from A/c XX4421 on ${d(1)} to SUNITA MAID via UPI (Ref 4300XXXX). -HDFC Bank`,
   ].join("\n\n");
 }
 
-/** A two-page statement PDF laid out like a net-banking download. */
+/** A statement PDF laid out like a net-banking download. */
 export async function samplePdf(now = new Date()): Promise<ArrayBuffer> {
   const { jsPDF } = await import("jspdf");
   const doc = new jsPDF({ orientation: "landscape", unit: "pt", format: "a4" });
@@ -139,14 +180,17 @@ export async function samplePdf(now = new Date()): Promise<ArrayBuffer> {
     col(r.credit ? money(r.credit) : "", 14, true) +
     col(money(r.balance), 17, true);
 
-  const pages = [rows.slice(0, 18), rows.slice(18)];
+  const PER_PAGE = 24;
+  const pages = Array.from({ length: Math.ceil(rows.length / PER_PAGE) }, (_, i) =>
+    rows.slice(i * PER_PAGE, (i + 1) * PER_PAGE),
+  );
   pages.forEach((pageRows, p) => {
     if (p > 0) doc.addPage();
     doc.setFont("helvetica", "bold").setFontSize(14).text("HDFC BANK LTD", 40, 48);
     doc.setFont("helvetica", "normal").setFontSize(9).setTextColor(120);
     doc.text("SAMPLE STATEMENT FOR TRYING MUNSHI AI. NOT A REAL ACCOUNT.", 40, 64);
     doc.text(
-      `Account No : XXXXXXXX4421   Statement From : ${ddmmyy(day(now, 30))} To : ${ddmmyy(day(now, 1))}`,
+      `Account No : XXXXXXXX4421   Statement From : ${ddmmyy(rows[0]!.date)} To : ${ddmmyy(rows.at(-1)!.date)}`,
       40,
       78,
     );
@@ -157,7 +201,9 @@ export async function samplePdf(now = new Date()): Promise<ArrayBuffer> {
     let y = 130;
     if (p === 0) {
       doc.text(
-        col(ddmmyy(day(now, 31)), 10) + col("OPENING BALANCE", 92) + col(money(OPENING), 21, true),
+        col(ddmmyy(new Date(rows[0]!.date.getTime() - DAY)), 10) +
+          col("OPENING BALANCE", 92) +
+          col(money(OPENING), 21, true),
         40,
         y,
       );

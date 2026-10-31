@@ -386,7 +386,7 @@ function Review({
   onBack: () => void;
   onDone: () => void;
 }) {
-  const { addMany, learnRule, ownRules, ownIncomeSet, assumeSampleIncome, askIncome } = useStore();
+  const { addMany, learnRule, ownRules, ownIncomeSet, applySampleProfile, askIncome } = useStore();
   const navigate = useNavigate();
   const [showCredits, setShowCredits] = useState(false);
   const [view, setView] = useState<View>("all");
@@ -440,11 +440,10 @@ function Review({
         ...(d.recurring && { recurring: true }),
       })),
     );
-    // Sample files come with a stand-in salary; real ones ask, offering any salary credit found.
-    if (!ownIncomeSet) {
-      if (sample) assumeSampleIncome();
-      else askIncome(salaryIn(drafts));
-    }
+    // Sample files come with the demo's salary, budgets and goals; real ones ask for the
+    // salary, offering any salary credit found.
+    if (sample) applySampleProfile();
+    else if (!ownIncomeSet) askIncome(salaryIn(drafts));
     toast.success(`Added ${selected.length} transactions`);
     onDone();
     void navigate({ to: "/transactions" });
