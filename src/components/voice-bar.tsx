@@ -5,13 +5,15 @@ import { parseCommand } from "@/lib/parse-command";
 import { useStore } from "@/lib/store";
 import { formatINR } from "@/lib/format";
 import { parseUsageCommand, yearlyCost } from "@/lib/recurring";
+import { parseRuleCommand } from "@/lib/rules";
 import { cn } from "@/lib/utils";
 
 export function VoiceBar() {
   const [text, setText] = useState("");
   const [listening, setListening] = useState(false);
   const ref = useRef<HTMLTextAreaElement>(null);
-  const { add, subscriptions, cancelSub, markUsed, markUnused } = useStore();
+  const { add, transactions, subscriptions, cancelSub, markUsed, markUnused, learnRule } =
+    useStore();
 
   const submit = () => {
     const value = text.trim();
@@ -42,20 +44,41 @@ export function VoiceBar() {
     }
 
     const p = parseCommand(value);
+
+    // No amount + a known merchant + a category = a correction, e.g. "Swiggy is food, not groceries".
+    const rule = p.amount
+      ? null
+      : parseRuleCommand(
+          value,
+          transactions.map((t) => t.merchant),
+        );
+    if (rule) {
+      const n = learnRule(rule.merchant, rule.category);
+      toast.success(`Got it. ${rule.merchant} → ${rule.category}, always.`, {
+        description: n
+          ? `Refiled ${n} past transaction${n > 1 ? "s" : ""}.`
+          : "Munshi will use this for new ones.",
+      });
+      setText("");
+      return;
+    }
+
     if (!p.amount) {
       toast("Couldn't find an amount", {
         description: "Try something like “Spent 480 on Swiggy last night”.",
       });
       return;
     }
-    add({
+    const tx = add({
       merchant: p.merchant,
       category: p.category,
       amount: p.amount,
       date: new Date(Date.now() - p.daysAgo * 86400000).toISOString(),
       note: value,
     });
-    toast.success(`Logged ${formatINR(p.amount)} · ${p.merchant}`, { description: p.category });
+    toast.success(`Logged ${formatINR(tx.amount)} · ${tx.merchant}`, {
+      description: tx.ruleId ? `${tx.category} (learned from you 🧠)` : tx.category,
+    });
     setText("");
   };
 

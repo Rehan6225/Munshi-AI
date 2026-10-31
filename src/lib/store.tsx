@@ -1,5 +1,14 @@
-import { createContext, useContext, useEffect, useMemo, useState, type ReactNode } from "react";
-import { detectRecurring, type Recurring, type Usage } from "./recurring";
+import {
+  createContext,
+  useContext,
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+  type ReactNode,
+} from "react";
+import { detectRecurring, merchantKey, type Recurring, type Usage } from "./recurring";
+import { findRule, suggestCategories, type Rule } from "./rules";
 import {
   fixedCosts,
   monthlySpend,
@@ -21,8 +30,8 @@ export interface Transaction {
   amount: number;
   date: string; // ISO
   note?: string;
-  /** Category the coach thinks is correct, if the current one looks wrong. */
-  suggestedCategory?: Category | undefined;
+  /** Set when a learned rule picked the category. */
+  ruleId?: string | undefined;
 }
 
 const d = (daysAgo: number) => new Date(Date.now() - daysAgo * 86400000).toISOString();
@@ -32,10 +41,9 @@ const DEMO_TX: Transaction[] = [
     id: "1",
     merchant: "Swiggy",
     category: "Groceries",
-    suggestedCategory: "Food",
     amount: 640,
     date: d(0),
-    note: "Biryani order, tagged as Groceries",
+    note: "Biryani order",
   },
   { id: "2", merchant: "Zomato", category: "Food", amount: 520, date: d(1) },
   { id: "3", merchant: "Blinkit", category: "Groceries", amount: 1240, date: d(1) },
@@ -138,6 +146,7 @@ interface Saved {
   cancelled: string[];
   profile: Profile;
   goals: Goal[];
+  rules: Rule[];
 }
 
 const STORAGE_KEY = "munshi-ai:v1";
@@ -148,6 +157,7 @@ const EMPTY: Saved = {
   cancelled: [],
   profile: EMPTY_PROFILE,
   goals: EMPTY_GOALS,
+  rules: [],
 };
 const DEMO: Saved = {
   mode: "demo",
@@ -156,6 +166,7 @@ const DEMO: Saved = {
   cancelled: [],
   profile: DEMO_PROFILE,
   goals: DEMO_GOALS,
+  rules: [],
 };
 
 function load(): Saved {
@@ -180,8 +191,15 @@ interface Ctx {
   /** Spent in the last 30 days. */
   spend: number;
   fixed: ReturnType<typeof fixedCosts>;
-  add: (t: Omit<Transaction, "id">) => void;
+  rules: Rule[];
+  /** Transaction id → the category its merchant is usually filed under. */
+  suggestions: Map<string, Category>;
+  /** Adds a transaction, letting a learned rule override its category. */
+  add: (t: Omit<Transaction, "id">) => Transaction;
   recategorize: (id: string, category: Category) => void;
+  /** Saves "merchant → category" and refiles past transactions. Returns how many changed. */
+  learnRule: (merchant: string, category: Category) => number;
+  removeRule: (id: string) => void;
   cancelSub: (key: string) => void;
   markUsed: (key: string) => void;
   markUnused: (key: string) => void;
@@ -202,6 +220,9 @@ export function StoreProvider({ children }: { children: ReactNode }) {
   const [hydrated, setHydrated] = useState(false);
   const [state, setState] = useState<Saved>(EMPTY);
   const set = (fn: (s: Saved) => Partial<Saved>) => setState((s) => ({ ...s, ...fn(s) }));
+  // Actions fired later (e.g. from a toast button) must see current data, not the render they came from.
+  const latest = useRef(state);
+  latest.current = state;
 
   useEffect(() => {
     // brief delay so skeletons are visible while "syncing"
@@ -227,6 +248,7 @@ export function StoreProvider({ children }: { children: ReactNode }) {
     [transactions, usage, cancelled],
   );
   const spend = useMemo(() => monthlySpend(transactions), [transactions]);
+  const suggestions = useMemo(() => suggestCategories(transactions), [transactions]);
   const fixed = useMemo(() => fixedCosts(subscriptions, profile), [subscriptions, profile]);
   const goals = useMemo(
     () =>
@@ -248,15 +270,59 @@ export function StoreProvider({ children }: { children: ReactNode }) {
     goals,
     spend,
     fixed,
-    add: (t) =>
+    rules: state.rules,
+    suggestions,
+    add: (t) => {
+      const rule = findRule(t.merchant, latest.current.rules);
+      const tx: Transaction = rule
+        ? { ...t, id: crypto.randomUUID(), category: rule.category, ruleId: rule.id }
+        : { ...t, id: crypto.randomUUID() };
       set((s) => ({
-        transactions: [{ ...t, id: crypto.randomUUID() }, ...s.transactions],
+        transactions: [tx, ...s.transactions],
+        rules: rule
+          ? s.rules.map((r) => (r.id === rule.id ? { ...r, applied: r.applied + 1 } : r))
+          : s.rules,
         mode: s.mode ?? "own",
-      })),
+      }));
+      return tx;
+    },
     recategorize: (id, category) =>
       set((s) => ({
         transactions: s.transactions.map((t) =>
-          t.id === id ? { ...t, category, suggestedCategory: undefined } : t,
+          t.id === id ? { ...t, category, ruleId: undefined } : t,
+        ),
+      })),
+    learnRule: (merchant, category) => {
+      const key = merchantKey(merchant);
+      const existing = latest.current.rules.find((r) => r.key === key);
+      const rule: Rule = existing
+        ? { ...existing, category }
+        : {
+            id: crypto.randomUUID(),
+            key,
+            merchant,
+            category,
+            applied: 0,
+            createdAt: new Date().toISOString(),
+          };
+      const matching = latest.current.transactions.filter((t) => merchantKey(t.merchant) === key);
+      const changed = matching.filter((t) => t.category !== category).length;
+      set((s) => ({
+        transactions: s.transactions.map((t) =>
+          merchantKey(t.merchant) === key ? { ...t, category, ruleId: rule.id } : t,
+        ),
+        rules: [
+          ...s.rules.filter((r) => r.key !== key),
+          { ...rule, applied: existing ? existing.applied + changed : matching.length },
+        ],
+      }));
+      return changed;
+    },
+    removeRule: (id) =>
+      set((s) => ({
+        rules: s.rules.filter((r) => r.id !== id),
+        transactions: s.transactions.map((t) =>
+          t.ruleId === id ? { ...t, ruleId: undefined } : t,
         ),
       })),
     cancelSub: (key) => set((s) => ({ cancelled: [...s.cancelled, key] })),

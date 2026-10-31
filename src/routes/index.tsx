@@ -40,7 +40,7 @@ const COLORS = [
 ];
 
 function Dashboard() {
-  const { hydrated, transactions, subscriptions, goals, profile } = useStore();
+  const { hydrated, transactions, subscriptions, goals, profile, suggestions } = useStore();
   const now = new Date();
 
   if (!hydrated) {
@@ -104,7 +104,7 @@ function Dashboard() {
   const fresh = subscriptions.find((s) => s.alerts.includes("new"));
   const renews = (iso: string) =>
     new Date(iso).toLocaleDateString("en-IN", { day: "numeric", month: "short" });
-  const miscat = transactions.find((t) => t.suggestedCategory);
+  const miscat = transactions.find((t) => suggestions.has(t.id));
   const eo = DEMO_EATING_OUT;
   const eoFirst = eo[0]!.amount;
   const eoLast = eo[eo.length - 1]!.amount;
@@ -132,7 +132,7 @@ function Dashboard() {
     },
     miscat && {
       icon: Tag,
-      text: `A ${miscat.merchant} order was filed under ${miscat.category}. Fix it so your food spend is honest.`,
+      text: `A ${miscat.merchant} spend is under ${miscat.category}, but you usually file it as ${suggestions.get(miscat.id)}. Fix it so your numbers stay honest.`,
       to: "/transactions" as const,
     },
     ef?.status === "At risk" && {

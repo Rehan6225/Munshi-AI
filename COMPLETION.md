@@ -3,7 +3,7 @@
 Everything needed to finish Munshi AI for **The Product Space AI Hackathon** (problem statement **#04: Personal Finance Coach with a Living Money Model**).
 
 **Deadline:** 31 Oct, 11:59 PM IST
-**Overall progress:** about 35%
+**Overall progress:** about 45%
 **Rule:** everything must be **dynamic**. Every number, alert and status is calculated from real data, never hardcoded.
 
 Legend: 🔴 not started · 🟡 in progress · 🟢 done
@@ -15,7 +15,7 @@ Legend: 🔴 not started · 🟡 in progress · 🟢 done
 | # | Requirement | Status | Done | What exists | Still hardcoded / missing |
 |---|---|---|---|---|---|
 | 1 | Ingest messy bank data (PDF, CSV, SMS) with automatic categories | 🔴 | 0% | Nothing | No upload or paste flow. Categories come from keyword matching only |
-| 2 | Correction loop: user fixes a category and the system learns the rule | 🟡 | 15% | "Move to Food" button on one demo transaction | The suggestion is typed into the demo data. No rule is saved, and future transactions aren't affected |
+| 2 | Correction loop: user fixes a category and the system learns the rule | 🟢 | 100% | ✅ Change any category → "Remember" refiles all past transactions from that merchant and future ones. "🧠 learned" badge, Learned rules list with usage count and delete. Voice: "Swiggy is food, not groceries, remember that". Suggestions calculated from each merchant's usual category | — |
 | 3 | Recurring payments and subscriptions, with alerts on change or non-use | 🟢 | 90% | Detected from transactions, with price-hike, unused and new alerts, voice commands and buttons | Lost on refresh (no saving yet) |
 | 4 | Persistent profile: income, fixed costs, emergency fund, goals with target dates | 🟢 | 95% | ✅ Money profile page: income, fixed costs (detected bills + your own), emergency fund (3–12 months of spending), goals with target, saved and date. Everything saves across refreshes | Nothing major |
 | 5 | Goal planner with what-if simulation ("cut dining by 30%", "rent goes up") | 🟡 | 35% | ✅ Goal status (Ahead / On track / At risk / Done) and advice calculated from income, spending and deadlines | What-If page still says "Coming soon" |
@@ -46,8 +46,8 @@ Legend: 🔴 not started · 🟡 in progress · 🟢 done
 
 | Item | Status | Details |
 |---|---|---|
-| Save data across refreshes | 🟢 | ✅ Transactions, profile, goals, subscription check-ins and cancellations all saved in the browser. Learned rules will be added with #2 |
-| Remove hardcoded values | 🟡 | ✅ `MONTHLY_INCOME` and goal `status`/`note` text removed. Still left: `DEMO_EATING_OUT` (task 4), demo `suggestedCategory` (task 2) |
+| Save data across refreshes | 🟢 | ✅ Transactions, profile, goals, learned rules, subscription check-ins and cancellations all saved in the browser |
+| Remove hardcoded values | 🟡 | ✅ `MONTHLY_INCOME`, goal `status`/`note` text and demo `suggestedCategory` removed. Still left: `DEMO_EATING_OUT` (task 4) |
 
 ---
 
@@ -56,7 +56,7 @@ Legend: 🔴 not started · 🟡 in progress · 🟢 done
 | Order | Task | Needs Gemini key? | Time | Status |
 |---|---|---|---|---|
 | 1 | Save data + profile form (#4), replacing the fixed income and goal text | No | 1 hr | 🟢 |
-| 2 | Correction loop with real learned rules (#2) | No | 45 min | 🔴 |
+| 2 | Correction loop with real learned rules (#2) | No | 45 min | 🟢 |
 | 3 | Calculated goal status + What-If simulator (#5) | No | 1.5 hr | 🟡 Goal status done; What-If left |
 | 4 | Calculated nudges + monthly review from real transactions (#6, #7) | No | 1 hr | 🔴 |
 | 5 | AI voice parsing + U1 "What Munshi heard" | **Yes** | 1 hr | 🔴 |
@@ -79,3 +79,4 @@ Newest last. Every finished task gets a line here, along with whether it has bee
 | 3:50 PM | **#3 Recurring payment detection:** subscriptions detected from transactions; price-hike, unused and new alerts; voice check-ins ("I never use Hotstar"); 10 tests | ✅ |
 | 4:00 PM | COMPLETION.md tracker created | ⏳ Not yet |
 | 4:55 PM | **Task 1, saving data + Money profile (#4):** everything saves across refreshes; new Money profile page (income, fixed costs, emergency fund, goals); goal status and advice calculated; "Start with my own numbers" option next to "Try with demo data"; Demo badge and Reset / switch button with confirmation; 8 tests | ⏳ Not yet |
+| 5:05 PM | **Task 2, correction loop (#2):** category picker on every transaction; "Remember" saves a rule and refiles past and future spends; 🧠 learned badge; Learned rules card; voice corrections ("Swiggy is food, not groceries"); calculated suggestions replace the hardcoded one; 11 tests | ⏳ Not yet |
