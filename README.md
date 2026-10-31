@@ -69,14 +69,6 @@ Dictate with **Wispr Flow** (or the built-in 🎤 mic). Filler words, "no wait" 
     <td><img src="docs/screenshots/coach.png" alt="Coach answering whether a phone is affordable, based on the user's real numbers" /><br /><b>Coach.</b> Answers from your real income, spending and goals, powered by Gemini.</td>
     <td><img src="docs/screenshots/plan-ahead.png" alt="Plan Ahead simulator with ideas and sliders" /><br /><b>Plan Ahead.</b> Try a change and watch your savings and goal dates move.</td>
   </tr>
-  <tr>
-    <td><img src="docs/screenshots/monthly-review.png" alt="Monthly review with income, spending, savings rate and highlights" /><br /><b>Monthly review.</b> Where the money went, what changed, and a PDF report.</td>
-    <td><img src="docs/screenshots/goals.png" alt="Goals page with status for each goal" /><br /><b>Goals.</b> Each goal's status and the monthly amount it needs to land on time.</td>
-  </tr>
-  <tr>
-    <td><img src="docs/screenshots/transactions.png" alt="Transactions with categories and learned rules" /><br /><b>Transactions.</b> Change a category and Munshi remembers it.</td>
-    <td><img src="docs/screenshots/landing.png" alt="Landing page: Talk to your money" /><br /><b>Start in seconds.</b> Try the demo or import your own statement.</td>
-  </tr>
 </table>
 
 <p align="center">
@@ -187,3 +179,7 @@ src/
 **The Product Space AI Hackathon**, problem statement **04: Personal Finance Coach with a Living Money Model**.
 
 The whole app was built **by voice**: every prompt, spec and fix was dictated with **Wispr Flow**.
+
+## 👥 Built by
+
+**Rehan Singh** and **Piyush Saharia**
