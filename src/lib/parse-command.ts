@@ -20,10 +20,24 @@ export function parseCommand(text: string) {
     if (unit === "k" || unit === "thousand") amount *= 1000;
     if (unit === "lakh" || unit === "lakhs" || unit === "l") amount *= 100000;
   }
-  const merchantMatch = text.match(/\b(?:on|at|for|to)\s+([A-Za-z][\w&' ]{1,24}?)(?=\s+(?:last|yesterday|today|this|for|on|at|and|in)\b|[.,!?]|$)/i);
-  const merchant = merchantMatch ? capitalize((merchantMatch[1] ?? "").trim()) : "Expense";
+  const merchantMatch = text.match(
+    /\b(?:on|at|for|to)\s+([A-Za-z][\w&' ]{1,24}?)(?=\s+(?:last|yesterday|today|this|for|on|at|and|in)\b|[.,!?]|$)/i,
+  );
+  // "paid 200 auto", "150 chai with friends": no preposition, so take the word after the amount.
+  const afterAmount = cleaned.match(
+    /\d+(?:\.\d+)?\s*(?:k\b|rs\.?|rupees|₹)?\s+(?!(?:on|at|for|to|yesterday|today|last|this|and|rupees)\b)([a-z][\w&']{1,20})/i,
+  );
+  const merchant = merchantMatch
+    ? capitalize((merchantMatch[1] ?? "").trim())
+    : afterAmount
+      ? capitalize(afterAmount[1]!)
+      : "Expense";
   const category = CATEGORY_HINTS.find(([, re]) => re.test(text))?.[0] ?? "Other";
-  const daysAgo = /yesterday|last night/i.test(text) ? 1 : 0;
+  const daysAgo = /day before yesterday/i.test(text)
+    ? 2
+    : /yesterday|last night/i.test(text)
+      ? 1
+      : 0;
   return { amount, merchant, category, daysAgo };
 }
 

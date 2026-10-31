@@ -3,7 +3,7 @@
 Everything needed to finish Munshi AI for **The Product Space AI Hackathon** (problem statement **#04: Personal Finance Coach with a Living Money Model**).
 
 **Deadline:** 31 Oct, 11:59 PM IST
-**Overall progress:** about 45%
+**Overall progress:** about 55%
 **Rule:** everything must be **dynamic**. Every number, alert and status is calculated from real data, never hardcoded.
 
 Legend: 🔴 not started · 🟡 in progress · 🟢 done
@@ -27,7 +27,7 @@ Legend: 🔴 not started · 🟡 in progress · 🟢 done
 
 | Item | Score weight | Status | Notes |
 |---|---|---|---|
-| AI voice parsing ("450, no wait, 480" → ₹480; several expenses in one sentence) | Voice 20% + AI 20% | 🔴 30% | Keyword matching parses self-corrections wrong. **Needs the Gemini API key** |
+| AI voice parsing ("450, no wait, 480" → ₹480; several expenses in one sentence) | Voice 20% + AI 20% | 🟡 85% | ✅ Gemini parsing via a server function (key stays on the server), with an on-device fallback that already handles fillers, "no wait" corrections and several spends per sentence. **Needs the Gemini key** in `.env` to switch on AI |
 | Wispr Flow usage (dictate every prompt, fix and message) | 20% | 🟡 Ongoing | Judges check activity on the Wispr account |
 | Live deployed URL | Required | 🔴 | Cloudflare (free); the project already builds for it |
 | LinkedIn post (demo video + tag Wispr Flow and the organizers) | 15% | 🔴 | Posting at all earns 6/10; higher engagement earns up to 10 |
@@ -37,7 +37,7 @@ Legend: 🔴 not started · 🟡 in progress · 🟢 done
 
 | # | Upgrade | Status | Why it matters |
 |---|---|---|---|
-| U1 | **"What Munshi heard"** card: raw speech with fillers and corrections struck through, then the clean entry | 🔴 | Makes the voice skill visible to judges |
+| U1 | **"What Munshi heard"** card: raw speech with fillers and corrections struck through, then the clean entry | 🟢 | ✅ Built: fillers struck in grey, take-backs in red, editable entries, Save / Discard, Gemini or On-device badge |
 | U2 | **Munshi persona**: avatar plus warm Hinglish replies ("Ho gaya! ₹480 Swiggy pe likh diya.") | 🔴 | Makes the app memorable; builds on the munshi story |
 | U3 | **Munshi talks back**: spoken replies (free browser text-to-speech) | 🔴 | Wow moment in the demo; voice works both ways |
 | U4 | **Ledger (khata) look** for transactions (optional) | 🔴 | A distinct look, tied to the munshi idea |
@@ -59,7 +59,7 @@ Legend: 🔴 not started · 🟡 in progress · 🟢 done
 | 2 | Correction loop with real learned rules (#2) | No | 45 min | 🟢 |
 | 3 | Calculated goal status + What-If simulator (#5) | No | 1.5 hr | 🟡 Goal status done; What-If left |
 | 4 | Calculated nudges + monthly review from real transactions (#6, #7) | No | 1 hr | 🔴 |
-| 5 | AI voice parsing + U1 "What Munshi heard" | **Yes** | 1 hr | 🔴 |
+| 5 | AI voice parsing + U1 "What Munshi heard" | **Yes** | 1 hr | 🟢 Built; add the key to enable Gemini |
 | 6 | Import: CSV + SMS paste with AI categories (#1); PDF only if time allows | **Yes** | 1 hr | 🔴 |
 | 7 | Coach with guardrails (#8) | **Yes** | 45 min | 🔴 |
 | 8 | U2 Munshi persona + U3 talk-back | No | 45 min | 🔴 |
@@ -80,3 +80,4 @@ Newest last. Every finished task gets a line here, along with whether it has bee
 | 4:00 PM | COMPLETION.md tracker created | ⏳ Not yet |
 | 4:55 PM | **Task 1, saving data + Money profile (#4):** everything saves across refreshes; new Money profile page (income, fixed costs, emergency fund, goals); goal status and advice calculated; "Start with my own numbers" option next to "Try with demo data"; Demo badge and Reset / switch button with confirmation; 8 tests | ⏳ Not yet |
 | 5:05 PM | **Task 2, correction loop (#2):** category picker on every transaction; "Remember" saves a rule and refiles past and future spends; 🧠 learned badge; Learned rules card; voice corrections ("Swiggy is food, not groceries"); calculated suggestions replace the hardcoded one; 11 tests | ⏳ Not yet |
+| 5:51 PM | **Task 5, voice parsing + U1 "What Munshi heard":** Gemini server function (key stays on the server) with an on-device fallback; handles fillers, "450, no wait, 480" and several spends per sentence; confirm card with struck-through speech, editable amounts and categories; 12 tests | ⏳ Not yet |

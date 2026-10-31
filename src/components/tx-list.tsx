@@ -1,18 +1,9 @@
 import { AlertTriangle, Brain } from "lucide-react";
 import { toast } from "sonner";
+import { CATEGORIES } from "@/lib/categories";
 import { formatINR } from "@/lib/format";
 import { merchantKey } from "@/lib/recurring";
 import { useStore, type Category, type Transaction } from "@/lib/store";
-
-const CATEGORIES: Category[] = [
-  "Food",
-  "Groceries",
-  "Transport",
-  "Shopping",
-  "Bills",
-  "Entertainment",
-  "Other",
-];
 
 export function TxList({ items }: { items: Transaction[] }) {
   const { transactions, suggestions, recategorize, learnRule } = useStore();
