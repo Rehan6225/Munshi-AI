@@ -128,11 +128,24 @@ describe("store: demo and own data stay apart", () => {
     act(() => void result.current.addMany([imported]));
     expect(result.current.profile.income).toBe(0);
 
-    act(() => result.current.assumeSampleIncome());
-    expect([result.current.profile.income, result.current.incomeAssumed]).toEqual([95000, true]);
+    act(() => result.current.applySampleProfile());
+    expect([result.current.profile.income, result.current.incomeAssumed]).toEqual([120000, true]);
     act(() => result.current.updateProfile({ income: 72000 }));
-    act(() => result.current.assumeSampleIncome());
+    act(() => result.current.applySampleProfile());
     expect([result.current.profile.income, result.current.ownIncomeSet]).toEqual([72000, true]);
+  });
+
+  it("gives sample data the demo's budgets, goals and check-ins, keeping the user's own", async () => {
+    const { result } = await demoStore();
+    act(() => void result.current.addMany([imported]));
+    act(() => result.current.updateProfile({ budgets: { Groceries: 6000 } }));
+    act(() => result.current.applySampleProfile());
+    expect(result.current.profile.budgets).toEqual({ Groceries: 6000 });
+    expect(result.current.goals.map((g) => g.name)).toEqual([
+      "Emergency fund",
+      "Goa trip",
+      "New laptop",
+    ]);
   });
 
   it("reads data saved in the older single-set format", async () => {

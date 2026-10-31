@@ -107,7 +107,8 @@ function Pick({
   const { transactions, ownRules } = useStore();
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState("");
-  const [sms, setSms] = useState("");
+  // Opens with the sample messages in place, so the SMS import can be tried in one click.
+  const [sms, setSms] = useState(() => sampleSms());
   const [locked, setLocked] = useState<File | null>(null);
   const [password, setPassword] = useState("");
   const [dragging, setDragging] = useState(false);
@@ -247,8 +248,20 @@ function Pick({
             className="w-full resize-none rounded-xl border bg-card p-3 font-mono text-xs leading-relaxed outline-none placeholder:text-muted-foreground/60 focus:border-primary/50"
           />
           <p className="text-xs text-muted-foreground">
-            In Messages, long-press your bank's alerts, copy them and paste here. Separate messages
-            with a blank line.
+            {sms.trim() === sampleSms().trim() ? (
+              <>
+                These are sample bank alerts. To use yours,{" "}
+                <button
+                  onClick={() => setSms("")}
+                  className="font-medium text-primary underline-offset-2 hover:underline"
+                >
+                  clear them
+                </button>
+                , then copy your bank's alerts from Messages and paste them here.
+              </>
+            ) : (
+              "In Messages, long-press your bank's alerts, copy them and paste here. Separate messages with a blank line."
+            )}
           </p>
           <button
             onClick={readSms}
@@ -386,7 +399,7 @@ function Review({
   onBack: () => void;
   onDone: () => void;
 }) {
-  const { addMany, learnRule, ownRules, ownIncomeSet, assumeSampleIncome, askIncome } = useStore();
+  const { addMany, learnRule, ownRules, ownIncomeSet, applySampleProfile, askIncome } = useStore();
   const navigate = useNavigate();
   const [showCredits, setShowCredits] = useState(false);
   const [view, setView] = useState<View>("all");
@@ -440,11 +453,10 @@ function Review({
         ...(d.recurring && { recurring: true }),
       })),
     );
-    // Sample files come with a stand-in salary; real ones ask, offering any salary credit found.
-    if (!ownIncomeSet) {
-      if (sample) assumeSampleIncome();
-      else askIncome(salaryIn(drafts));
-    }
+    // Sample files come with the demo's salary, budgets and goals; real ones ask for the
+    // salary, offering any salary credit found.
+    if (sample) applySampleProfile();
+    else if (!ownIncomeSet) askIncome(salaryIn(drafts));
     toast.success(`Added ${selected.length} transactions`);
     onDone();
     void navigate({ to: "/transactions" });
