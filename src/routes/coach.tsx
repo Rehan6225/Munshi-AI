@@ -50,7 +50,11 @@ function Page() {
   const [busy, setBusy] = useState(false);
   const end = useRef<HTMLDivElement>(null);
 
-  useEffect(() => end.current?.scrollIntoView({ behavior: "smooth", block: "end" }), [messages]);
+  // Braces matter: newer browsers return a Promise from scrollIntoView, and an effect
+  // must return nothing or a cleanup function.
+  useEffect(() => {
+    end.current?.scrollIntoView({ behavior: "smooth", block: "end" });
+  }, [messages]);
 
   if (store.hydrated && !store.mode) {
     return (

@@ -5,7 +5,8 @@ Object.defineProperty(window, "scrollTo", {
   value: () => {},
 });
 
-Element.prototype.scrollIntoView = () => {};
+// Newer Chrome returns a Promise here; matching it catches effects that accidentally return it.
+Element.prototype.scrollIntoView = () => Promise.resolve() as unknown as void;
 
 Object.defineProperty(window, "matchMedia", {
   writable: true,
