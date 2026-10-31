@@ -10,33 +10,115 @@
 
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as IndexRouteImport } from './routes/index'
+import { Route as CoachRouteImport } from './routes/coach'
+import { Route as GoalsRouteImport } from './routes/goals'
+import { Route as MonthlyReviewRouteImport } from './routes/monthly-review'
+import { Route as SubscriptionsRouteImport } from './routes/subscriptions'
+import { Route as TransactionsRouteImport } from './routes/transactions'
+import { Route as WhatIfRouteImport } from './routes/what-if'
 
 const IndexRoute = IndexRouteImport.update({
   id: '/',
   path: '/',
   getParentRoute: () => rootRouteImport,
 } as any)
+const CoachRoute = CoachRouteImport.update({
+  id: '/coach',
+  path: '/coach',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const GoalsRoute = GoalsRouteImport.update({
+  id: '/goals',
+  path: '/goals',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const MonthlyReviewRoute = MonthlyReviewRouteImport.update({
+  id: '/monthly-review',
+  path: '/monthly-review',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const SubscriptionsRoute = SubscriptionsRouteImport.update({
+  id: '/subscriptions',
+  path: '/subscriptions',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const TransactionsRoute = TransactionsRouteImport.update({
+  id: '/transactions',
+  path: '/transactions',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const WhatIfRoute = WhatIfRouteImport.update({
+  id: '/what-if',
+  path: '/what-if',
+  getParentRoute: () => rootRouteImport,
+} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
+  '/coach': typeof CoachRoute
+  '/goals': typeof GoalsRoute
+  '/monthly-review': typeof MonthlyReviewRoute
+  '/subscriptions': typeof SubscriptionsRoute
+  '/transactions': typeof TransactionsRoute
+  '/what-if': typeof WhatIfRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
+  '/coach': typeof CoachRoute
+  '/goals': typeof GoalsRoute
+  '/monthly-review': typeof MonthlyReviewRoute
+  '/subscriptions': typeof SubscriptionsRoute
+  '/transactions': typeof TransactionsRoute
+  '/what-if': typeof WhatIfRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
+  '/coach': typeof CoachRoute
+  '/goals': typeof GoalsRoute
+  '/monthly-review': typeof MonthlyReviewRoute
+  '/subscriptions': typeof SubscriptionsRoute
+  '/transactions': typeof TransactionsRoute
+  '/what-if': typeof WhatIfRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/'
+  fullPaths:
+    | '/'
+    | '/coach'
+    | '/goals'
+    | '/monthly-review'
+    | '/subscriptions'
+    | '/transactions'
+    | '/what-if'
   fileRoutesByTo: FileRoutesByTo
-  to: '/'
-  id: '__root__' | '/'
+  to:
+    | '/'
+    | '/coach'
+    | '/goals'
+    | '/monthly-review'
+    | '/subscriptions'
+    | '/transactions'
+    | '/what-if'
+  id:
+    | '__root__'
+    | '/'
+    | '/coach'
+    | '/goals'
+    | '/monthly-review'
+    | '/subscriptions'
+    | '/transactions'
+    | '/what-if'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
+  CoachRoute: typeof CoachRoute
+  GoalsRoute: typeof GoalsRoute
+  MonthlyReviewRoute: typeof MonthlyReviewRoute
+  SubscriptionsRoute: typeof SubscriptionsRoute
+  TransactionsRoute: typeof TransactionsRoute
+  WhatIfRoute: typeof WhatIfRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -48,11 +130,59 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof IndexRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/coach': {
+      id: '/coach'
+      path: '/coach'
+      fullPath: '/coach'
+      preLoaderRoute: typeof CoachRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/goals': {
+      id: '/goals'
+      path: '/goals'
+      fullPath: '/goals'
+      preLoaderRoute: typeof GoalsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/monthly-review': {
+      id: '/monthly-review'
+      path: '/monthly-review'
+      fullPath: '/monthly-review'
+      preLoaderRoute: typeof MonthlyReviewRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/subscriptions': {
+      id: '/subscriptions'
+      path: '/subscriptions'
+      fullPath: '/subscriptions'
+      preLoaderRoute: typeof SubscriptionsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/transactions': {
+      id: '/transactions'
+      path: '/transactions'
+      fullPath: '/transactions'
+      preLoaderRoute: typeof TransactionsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/what-if': {
+      id: '/what-if'
+      path: '/what-if'
+      fullPath: '/what-if'
+      preLoaderRoute: typeof WhatIfRouteImport
+      parentRoute: typeof rootRouteImport
+    }
   }
 }
 
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
+  CoachRoute: CoachRoute,
+  GoalsRoute: GoalsRoute,
+  MonthlyReviewRoute: MonthlyReviewRoute,
+  SubscriptionsRoute: SubscriptionsRoute,
+  TransactionsRoute: TransactionsRoute,
+  WhatIfRoute: WhatIfRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
