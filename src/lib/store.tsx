@@ -1,6 +1,8 @@
-import { createContext, useContext, useEffect, useState, type ReactNode } from "react";
+import { createContext, useContext, useEffect, useMemo, useState, type ReactNode } from "react";
+import { detectRecurring, type Recurring, type Usage } from "./recurring";
 
-export type Category = "Food" | "Groceries" | "Transport" | "Shopping" | "Bills" | "Entertainment" | "Other";
+export type Category =
+  "Food" | "Groceries" | "Transport" | "Shopping" | "Bills" | "Entertainment" | "Other";
 
 export interface Transaction {
   id: string;
@@ -11,16 +13,6 @@ export interface Transaction {
   note?: string;
   /** Category the coach thinks is correct, if the current one looks wrong. */
   suggestedCategory?: Category | undefined;
-}
-
-export interface Subscription {
-  name: string;
-  amount: number;
-  previousAmount?: number;
-  cycle: "Monthly" | "Yearly";
-  next: string;
-  lastUsed: string;
-  flag?: "forgotten" | "price-hike";
 }
 
 export interface Goal {
@@ -36,36 +28,96 @@ export interface Goal {
 const d = (daysAgo: number) => new Date(Date.now() - daysAgo * 86400000).toISOString();
 
 const DEMO_TX: Transaction[] = [
-  { id: "1", merchant: "Swiggy", category: "Groceries", suggestedCategory: "Food", amount: 640, date: d(0), note: "Biryani order, tagged as Groceries" },
+  {
+    id: "1",
+    merchant: "Swiggy",
+    category: "Groceries",
+    suggestedCategory: "Food",
+    amount: 640,
+    date: d(0),
+    note: "Biryani order, tagged as Groceries",
+  },
   { id: "2", merchant: "Zomato", category: "Food", amount: 520, date: d(1) },
   { id: "3", merchant: "Blinkit", category: "Groceries", amount: 1240, date: d(1) },
   { id: "4", merchant: "Uber", category: "Transport", amount: 320, date: d(2) },
-  { id: "5", merchant: "Netflix", category: "Entertainment", amount: 649, date: d(2) },
   { id: "6", merchant: "Third Wave Coffee", category: "Food", amount: 410, date: d(3) },
-  { id: "7", merchant: "House rent", category: "Bills", amount: 22000, date: d(4) },
   { id: "8", merchant: "Swiggy", category: "Food", amount: 780, date: d(5) },
-  { id: "9", merchant: "Disney+ Hotstar", category: "Entertainment", amount: 299, date: d(6) },
   { id: "10", merchant: "Myntra", category: "Shopping", amount: 2899, date: d(7) },
   { id: "11", merchant: "Social, Indiranagar", category: "Food", amount: 2350, date: d(8) },
-  { id: "12", merchant: "Airtel broadband", category: "Bills", amount: 999, date: d(9) },
   { id: "13", merchant: "Petrol", category: "Transport", amount: 2500, date: d(10) },
   { id: "14", merchant: "Zomato", category: "Food", amount: 690, date: d(12) },
   { id: "15", merchant: "DMart", category: "Groceries", amount: 3150, date: d(14) },
   { id: "16", merchant: "Swiggy", category: "Food", amount: 560, date: d(16) },
 ];
 
-const DEMO_SUBS: Subscription[] = [
-  { name: "Disney+ Hotstar", amount: 299, cycle: "Monthly", next: "6 Nov", lastUsed: "4 months ago", flag: "forgotten" },
-  { name: "Netflix", amount: 649, previousAmount: 499, cycle: "Monthly", next: "2 Nov", lastUsed: "Yesterday", flag: "price-hike" },
-  { name: "Spotify", amount: 119, cycle: "Monthly", next: "9 Nov", lastUsed: "Today" },
-  { name: "Amazon Prime", amount: 1499, cycle: "Yearly", next: "14 Feb", lastUsed: "Last week" },
-  { name: "Cult.fit", amount: 1299, cycle: "Monthly", next: "18 Nov", lastUsed: "3 weeks ago" },
+/** One charge per cycle, oldest amount first, ending `latest` days ago. */
+const charges = (
+  merchant: string,
+  category: Category,
+  amounts: number[],
+  latest: number,
+  every = 30,
+): Transaction[] =>
+  amounts.map((amount, i) => ({
+    id: `${merchant}-${i}`,
+    merchant,
+    category,
+    amount,
+    date: d(latest + (amounts.length - 1 - i) * every),
+  }));
+
+/** Six months of autopay history, so subscriptions are detected rather than hand-entered. */
+const DEMO_RECURRING: Transaction[] = [
+  ...charges("Netflix", "Entertainment", [499, 499, 499, 499, 649, 649], 2),
+  ...charges("Disney+ Hotstar", "Entertainment", [299, 299, 299, 299, 299, 299], 6),
+  ...charges("Spotify", "Entertainment", [119, 119, 119, 119, 119, 119], 11),
+  ...charges("Cult.fit", "Other", [1299, 1299, 1299, 1299], 13),
+  ...charges("YouTube Premium", "Entertainment", [149, 149], 3),
+  ...charges("Amazon Prime", "Shopping", [1499, 1499], 260, 365),
+  ...charges("House rent", "Bills", [22000, 22000, 22000, 22000, 22000, 22000], 4),
+  ...charges("Airtel broadband", "Bills", [999, 999, 999, 999, 999, 999], 9),
 ];
 
+/** What the user told Munshi about when they last used each service. */
+const DEMO_USAGE: Usage = {
+  disneyhotstar: d(124),
+  netflix: d(1),
+  spotify: d(0),
+  cultfit: d(21),
+  amazonprime: d(7),
+  youtubepremium: d(2),
+};
+
+const DEMO_ALL_TX = [...DEMO_TX, ...DEMO_RECURRING].sort((a, b) => b.date.localeCompare(a.date));
+
 const DEMO_GOALS: Goal[] = [
-  { id: "g1", name: "Emergency fund", saved: 85000, target: 300000, due: "Mar 2027", status: "At risk", note: "Needs ₹43,000/month — you're saving ₹12,000." },
-  { id: "g2", name: "Goa trip", saved: 28000, target: 45000, due: "Dec 2026", status: "On track", note: "₹8,500/month gets you there." },
-  { id: "g3", name: "New laptop", saved: 52000, target: 120000, due: "Jun 2027", status: "Ahead", note: "A month ahead of plan." },
+  {
+    id: "g1",
+    name: "Emergency fund",
+    saved: 85000,
+    target: 300000,
+    due: "Mar 2027",
+    status: "At risk",
+    note: "Needs ₹43,000/month — you're saving ₹12,000.",
+  },
+  {
+    id: "g2",
+    name: "Goa trip",
+    saved: 28000,
+    target: 45000,
+    due: "Dec 2026",
+    status: "On track",
+    note: "₹8,500/month gets you there.",
+  },
+  {
+    id: "g3",
+    name: "New laptop",
+    saved: 52000,
+    target: 120000,
+    due: "Jun 2027",
+    status: "Ahead",
+    note: "A month ahead of plan.",
+  },
 ];
 
 /** Eating-out spend over the last 6 months — trending up. */
@@ -84,11 +136,14 @@ interface Ctx {
   hydrated: boolean;
   demo: boolean;
   transactions: Transaction[];
-  subscriptions: Subscription[];
+  /** Recurring payments detected from transactions. */
+  subscriptions: Recurring[];
   goals: Goal[];
   add: (t: Omit<Transaction, "id">) => void;
   recategorize: (id: string, category: Category) => void;
-  cancelSub: (name: string) => void;
+  cancelSub: (key: string) => void;
+  markUsed: (key: string) => void;
+  markUnused: (key: string) => void;
   loadDemo: () => void;
   reset: () => void;
 }
@@ -99,12 +154,18 @@ export function StoreProvider({ children }: { children: ReactNode }) {
   const [hydrated, setHydrated] = useState(false);
   const [demo, setDemo] = useState(false);
   const [transactions, setTx] = useState<Transaction[]>([]);
-  const [subscriptions, setSubs] = useState<Subscription[]>([]);
+  const [usage, setUsage] = useState<Usage>({});
+  const [cancelled, setCancelled] = useState<string[]>([]);
+  const subscriptions = useMemo(
+    () => detectRecurring(transactions, usage).filter((r) => !cancelled.includes(r.key)),
+    [transactions, usage, cancelled],
+  );
   const [goals, setGoals] = useState<Goal[]>([]);
 
   const loadDemo = () => {
-    setTx(DEMO_TX);
-    setSubs(DEMO_SUBS);
+    setTx(DEMO_ALL_TX);
+    setUsage(DEMO_USAGE);
+    setCancelled([]);
     setGoals(DEMO_GOALS);
     setDemo(true);
     localStorage.setItem(KEY, "1");
@@ -130,13 +191,18 @@ export function StoreProvider({ children }: { children: ReactNode }) {
       setDemo(true);
     },
     recategorize: (id, category) =>
-      setTx((prev) => prev.map((t) => (t.id === id ? { ...t, category, suggestedCategory: undefined } : t))),
-    cancelSub: (name) => setSubs((prev) => prev.filter((s) => s.name !== name)),
+      setTx((prev) =>
+        prev.map((t) => (t.id === id ? { ...t, category, suggestedCategory: undefined } : t)),
+      ),
+    cancelSub: (key) => setCancelled((prev) => [...prev, key]),
+    markUsed: (key) => setUsage((prev) => ({ ...prev, [key]: new Date().toISOString() })),
+    markUnused: (key) => setUsage((prev) => ({ ...prev, [key]: null })),
     loadDemo,
     reset: () => {
       localStorage.removeItem(KEY);
       setTx([]);
-      setSubs([]);
+      setUsage({});
+      setCancelled([]);
       setGoals([]);
       setDemo(false);
     },

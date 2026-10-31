@@ -3,6 +3,7 @@ import { Cell, Pie, PieChart, ResponsiveContainer, Tooltip } from "recharts";
 import { Lightbulb, TrendingUp, Repeat, ShieldAlert, Tag, Receipt } from "lucide-react";
 import { PageHeader } from "@/components/app-shell";
 import { DEMO_EATING_OUT, MONTHLY_INCOME, useStore } from "@/lib/store";
+import { daysSince, yearlyCost } from "@/lib/recurring";
 import { formatINR, formatINRShort } from "@/lib/format";
 import { Progress } from "@/components/ui/progress";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -14,15 +15,29 @@ export const Route = createFileRoute("/")({
   head: () => ({
     meta: [
       { title: "Dashboard — Munshi AI" },
-      { name: "description", content: "Your month at a glance: spend, savings rate, emergency fund and goals in ₹." },
+      {
+        name: "description",
+        content: "Your month at a glance: spend, savings rate, emergency fund and goals in ₹.",
+      },
       { property: "og:title", content: "Dashboard — Munshi AI" },
-      { property: "og:description", content: "Your month at a glance: spend, savings rate, emergency fund and goals in ₹." },
+      {
+        property: "og:description",
+        content: "Your month at a glance: spend, savings rate, emergency fund and goals in ₹.",
+      },
     ],
   }),
   component: Dashboard,
 });
 
-const COLORS = ["var(--chart-1)", "var(--chart-2)", "var(--chart-3)", "var(--chart-4)", "var(--chart-5)", "var(--muted-foreground)", "var(--secondary)"];
+const COLORS = [
+  "var(--chart-1)",
+  "var(--chart-2)",
+  "var(--chart-3)",
+  "var(--chart-4)",
+  "var(--chart-5)",
+  "var(--muted-foreground)",
+  "var(--secondary)",
+];
 
 function Dashboard() {
   const { hydrated, transactions, subscriptions, goals } = useStore();
@@ -40,7 +55,9 @@ function Dashboard() {
         </div>
         <div className="mt-5 grid gap-5 lg:grid-cols-5">
           <div className="card-soft h-80 lg:col-span-3" />
-          <div className="card-soft h-80 p-6 lg:col-span-2"><ListSkeleton rows={3} /></div>
+          <div className="card-soft h-80 p-6 lg:col-span-2">
+            <ListSkeleton rows={3} />
+          </div>
         </div>
       </>
     );
@@ -50,7 +67,11 @@ function Dashboard() {
     return (
       <>
         <PageHeader title="Namaste 👋" />
-        <EmptyState icon={Receipt} title="Nothing logged yet" text="Type or dictate your first spend in the bar below — or load the demo to see Munshi AI in action." />
+        <EmptyState
+          icon={Receipt}
+          title="Nothing logged yet"
+          text="Type or dictate your first spend in the bar below — or load the demo to see Munshi AI in action."
+        />
       </>
     );
   }
@@ -67,32 +88,76 @@ function Dashboard() {
   const goalPct = goal ? Math.round((goal.saved / goal.target) * 100) : 0;
 
   const byCat = Object.entries(
-    month.reduce<Record<string, number>>((acc, t) => ((acc[t.category] = (acc[t.category] ?? 0) + t.amount), acc), {}),
+    month.reduce<Record<string, number>>(
+      (acc, t) => ((acc[t.category] = (acc[t.category] ?? 0) + t.amount), acc),
+      {},
+    ),
   )
     .map(([name, value]) => ({ name, value }))
     .sort((a, b) => b.value - a.value);
 
-  const hotstar = subscriptions.find((s) => s.flag === "forgotten");
-  const netflix = subscriptions.find((s) => s.flag === "price-hike");
+  const unused = subscriptions.find((s) => s.alerts.includes("unused"));
+  const hike = subscriptions.find((s) => s.alerts.includes("price-up"));
+  const fresh = subscriptions.find((s) => s.alerts.includes("new"));
+  const renews = (iso: string) =>
+    new Date(iso).toLocaleDateString("en-IN", { day: "numeric", month: "short" });
   const miscat = transactions.find((t) => t.suggestedCategory);
   const eo = DEMO_EATING_OUT;
   const eoFirst = eo[0]!.amount;
   const eoLast = eo[eo.length - 1]!.amount;
   const nudges = [
-    { icon: TrendingUp, text: `Eating out is up ${Math.round(((eoLast - eoFirst) / eoFirst) * 100)}% since May — ${formatINR(eoLast)} this month.`, to: "/monthly-review" as const },
-    hotstar && { icon: Repeat, text: `${hotstar.name} renews ${hotstar.next}. You haven't watched in ${hotstar.lastUsed.replace(" ago", "")}.`, to: "/subscriptions" as const },
-    netflix && netflix.previousAmount && { icon: Repeat, text: `Netflix went from ${formatINR(netflix.previousAmount)} to ${formatINR(netflix.amount)}. That's ${formatINR((netflix.amount - netflix.previousAmount) * 12)} more a year.`, to: "/subscriptions" as const },
-    miscat && { icon: Tag, text: `A ${miscat.merchant} order was filed under ${miscat.category}. Fix it so your food spend is honest.`, to: "/transactions" as const },
-    ef?.status === "At risk" && { icon: ShieldAlert, text: `Emergency fund is at risk. ${ef.note}`, to: "/goals" as const },
+    {
+      icon: TrendingUp,
+      text: `Eating out is up ${Math.round(((eoLast - eoFirst) / eoFirst) * 100)}% since May — ${formatINR(eoLast)} this month.`,
+      to: "/monthly-review" as const,
+    },
+    unused && {
+      icon: Repeat,
+      text: `${unused.name} renews ${renews(unused.next)}${unused.lastUsed ? `. You haven't used it in ${daysSince(unused.lastUsed)} days` : ", and you said you don't use it"}. Cancel to save ${formatINR(yearlyCost(unused))} a year.`,
+      to: "/subscriptions" as const,
+    },
+    hike &&
+      hike.previousAmount && {
+        icon: Repeat,
+        text: `${hike.name} went from ${formatINR(hike.previousAmount)} to ${formatINR(hike.amount)}. That's ${formatINR(yearlyCost({ ...hike, amount: hike.amount - hike.previousAmount }))} more a year.`,
+        to: "/subscriptions" as const,
+      },
+    fresh && {
+      icon: Repeat,
+      text: `New autopay: ${fresh.name} at ${formatINR(fresh.amount)}/${fresh.cycle === "Yearly" ? "year" : "month"}. Did you mean to sign up?`,
+      to: "/subscriptions" as const,
+    },
+    miscat && {
+      icon: Tag,
+      text: `A ${miscat.merchant} order was filed under ${miscat.category}. Fix it so your food spend is honest.`,
+      to: "/transactions" as const,
+    },
+    ef?.status === "At risk" && {
+      icon: ShieldAlert,
+      text: `Emergency fund is at risk. ${ef.note}`,
+      to: "/goals" as const,
+    },
   ].filter(Boolean) as unknown as { icon: typeof Repeat; text: string; to: "/" }[];
 
   return (
     <>
-      <PageHeader title="Namaste 👋" subtitle={now.toLocaleDateString("en-IN", { month: "long", year: "numeric" })} />
+      <PageHeader
+        title="Namaste 👋"
+        subtitle={now.toLocaleDateString("en-IN", { month: "long", year: "numeric" })}
+      />
 
       <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-4">
-        <Stat label="This month's spend" value={formatINR(spend)} hint={`of ${formatINRShort(MONTHLY_INCOME)} income`} />
-        <Stat label="Savings rate" value={`${savingsRate}%`} hint="Target 30%" accent={savingsRate >= 30} />
+        <Stat
+          label="This month's spend"
+          value={formatINR(spend)}
+          hint={`of ${formatINRShort(MONTHLY_INCOME)} income`}
+        />
+        <Stat
+          label="Savings rate"
+          value={`${savingsRate}%`}
+          hint="Target 30%"
+          accent={savingsRate >= 30}
+        />
         {ef && (
           <Link to="/goals" className="card-soft p-6 transition hover:shadow-glow">
             <div className="flex items-center justify-between gap-2">
@@ -101,7 +166,9 @@ function Dashboard() {
             </div>
             <p className="mt-2 text-2xl font-semibold tabular-nums">{formatINRShort(ef.saved)}</p>
             <Progress value={efPct} className="mt-4 h-1.5" />
-            <p className="mt-2 text-xs text-muted-foreground">{efPct}% of {formatINRShort(ef.target)}</p>
+            <p className="mt-2 text-xs text-muted-foreground">
+              {efPct}% of {formatINRShort(ef.target)}
+            </p>
           </Link>
         )}
         {goal && (
@@ -123,14 +190,25 @@ function Dashboard() {
             <div className="relative size-52 shrink-0 sm:size-56">
               <ResponsiveContainer width="100%" height="100%">
                 <PieChart>
-                  <Pie data={byCat} dataKey="value" innerRadius="70%" outerRadius="100%" paddingAngle={3} stroke="none">
+                  <Pie
+                    data={byCat}
+                    dataKey="value"
+                    innerRadius="70%"
+                    outerRadius="100%"
+                    paddingAngle={3}
+                    stroke="none"
+                  >
                     {byCat.map((_, i) => (
                       <Cell key={i} fill={COLORS[i % COLORS.length]} />
                     ))}
                   </Pie>
                   <Tooltip
                     formatter={(v: number) => formatINR(v)}
-                    contentStyle={{ background: "var(--popover)", border: "1px solid var(--border)", borderRadius: 12 }}
+                    contentStyle={{
+                      background: "var(--popover)",
+                      border: "1px solid var(--border)",
+                      borderRadius: 12,
+                    }}
                     itemStyle={{ color: "var(--foreground)" }}
                   />
                 </PieChart>
@@ -146,10 +224,15 @@ function Dashboard() {
               {byCat.map((c, i) => (
                 <li key={c.name} className="flex items-center justify-between gap-3 text-sm">
                   <span className="flex min-w-0 items-center gap-2.5">
-                    <span className="size-2.5 shrink-0 rounded-full" style={{ background: COLORS[i % COLORS.length] }} />
+                    <span
+                      className="size-2.5 shrink-0 rounded-full"
+                      style={{ background: COLORS[i % COLORS.length] }}
+                    />
                     <span className="truncate">{c.name}</span>
                   </span>
-                  <span className="shrink-0 tabular-nums text-muted-foreground">{formatINR(c.value)}</span>
+                  <span className="shrink-0 tabular-nums text-muted-foreground">
+                    {formatINR(c.value)}
+                  </span>
                 </li>
               ))}
             </ul>
@@ -159,7 +242,9 @@ function Dashboard() {
         <section className="card-soft min-w-0 p-6 lg:col-span-2">
           <h2 className="flex items-center gap-2 font-semibold">
             <Lightbulb className="size-4 text-primary" /> Nudges
-            <span className="ml-auto rounded-full bg-accent px-2 py-0.5 text-xs text-accent-foreground">{nudges.length}</span>
+            <span className="ml-auto rounded-full bg-accent px-2 py-0.5 text-xs text-accent-foreground">
+              {nudges.length}
+            </span>
           </h2>
           <ul className="mt-4 space-y-3">
             {nudges.map((n, i) => (
@@ -191,11 +276,23 @@ function Dashboard() {
   );
 }
 
-function Stat({ label, value, hint, accent }: { label: string; value: string; hint: string; accent?: boolean }) {
+function Stat({
+  label,
+  value,
+  hint,
+  accent,
+}: {
+  label: string;
+  value: string;
+  hint: string;
+  accent?: boolean;
+}) {
   return (
     <div className="card-soft p-6">
       <p className="text-sm text-muted-foreground">{label}</p>
-      <p className={`mt-2 text-2xl font-semibold tabular-nums ${accent ? "text-primary" : ""}`}>{value}</p>
+      <p className={`mt-2 text-2xl font-semibold tabular-nums ${accent ? "text-primary" : ""}`}>
+        {value}
+      </p>
       <p className="mt-2 text-xs text-muted-foreground">{hint}</p>
     </div>
   );

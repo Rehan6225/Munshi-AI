@@ -4,20 +4,48 @@ import { toast } from "sonner";
 import { parseCommand } from "@/lib/parse-command";
 import { useStore } from "@/lib/store";
 import { formatINR } from "@/lib/format";
+import { parseUsageCommand, yearlyCost } from "@/lib/recurring";
 import { cn } from "@/lib/utils";
 
 export function VoiceBar() {
   const [text, setText] = useState("");
   const [listening, setListening] = useState(false);
   const ref = useRef<HTMLTextAreaElement>(null);
-  const { add } = useStore();
+  const { add, subscriptions, cancelSub, markUsed, markUnused } = useStore();
 
   const submit = () => {
     const value = text.trim();
     if (!value) return;
+
+    const usage = parseUsageCommand(value, subscriptions);
+    // "Paid 1299 at Cult, went to the gym" is an expense, not a usage check-in.
+    if (usage && !(usage.action === "used" && parseCommand(value).amount)) {
+      const { action, sub } = usage;
+      const saving = `${formatINR(yearlyCost(sub))} a year`;
+      if (action === "unused") {
+        markUnused(sub.key);
+        toast(`Got it, you don't use ${sub.name}`, {
+          description: `Cancelling it saves ${saving}.`,
+          action: { label: "Cancel it", onClick: () => cancelSub(sub.key) },
+        });
+      } else if (action === "cancel") {
+        cancelSub(sub.key);
+        toast.success(`${sub.name} marked to cancel`, {
+          description: `That's ${saving} back in your pocket.`,
+        });
+      } else {
+        markUsed(sub.key);
+        toast.success(`Noted, you still use ${sub.name}`);
+      }
+      setText("");
+      return;
+    }
+
     const p = parseCommand(value);
     if (!p.amount) {
-      toast("Couldn't find an amount", { description: "Try something like “Spent 480 on Swiggy last night”." });
+      toast("Couldn't find an amount", {
+        description: "Try something like “Spent 480 on Swiggy last night”.",
+      });
       return;
     }
     add({
