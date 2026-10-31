@@ -6,6 +6,10 @@ import {
   SidebarMenuButton, SidebarMenuItem, SidebarProvider, SidebarTrigger,
 } from "@/components/ui/sidebar";
 import { VoiceBar } from "./voice-bar";
+import { Onboarding } from "./onboarding";
+import { useStore } from "@/lib/store";
+import { RotateCcw } from "lucide-react";
+import { SidebarFooter } from "@/components/ui/sidebar";
 
 const NAV = [
   { title: "Dashboard", url: "/", icon: LayoutDashboard },
@@ -45,11 +49,28 @@ function AppSidebar() {
           </SidebarGroupContent>
         </SidebarGroup>
       </SidebarContent>
+      <SidebarFooter className="p-3">
+        <ResetButton />
+      </SidebarFooter>
     </Sidebar>
   );
 }
 
+function ResetButton() {
+  const { demo, reset } = useStore();
+  if (!demo) return null;
+  return (
+    <SidebarMenuButton onClick={reset} tooltip="Reset demo" className="h-10 rounded-xl text-muted-foreground">
+      <RotateCcw className="size-4" />
+      <span>Reset demo</span>
+    </SidebarMenuButton>
+  );
+}
+
 export function AppShell({ children }: { children: ReactNode }) {
+  const path = useRouterState({ select: (r) => r.location.pathname });
+  const { hydrated, demo } = useStore();
+  if (hydrated && !demo && path === "/") return <Onboarding />;
   return (
     <SidebarProvider>
       <div className="flex min-h-screen w-full">
@@ -57,9 +78,10 @@ export function AppShell({ children }: { children: ReactNode }) {
         <div className="relative flex min-w-0 flex-1 flex-col">
           <header className="flex h-14 items-center gap-2 px-4 md:px-8">
             <SidebarTrigger />
+            <span className="font-semibold tracking-tight md:hidden">Pesa Pilot</span>
           </header>
           <main className="flex-1 px-4 pb-12 md:px-8">
-            <div className="mx-auto max-w-6xl">{children}</div>
+            <div key={path} className="mx-auto max-w-6xl animate-in fade-in slide-in-from-bottom-2 duration-500">{children}</div>
           </main>
           <VoiceBar />
         </div>
@@ -71,7 +93,7 @@ export function AppShell({ children }: { children: ReactNode }) {
 export function PageHeader({ title, subtitle }: { title: string; subtitle?: string }) {
   return (
     <div className="mb-8">
-      <h1 className="text-3xl font-semibold tracking-tight">{title}</h1>
+      <h1 className="text-2xl font-semibold tracking-tight sm:text-3xl">{title}</h1>
       {subtitle && <p className="mt-1.5 text-muted-foreground">{subtitle}</p>}
     </div>
   );
