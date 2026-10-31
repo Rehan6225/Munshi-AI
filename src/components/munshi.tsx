@@ -1,6 +1,6 @@
 import { NotebookPen, Volume2, VolumeX, X } from "lucide-react";
 import type { ReactNode } from "react";
-import { setMuted, stopSpeaking, useSpeech } from "@/lib/speech";
+import { setMuted, setVoiceChoice, stopSpeaking, useSpeech } from "@/lib/speech";
 import type { MunshiReply } from "@/lib/munshi";
 import { cn } from "@/lib/utils";
 
@@ -82,6 +82,28 @@ export function MuteButton({ className }: { className?: string }) {
       )}
     >
       {muted ? <VolumeX className="size-5" /> : <Volume2 className="size-5" />}
+    </button>
+  );
+}
+
+/** EN = Indian-English voice (default), हि = Hindi voice. Only shown when the device has one. */
+export function VoiceToggle({ className }: { className?: string }) {
+  const { voice, hindiAvailable, muted } = useSpeech();
+  if (!hindiAvailable || muted) return null;
+  return (
+    <button
+      type="button"
+      onClick={() => setVoiceChoice(voice === "en" ? "hi" : "en")}
+      aria-label={
+        voice === "en" ? "Switch Munshi to a Hindi voice" : "Switch Munshi to an English voice"
+      }
+      title={voice === "en" ? "Munshi speaks Indian English" : "Munshi speaks Hindi"}
+      className={cn(
+        "grid h-10 min-w-10 shrink-0 place-items-center rounded-xl px-2 text-xs font-semibold text-muted-foreground transition hover:bg-secondary hover:text-foreground",
+        className,
+      )}
+    >
+      {voice === "en" ? "EN" : "हि"}
     </button>
   );
 }
