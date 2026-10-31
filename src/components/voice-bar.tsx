@@ -15,6 +15,7 @@ import { speak } from "@/lib/speech";
 import { merchantKey, yearlyCost } from "@/lib/recurring";
 import { parseLocally, sanitizeAiParse, type VoiceAction, type VoiceParse } from "@/lib/voice";
 import { cn } from "@/lib/utils";
+import { useIsMobile } from "@/hooks/use-mobile";
 
 /** Minimal shape of the browser's speech recognition API, which TypeScript doesn't ship. */
 interface Recognition {
@@ -34,6 +35,7 @@ interface Said {
 
 export function VoiceBar() {
   const [text, setText] = useState("");
+  const isMobile = useIsMobile();
   const [listening, setListening] = useState(false);
   const [busy, setBusy] = useState(false);
   const [draft, setDraft] = useState<VoiceParse | null>(null);
@@ -233,7 +235,12 @@ export function VoiceBar() {
                 void submit();
               }
             }}
-            placeholder="Just say it — “Spent 480 on Swiggy last night”"
+            placeholder={
+              // The full example doesn't fit on a phone, so it gets the short version.
+              isMobile
+                ? "Speak via Wispr Flow"
+                : "Just say it through Wispr Flow — “Spent 480 on Swiggy last night”"
+            }
             aria-label="Voice command"
             className="flex-1 resize-none bg-transparent px-3 py-2.5 text-[15px] leading-relaxed outline-none placeholder:text-muted-foreground"
           />
