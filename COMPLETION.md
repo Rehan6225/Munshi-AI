@@ -3,7 +3,7 @@
 Everything needed to finish Munshi AI for **The Product Space AI Hackathon** (problem statement **#04: Personal Finance Coach with a Living Money Model**).
 
 **Deadline:** 31 Oct, 11:59 PM IST
-**Overall progress:** about 95%. Every feature is built; only **deployment** is left (then the demo video, LinkedIn post and submission, which need the live URL)
+**Overall progress:** about 97%. Every feature is built and **live at https://munshi-ai.finance-coach.workers.dev**. Left: demo video, LinkedIn post, submission
 **Rule:** everything must be **dynamic**. Every number, alert and status is calculated from real data, never hardcoded.
 
 Legend: 🔴 not started · 🟡 in progress · 🟢 done · ⚪ skipped (optional)
@@ -29,9 +29,9 @@ Legend: 🔴 not started · 🟡 in progress · 🟢 done · ⚪ skipped (option
 |---|---|---|---|
 | AI voice parsing ("450, no wait, 480" → ₹480; several expenses in one sentence) | Voice 20% + AI 20% | 🟢 100% | ✅ Gemini parsing via a server function (key stays on the server), with an on-device fallback that already handles fillers, "no wait" corrections and several spends per sentence. The Gemini key goes in as a Cloudflare secret during deployment |
 | Wispr Flow usage (dictate every prompt, fix and message) | 20% | 🟡 Ongoing | Judges check activity on the Wispr account |
-| Live deployed URL | Required | 🔴 **Next** | Cloudflare (free); the project already builds for it. Add `GEMINI_API_KEY` as a secret there |
-| LinkedIn post (demo video + tag Wispr Flow and the organizers) | 15% | 🔴 After deploy | Posting at all earns 6/10; higher engagement earns up to 10. Needs the live URL |
-| Final submission | Required | 🔴 After deploy | Before 11:59 PM IST. Needs the live URL |
+| Live deployed URL | Required | 🟢 | ✅ https://munshi-ai.finance-coach.workers.dev on Cloudflare Workers (free), auto-deployed from `main` on every push. **Gemini is on**: `GEMINI_API_KEY` and `GEMINI_MODEL` are stored as Cloudflare secrets |
+| LinkedIn post (demo video + tag Wispr Flow and the organizers) | 15% | 🔴 **Next** | Posting at all earns 6/10; higher engagement earns up to 10 |
+| Final submission | Required | 🔴 **Next** | Before 11:59 PM IST |
 
 ## ✨ UI upgrades (creativity and UX)
 
@@ -64,7 +64,7 @@ Legend: 🔴 not started · 🟡 in progress · 🟢 done · ⚪ skipped (option
 | 6 | Import: CSV + SMS paste with AI categories (#1); PDF only if time allows | **Yes** | 1 hr | 🟢 Done by teammate, incl. PDF |
 | 7 | Coach with guardrails (#8) | **Yes** | 45 min | 🟢 |
 | 8 | U2 Munshi persona + U3 talk-back | No | 45 min | 🟢 |
-| 9 | Deploy, then record the demo, then the LinkedIn post, then submit | No | 1 hr | 🔴 Next |
+| 9 | Deploy, then record the demo, then the LinkedIn post, then submit | No | 1 hr | 🟡 Deployed; demo, post and submission left |
 | — | U4 ledger look | No | Only if ahead | ⚪ Skipped |
 
 ## 🕓 Done log
@@ -99,3 +99,6 @@ Newest last. Every finished task gets a line here, along with whether it has bee
 | 8:15 PM | **Sample PDF statement:** the PDF sample (the import dialog opens on it) now prints the same 68 spends in the HDFC-style layout: header, opening balance, narration, reference, value date, withdrawal, deposit and running balance, over 3 pages. Narration column widened, so long narrations no longer run into the reference number (e.g. `...SALARY0000429812335`); a test reads the printed lines back through the PDF parser and gets the same 68 spends as the CSV | ✅ |
 | 8:30 PM | **New Munshi ji logo:** the animated Munshi ji illustration (writing in her ledger, peering over her glasses, turning the page) replaces the pen icon everywhere, recoloured to the app's emerald. Animates on the big avatars and while she's speaking; small chat avatars show a still close-up of her face; also the browser-tab icon. Fixed a stray `&` in the SVG that would have stopped it loading as an image | ✅ |
 | 8:40 PM | **More "need a look" rows in the sample statement:** besides the 4 Meghana Foods orders, a UPI payment to Ramesh Kumar and an ATM cash withdrawal now need a look (6 in all), in the PDF, CSV and SMS samples alike; still 68 spends and the same 7 dashboard nudges | ✅ |
+| 9:05 PM | **Deployed to Cloudflare Workers (free):** live at https://munshi-ai.finance-coach.workers.dev, auto-deployed from `main` through Cloudflare Workers Builds. Checked every page, the logo and the PDF reader file on the live site; no environment variables needed (Gemini key optional). README links the live app | ✅ |
+| 9:20 PM | **Gemini switched on, live and locally:** API key and model stored as encrypted Cloudflare secrets (they survive deploys) and in the gitignored `.env.local`. The old default `gemini-flash-latest` was overloaded and slow (503s, 18–45 s), so the default is now `gemini-3.5-flash-lite`, which parsed "450, no wait, 480 on Swiggy and 200 on an Uber" correctly in about 1.3 s | ✅ |
+| 9:35 PM | **README rewritten with screenshots; voice bar mentions Wispr Flow:** new README for judges and GitHub visitors, with the live link, 11 screenshots (dashboard, "What Munshi heard", import review with 6 "need a look", subscriptions, Coach answering via Gemini, Plan Ahead, monthly review, goals, transactions, landing, phone), the guardrails, the AI fallback, local setup with the optional Gemini key, and free deploy steps. Voice bar placeholder now reads "Just say it through Wispr Flow — “Spent 480 on Swiggy last night”" ("Speak via Wispr Flow" on phones, where the full line doesn't fit) | ✅ |

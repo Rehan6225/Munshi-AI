@@ -31,7 +31,7 @@ export const askCoach = createServerFn({ method: "POST" })
     if (asksForSecurities(data.question)) return { ok: false, reason: "guardrail" };
     const key = process.env["GEMINI_API_KEY"];
     if (!key) return { ok: false, reason: "no-key" };
-    const model = process.env["GEMINI_MODEL"] || "gemini-flash-latest";
+    const model = process.env["GEMINI_MODEL"] || "gemini-3.5-flash-lite";
 
     const contents = [
       ...data.history.map((h) => ({

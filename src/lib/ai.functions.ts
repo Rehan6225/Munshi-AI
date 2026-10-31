@@ -25,7 +25,7 @@ export const parseVoiceWithAi = createServerFn({ method: "POST" })
   .handler(async ({ data }): Promise<AiParseResult> => {
     const key = process.env["GEMINI_API_KEY"];
     if (!key) return { ok: false, reason: "no-key" };
-    const model = process.env["GEMINI_MODEL"] || "gemini-flash-latest";
+    const model = process.env["GEMINI_MODEL"] || "gemini-3.5-flash-lite";
 
     const prompt = [
       `Today is ${data.today}.`,
