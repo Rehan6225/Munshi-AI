@@ -39,7 +39,7 @@ Legend: 🔴 not started · 🟡 in progress · 🟢 done
 |---|---|---|---|
 | U1 | **"What Munshi heard"** card: raw speech with fillers and corrections struck through, then the clean entry | 🟢 | ✅ Built: fillers struck in grey, take-backs in red, editable entries, Save / Discard, Gemini or On-device badge |
 | U2 | **Munshi persona**: avatar plus warm Hinglish replies ("Ho gaya! ₹480 Swiggy pe likh diya.") | 🟢 | ✅ Munshi ji avatar (logo, card, replies), Hinglish replies for every voice action, weekly nudges ("teesra Swiggy order"), dashboard greeting |
-| U3 | **Munshi talks back**: spoken replies (free browser text-to-speech) | 🟢 | ✅ Speaks every reply in an Indian-English voice, avatar pulses while talking, 🔊/🔇 toggle remembered, "Suniye aaj ka hisaab" spoken summary |
+| U3 | **Munshi talks back**: spoken replies (free browser text-to-speech) | 🟢 🔒 Final | ✅ Speaks every reply with a **Hindi voice** (Google हिन्दी, then macOS Lekha), avatar pulses while talking, 🔊/🔇 toggle remembered, "Suniye aaj ka hisaab" spoken summary. **Locked: no further changes to the voice** |
 | U4 | **Ledger (khata) look** for transactions (optional) | 🔴 | A distinct look, tied to the munshi idea |
 
 ## 🧱 Behind the scenes (needed for "dynamic")
