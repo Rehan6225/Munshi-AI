@@ -34,7 +34,9 @@ describe("store: correction loop", () => {
       changed = result.current.learnRule("Swiggy", "Food & Dining");
     });
     expect(changed).toBe(1);
-    expect(swiggy(result.current).every((t) => t.category === "Food & Dining" && t.ruleId)).toBe(true);
+    expect(swiggy(result.current).every((t) => t.category === "Food & Dining" && t.ruleId)).toBe(
+      true,
+    );
     expect(result.current.suggestions.size).toBe(0);
     expect(result.current.rules).toMatchObject([
       { merchant: "Swiggy", category: "Food & Dining", applied: 3 },
@@ -60,7 +62,9 @@ describe("store: correction loop", () => {
     act(() => void result.current.learnRule("Swiggy", "Food & Dining"));
     act(() => result.current.removeRule(result.current.rules[0]!.id));
     expect(result.current.rules).toEqual([]);
-    expect(swiggy(result.current).every((t) => t.category === "Food & Dining" && !t.ruleId)).toBe(true);
+    expect(swiggy(result.current).every((t) => t.category === "Food & Dining" && !t.ruleId)).toBe(
+      true,
+    );
   });
 
   it("keeps rules and profile across a reload", async () => {
@@ -74,5 +78,70 @@ describe("store: correction loop", () => {
     expect(result.current.mode).toBe("demo");
     expect(result.current.profile.income).toBe(120000);
     expect(result.current.rules.map((r) => r.merchant)).toEqual(["Uber"]);
+  });
+});
+
+describe("store: demo and own data stay apart", () => {
+  beforeEach(() => localStorage.clear());
+  const imported = {
+    merchant: "Netflix",
+    category: "Subscriptions" as const,
+    amount: 649,
+    date: new Date().toISOString(),
+    source: "pdf" as const,
+  };
+
+  it("puts an import made from the demo into the user's own data", async () => {
+    const { result } = await demoStore();
+    const demoCount = result.current.transactions.length;
+
+    let leftDemo = false;
+    act(() => {
+      leftDemo = result.current.addMany([imported]);
+    });
+    expect(leftDemo).toBe(true);
+    expect(result.current.mode).toBe("own");
+    expect(result.current.transactions).toHaveLength(1);
+    expect(result.current.subscriptions.map((s) => s.name)).toEqual(["Netflix"]);
+
+    act(() => result.current.loadDemo());
+    expect(result.current.transactions).toHaveLength(demoCount);
+    expect(result.current.hasOwnData).toBe(true);
+  });
+
+  it("leaving the demo keeps the user's data, clearing it doesn't touch the demo", async () => {
+    const { result } = await demoStore();
+    act(() => void result.current.addMany([imported]));
+    act(() => result.current.loadDemo());
+    act(() => result.current.reset());
+    expect(result.current.mode).toBe("own");
+    expect(result.current.transactions).toHaveLength(1);
+    act(() => result.current.reset());
+    expect(result.current.mode).toBeNull();
+    expect(result.current.hasOwnData).toBe(false);
+  });
+
+  it("has no salary for the user's data until they give one; the sample's never overrides it", async () => {
+    const { result } = await demoStore();
+    expect(result.current.incomeAssumed).toBe(true);
+    act(() => void result.current.addMany([imported]));
+    expect(result.current.profile.income).toBe(0);
+
+    act(() => result.current.assumeSampleIncome());
+    expect([result.current.profile.income, result.current.incomeAssumed]).toEqual([95000, true]);
+    act(() => result.current.updateProfile({ income: 72000 }));
+    act(() => result.current.assumeSampleIncome());
+    expect([result.current.profile.income, result.current.ownIncomeSet]).toEqual([72000, true]);
+  });
+
+  it("reads data saved in the older single-set format", async () => {
+    localStorage.setItem(
+      "munshi-ai:v1",
+      JSON.stringify({ mode: "own", transactions: [{ id: "x", ...imported, category: "Food" }] }),
+    );
+    const { result } = renderHook(() => useStore(), { wrapper });
+    await waitFor(() => expect(result.current.hydrated).toBe(true));
+    expect(result.current.mode).toBe("own");
+    expect(result.current.transactions[0]!.category).toBe("Food & Dining");
   });
 });

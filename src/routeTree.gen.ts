@@ -13,9 +13,11 @@ import { Route as IndexRouteImport } from './routes/index'
 import { Route as CoachRouteImport } from './routes/coach'
 import { Route as GoalsRouteImport } from './routes/goals'
 import { Route as MonthlyReviewRouteImport } from './routes/monthly-review'
+import { Route as PlanAheadRouteImport } from './routes/plan-ahead'
 import { Route as ProfileRouteImport } from './routes/profile'
 import { Route as SubscriptionsRouteImport } from './routes/subscriptions'
 import { Route as TransactionsRouteImport } from './routes/transactions'
+import { Route as WelcomeRouteImport } from './routes/welcome'
 import { Route as WhatIfRouteImport } from './routes/what-if'
 
 const IndexRoute = IndexRouteImport.update({
@@ -38,6 +40,11 @@ const MonthlyReviewRoute = MonthlyReviewRouteImport.update({
   path: '/monthly-review',
   getParentRoute: () => rootRouteImport,
 } as any)
+const PlanAheadRoute = PlanAheadRouteImport.update({
+  id: '/plan-ahead',
+  path: '/plan-ahead',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const ProfileRoute = ProfileRouteImport.update({
   id: '/profile',
   path: '/profile',
@@ -53,6 +60,11 @@ const TransactionsRoute = TransactionsRouteImport.update({
   path: '/transactions',
   getParentRoute: () => rootRouteImport,
 } as any)
+const WelcomeRoute = WelcomeRouteImport.update({
+  id: '/welcome',
+  path: '/welcome',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const WhatIfRoute = WhatIfRouteImport.update({
   id: '/what-if',
   path: '/what-if',
@@ -64,9 +76,11 @@ export interface FileRoutesByFullPath {
   '/coach': typeof CoachRoute
   '/goals': typeof GoalsRoute
   '/monthly-review': typeof MonthlyReviewRoute
+  '/plan-ahead': typeof PlanAheadRoute
   '/profile': typeof ProfileRoute
   '/subscriptions': typeof SubscriptionsRoute
   '/transactions': typeof TransactionsRoute
+  '/welcome': typeof WelcomeRoute
   '/what-if': typeof WhatIfRoute
 }
 export interface FileRoutesByTo {
@@ -74,9 +88,11 @@ export interface FileRoutesByTo {
   '/coach': typeof CoachRoute
   '/goals': typeof GoalsRoute
   '/monthly-review': typeof MonthlyReviewRoute
+  '/plan-ahead': typeof PlanAheadRoute
   '/profile': typeof ProfileRoute
   '/subscriptions': typeof SubscriptionsRoute
   '/transactions': typeof TransactionsRoute
+  '/welcome': typeof WelcomeRoute
   '/what-if': typeof WhatIfRoute
 }
 export interface FileRoutesById {
@@ -85,9 +101,11 @@ export interface FileRoutesById {
   '/coach': typeof CoachRoute
   '/goals': typeof GoalsRoute
   '/monthly-review': typeof MonthlyReviewRoute
+  '/plan-ahead': typeof PlanAheadRoute
   '/profile': typeof ProfileRoute
   '/subscriptions': typeof SubscriptionsRoute
   '/transactions': typeof TransactionsRoute
+  '/welcome': typeof WelcomeRoute
   '/what-if': typeof WhatIfRoute
 }
 export interface FileRouteTypes {
@@ -97,9 +115,11 @@ export interface FileRouteTypes {
     | '/coach'
     | '/goals'
     | '/monthly-review'
+    | '/plan-ahead'
     | '/profile'
     | '/subscriptions'
     | '/transactions'
+    | '/welcome'
     | '/what-if'
   fileRoutesByTo: FileRoutesByTo
   to:
@@ -107,9 +127,11 @@ export interface FileRouteTypes {
     | '/coach'
     | '/goals'
     | '/monthly-review'
+    | '/plan-ahead'
     | '/profile'
     | '/subscriptions'
     | '/transactions'
+    | '/welcome'
     | '/what-if'
   id:
     | '__root__'
@@ -117,9 +139,11 @@ export interface FileRouteTypes {
     | '/coach'
     | '/goals'
     | '/monthly-review'
+    | '/plan-ahead'
     | '/profile'
     | '/subscriptions'
     | '/transactions'
+    | '/welcome'
     | '/what-if'
   fileRoutesById: FileRoutesById
 }
@@ -128,9 +152,11 @@ export interface RootRouteChildren {
   CoachRoute: typeof CoachRoute
   GoalsRoute: typeof GoalsRoute
   MonthlyReviewRoute: typeof MonthlyReviewRoute
+  PlanAheadRoute: typeof PlanAheadRoute
   ProfileRoute: typeof ProfileRoute
   SubscriptionsRoute: typeof SubscriptionsRoute
   TransactionsRoute: typeof TransactionsRoute
+  WelcomeRoute: typeof WelcomeRoute
   WhatIfRoute: typeof WhatIfRoute
 }
 
@@ -164,6 +190,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof MonthlyReviewRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/plan-ahead': {
+      id: '/plan-ahead'
+      path: '/plan-ahead'
+      fullPath: '/plan-ahead'
+      preLoaderRoute: typeof PlanAheadRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/profile': {
       id: '/profile'
       path: '/profile'
@@ -185,6 +218,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof TransactionsRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/welcome': {
+      id: '/welcome'
+      path: '/welcome'
+      fullPath: '/welcome'
+      preLoaderRoute: typeof WelcomeRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/what-if': {
       id: '/what-if'
       path: '/what-if'
@@ -200,9 +240,11 @@ const rootRouteChildren: RootRouteChildren = {
   CoachRoute: CoachRoute,
   GoalsRoute: GoalsRoute,
   MonthlyReviewRoute: MonthlyReviewRoute,
+  PlanAheadRoute: PlanAheadRoute,
   ProfileRoute: ProfileRoute,
   SubscriptionsRoute: SubscriptionsRoute,
   TransactionsRoute: TransactionsRoute,
+  WelcomeRoute: WelcomeRoute,
   WhatIfRoute: WhatIfRoute,
 }
 export const routeTree = rootRouteImport
