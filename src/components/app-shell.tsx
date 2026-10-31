@@ -58,7 +58,7 @@ export function AppShell({ children }: { children: ReactNode }) {
           <header className="flex h-14 items-center gap-2 px-4 md:px-8">
             <SidebarTrigger />
           </header>
-          <main className="flex-1 px-4 pb-40 md:px-8">
+          <main className="flex-1 px-4 pb-12 md:px-8">
             <div className="mx-auto max-w-6xl">{children}</div>
           </main>
           <VoiceBar />

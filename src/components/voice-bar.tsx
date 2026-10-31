@@ -47,7 +47,7 @@ export function VoiceBar() {
   };
 
   return (
-    <div className="fixed inset-x-0 bottom-0 z-30 pointer-events-none md:left-[var(--sidebar-offset,0px)]">
+    <div className="sticky bottom-0 z-30 pointer-events-none">
       <div className="mx-auto max-w-4xl px-4 pb-4 pt-6 bg-gradient-to-t from-background via-background/90 to-transparent pointer-events-auto">
         <div className="flex items-end gap-2 rounded-2xl border bg-card p-2 shadow-glow">
           <textarea
