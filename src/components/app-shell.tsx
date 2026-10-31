@@ -1,15 +1,43 @@
 import { Link, useRouterState } from "@tanstack/react-router";
 import type { ReactNode } from "react";
-import { LayoutDashboard, ArrowLeftRight, Repeat, Target, Sparkles, CalendarCheck, MessageCircle } from "lucide-react";
 import {
-  Sidebar, SidebarContent, SidebarGroup, SidebarGroupContent, SidebarHeader, SidebarMenu,
-  SidebarMenuButton, SidebarMenuItem, SidebarProvider, SidebarTrigger,
+  LayoutDashboard,
+  ArrowLeftRight,
+  Repeat,
+  Target,
+  Sparkles,
+  CalendarCheck,
+  MessageCircle,
+  UserRound,
+} from "lucide-react";
+import {
+  Sidebar,
+  SidebarContent,
+  SidebarGroup,
+  SidebarGroupContent,
+  SidebarHeader,
+  SidebarMenu,
+  SidebarMenuButton,
+  SidebarMenuItem,
+  SidebarProvider,
+  SidebarTrigger,
 } from "@/components/ui/sidebar";
 import { VoiceBar } from "./voice-bar";
 import { Onboarding } from "./onboarding";
 import { useStore } from "@/lib/store";
 import { RotateCcw } from "lucide-react";
 import { SidebarFooter } from "@/components/ui/sidebar";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from "@/components/ui/alert-dialog";
 
 const NAV = [
   { title: "Dashboard", url: "/", icon: LayoutDashboard },
@@ -19,16 +47,27 @@ const NAV = [
   { title: "What If", url: "/what-if", icon: Sparkles },
   { title: "Monthly Review", url: "/monthly-review", icon: CalendarCheck },
   { title: "Coach", url: "/coach", icon: MessageCircle },
+  { title: "Money profile", url: "/profile", icon: UserRound },
 ] as const;
 
 function AppSidebar() {
   const path = useRouterState({ select: (r) => r.location.pathname });
+  const { mode } = useStore();
   return (
     <Sidebar collapsible="icon">
       <SidebarHeader className="px-4 py-5">
         <div className="flex items-center gap-2.5">
-          <div className="grid size-8 shrink-0 place-items-center rounded-xl bg-primary font-bold text-primary-foreground">₹</div>
-          <span className="text-lg font-semibold tracking-tight group-data-[collapsible=icon]:hidden">Munshi AI</span>
+          <div className="grid size-8 shrink-0 place-items-center rounded-xl bg-primary font-bold text-primary-foreground">
+            ₹
+          </div>
+          <span className="text-lg font-semibold tracking-tight group-data-[collapsible=icon]:hidden">
+            Munshi AI
+          </span>
+          {mode === "demo" && (
+            <span className="rounded-full bg-accent px-2 py-0.5 text-[10px] font-medium uppercase tracking-wide text-accent-foreground group-data-[collapsible=icon]:hidden">
+              Demo
+            </span>
+          )}
         </div>
       </SidebarHeader>
       <SidebarContent>
@@ -37,7 +76,12 @@ function AppSidebar() {
             <SidebarMenu className="gap-1">
               {NAV.map((item) => (
                 <SidebarMenuItem key={item.url}>
-                  <SidebarMenuButton asChild isActive={path === item.url} tooltip={item.title} className="h-10 rounded-xl">
+                  <SidebarMenuButton
+                    asChild
+                    isActive={path === item.url}
+                    tooltip={item.title}
+                    className="h-10 rounded-xl"
+                  >
                     <Link to={item.url}>
                       <item.icon className="size-4" />
                       <span>{item.title}</span>
@@ -57,20 +101,41 @@ function AppSidebar() {
 }
 
 function ResetButton() {
-  const { demo, reset } = useStore();
-  if (!demo) return null;
+  const { mode, reset } = useStore();
+  if (!mode) return null;
   return (
-    <SidebarMenuButton onClick={reset} tooltip="Reset demo" className="h-10 rounded-xl text-muted-foreground">
-      <RotateCcw className="size-4" />
-      <span>Reset demo</span>
-    </SidebarMenuButton>
+    <AlertDialog>
+      <AlertDialogTrigger asChild>
+        <SidebarMenuButton
+          tooltip="Reset / switch"
+          className="h-10 rounded-xl text-muted-foreground"
+        >
+          <RotateCcw className="size-4" />
+          <span>Reset / switch</span>
+        </SidebarMenuButton>
+      </AlertDialogTrigger>
+      <AlertDialogContent>
+        <AlertDialogHeader>
+          <AlertDialogTitle>Start over?</AlertDialogTitle>
+          <AlertDialogDescription>
+            {mode === "demo"
+              ? "This clears the demo data. You can load it again or start with your own numbers."
+              : "This deletes your transactions, profile and goals from this browser. It can't be undone."}
+          </AlertDialogDescription>
+        </AlertDialogHeader>
+        <AlertDialogFooter>
+          <AlertDialogCancel>Keep my data</AlertDialogCancel>
+          <AlertDialogAction onClick={reset}>Start over</AlertDialogAction>
+        </AlertDialogFooter>
+      </AlertDialogContent>
+    </AlertDialog>
   );
 }
 
 export function AppShell({ children }: { children: ReactNode }) {
   const path = useRouterState({ select: (r) => r.location.pathname });
-  const { hydrated, demo } = useStore();
-  if (hydrated && !demo && path === "/") return <Onboarding />;
+  const { hydrated, mode } = useStore();
+  if (hydrated && !mode && path === "/") return <Onboarding />;
   return (
     <SidebarProvider>
       <div className="flex min-h-screen w-full">
@@ -81,7 +146,12 @@ export function AppShell({ children }: { children: ReactNode }) {
             <span className="font-semibold tracking-tight md:hidden">Munshi AI</span>
           </header>
           <main className="flex-1 px-4 pb-12 md:px-8">
-            <div key={path} className="mx-auto max-w-6xl animate-in fade-in slide-in-from-bottom-2 duration-500">{children}</div>
+            <div
+              key={path}
+              className="mx-auto max-w-6xl animate-in fade-in slide-in-from-bottom-2 duration-500"
+            >
+              {children}
+            </div>
           </main>
           <VoiceBar />
         </div>

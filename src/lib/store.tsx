@@ -1,5 +1,15 @@
 import { createContext, useContext, useEffect, useMemo, useState, type ReactNode } from "react";
 import { detectRecurring, type Recurring, type Usage } from "./recurring";
+import {
+  fixedCosts,
+  monthlySpend,
+  monthsFromNow,
+  planGoals,
+  type FixedCost,
+  type Goal,
+  type GoalPlan,
+  type Profile,
+} from "./plan";
 
 export type Category =
   "Food" | "Groceries" | "Transport" | "Shopping" | "Bills" | "Entertainment" | "Other";
@@ -13,16 +23,6 @@ export interface Transaction {
   note?: string;
   /** Category the coach thinks is correct, if the current one looks wrong. */
   suggestedCategory?: Category | undefined;
-}
-
-export interface Goal {
-  id: string;
-  name: string;
-  saved: number;
-  target: number;
-  due: string;
-  status: "On track" | "At risk" | "Ahead";
-  note: string;
 }
 
 const d = (daysAgo: number) => new Date(Date.now() - daysAgo * 86400000).toISOString();
@@ -90,33 +90,31 @@ const DEMO_USAGE: Usage = {
 
 const DEMO_ALL_TX = [...DEMO_TX, ...DEMO_RECURRING].sort((a, b) => b.date.localeCompare(a.date));
 
+const DEMO_PROFILE: Profile = { income: 95000, emergencyMonths: 6, extraFixedCosts: [] };
+
+/** Targets and saved amounts only; status and advice are calculated in plan.ts. */
 const DEMO_GOALS: Goal[] = [
   {
     id: "g1",
     name: "Emergency fund",
+    emergency: true,
+    target: 0,
     saved: 85000,
-    target: 300000,
-    due: "Mar 2027",
-    status: "At risk",
-    note: "Needs ₹43,000/month — you're saving ₹12,000.",
+    due: monthsFromNow(5),
   },
+  { id: "g2", name: "Goa trip", target: 45000, saved: 22000, due: monthsFromNow(3) },
+  { id: "g3", name: "New laptop", target: 120000, saved: 52000, due: monthsFromNow(8) },
+];
+
+const EMPTY_PROFILE: Profile = { income: 0, emergencyMonths: 6, extraFixedCosts: [] };
+const EMPTY_GOALS: Goal[] = [
   {
-    id: "g2",
-    name: "Goa trip",
-    saved: 28000,
-    target: 45000,
-    due: "Dec 2026",
-    status: "On track",
-    note: "₹8,500/month gets you there.",
-  },
-  {
-    id: "g3",
-    name: "New laptop",
-    saved: 52000,
-    target: 120000,
-    due: "Jun 2027",
-    status: "Ahead",
-    note: "A month ahead of plan.",
+    id: "emergency",
+    name: "Emergency fund",
+    emergency: true,
+    target: 0,
+    saved: 0,
+    due: monthsFromNow(12),
   },
 ];
 
@@ -130,82 +128,185 @@ export const DEMO_EATING_OUT = [
   { month: "Oct", amount: 6950 },
 ];
 
-export const MONTHLY_INCOME = 95000;
+export type Mode = "demo" | "own";
+
+/** Everything that survives a refresh. */
+interface Saved {
+  mode: Mode | null;
+  transactions: Transaction[];
+  usage: Usage;
+  cancelled: string[];
+  profile: Profile;
+  goals: Goal[];
+}
+
+const STORAGE_KEY = "munshi-ai:v1";
+const EMPTY: Saved = {
+  mode: null,
+  transactions: [],
+  usage: {},
+  cancelled: [],
+  profile: EMPTY_PROFILE,
+  goals: EMPTY_GOALS,
+};
+const DEMO: Saved = {
+  mode: "demo",
+  transactions: DEMO_ALL_TX,
+  usage: DEMO_USAGE,
+  cancelled: [],
+  profile: DEMO_PROFILE,
+  goals: DEMO_GOALS,
+};
+
+function load(): Saved {
+  try {
+    const raw = localStorage.getItem(STORAGE_KEY);
+    return raw ? { ...EMPTY, ...(JSON.parse(raw) as Partial<Saved>) } : EMPTY;
+  } catch {
+    return EMPTY;
+  }
+}
 
 interface Ctx {
   hydrated: boolean;
-  demo: boolean;
+  /** null until the user picks demo data or their own numbers. */
+  mode: Mode | null;
   transactions: Transaction[];
   /** Recurring payments detected from transactions. */
   subscriptions: Recurring[];
-  goals: Goal[];
+  profile: Profile;
+  /** Goals with calculated status and advice. */
+  goals: GoalPlan[];
+  /** Spent in the last 30 days. */
+  spend: number;
+  fixed: ReturnType<typeof fixedCosts>;
   add: (t: Omit<Transaction, "id">) => void;
   recategorize: (id: string, category: Category) => void;
   cancelSub: (key: string) => void;
   markUsed: (key: string) => void;
   markUnused: (key: string) => void;
+  updateProfile: (patch: Partial<Profile>) => void;
+  addFixedCost: () => void;
+  updateFixedCost: (id: string, patch: Partial<FixedCost>) => void;
+  removeFixedCost: (id: string) => void;
+  saveGoal: (goal: Goal) => void;
+  addGoal: () => void;
+  removeGoal: (id: string) => void;
   loadDemo: () => void;
+  startOwn: () => void;
   reset: () => void;
 }
 const StoreCtx = createContext<Ctx | null>(null);
-const KEY = "munshi-ai-demo";
 
 export function StoreProvider({ children }: { children: ReactNode }) {
   const [hydrated, setHydrated] = useState(false);
-  const [demo, setDemo] = useState(false);
-  const [transactions, setTx] = useState<Transaction[]>([]);
-  const [usage, setUsage] = useState<Usage>({});
-  const [cancelled, setCancelled] = useState<string[]>([]);
-  const subscriptions = useMemo(
-    () => detectRecurring(transactions, usage).filter((r) => !cancelled.includes(r.key)),
-    [transactions, usage, cancelled],
-  );
-  const [goals, setGoals] = useState<Goal[]>([]);
-
-  const loadDemo = () => {
-    setTx(DEMO_ALL_TX);
-    setUsage(DEMO_USAGE);
-    setCancelled([]);
-    setGoals(DEMO_GOALS);
-    setDemo(true);
-    localStorage.setItem(KEY, "1");
-  };
+  const [state, setState] = useState<Saved>(EMPTY);
+  const set = (fn: (s: Saved) => Partial<Saved>) => setState((s) => ({ ...s, ...fn(s) }));
 
   useEffect(() => {
     // brief delay so skeletons are visible while "syncing"
     const t = setTimeout(() => {
-      if (localStorage.getItem(KEY)) loadDemo();
+      setState(load());
       setHydrated(true);
     }, 450);
     return () => clearTimeout(t);
   }, []);
 
+  useEffect(() => {
+    if (!hydrated) return;
+    try {
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
+    } catch {
+      // Private mode or full storage: the app still works for this session.
+    }
+  }, [hydrated, state]);
+
+  const { transactions, usage, cancelled, profile } = state;
+  const subscriptions = useMemo(
+    () => detectRecurring(transactions, usage).filter((r) => !cancelled.includes(r.key)),
+    [transactions, usage, cancelled],
+  );
+  const spend = useMemo(() => monthlySpend(transactions), [transactions]);
+  const fixed = useMemo(() => fixedCosts(subscriptions, profile), [subscriptions, profile]);
+  const goals = useMemo(
+    () =>
+      planGoals(state.goals, {
+        income: profile.income,
+        spend,
+        fixed: fixed.total,
+        emergencyMonths: profile.emergencyMonths,
+      }),
+    [state.goals, profile, spend, fixed.total],
+  );
+
   const value: Ctx = {
     hydrated,
-    demo,
+    mode: state.mode,
     transactions,
     subscriptions,
+    profile,
     goals,
-    add: (t) => {
-      setTx((prev) => [{ ...t, id: crypto.randomUUID() }, ...prev]);
-      setDemo(true);
-    },
+    spend,
+    fixed,
+    add: (t) =>
+      set((s) => ({
+        transactions: [{ ...t, id: crypto.randomUUID() }, ...s.transactions],
+        mode: s.mode ?? "own",
+      })),
     recategorize: (id, category) =>
-      setTx((prev) =>
-        prev.map((t) => (t.id === id ? { ...t, category, suggestedCategory: undefined } : t)),
-      ),
-    cancelSub: (key) => setCancelled((prev) => [...prev, key]),
-    markUsed: (key) => setUsage((prev) => ({ ...prev, [key]: new Date().toISOString() })),
-    markUnused: (key) => setUsage((prev) => ({ ...prev, [key]: null })),
-    loadDemo,
-    reset: () => {
-      localStorage.removeItem(KEY);
-      setTx([]);
-      setUsage({});
-      setCancelled([]);
-      setGoals([]);
-      setDemo(false);
-    },
+      set((s) => ({
+        transactions: s.transactions.map((t) =>
+          t.id === id ? { ...t, category, suggestedCategory: undefined } : t,
+        ),
+      })),
+    cancelSub: (key) => set((s) => ({ cancelled: [...s.cancelled, key] })),
+    markUsed: (key) => set((s) => ({ usage: { ...s.usage, [key]: new Date().toISOString() } })),
+    markUnused: (key) => set((s) => ({ usage: { ...s.usage, [key]: null } })),
+    updateProfile: (patch) => set((s) => ({ profile: { ...s.profile, ...patch } })),
+    addFixedCost: () =>
+      set((s) => ({
+        profile: {
+          ...s.profile,
+          extraFixedCosts: [
+            ...s.profile.extraFixedCosts,
+            { id: crypto.randomUUID(), name: "", amount: 0 },
+          ],
+        },
+      })),
+    updateFixedCost: (id, patch) =>
+      set((s) => ({
+        profile: {
+          ...s.profile,
+          extraFixedCosts: s.profile.extraFixedCosts.map((c) =>
+            c.id === id ? { ...c, ...patch } : c,
+          ),
+        },
+      })),
+    removeFixedCost: (id) =>
+      set((s) => ({
+        profile: {
+          ...s.profile,
+          extraFixedCosts: s.profile.extraFixedCosts.filter((c) => c.id !== id),
+        },
+      })),
+    saveGoal: (goal) => set((s) => ({ goals: s.goals.map((g) => (g.id === goal.id ? goal : g)) })),
+    addGoal: () =>
+      set((s) => ({
+        goals: [
+          ...s.goals,
+          {
+            id: crypto.randomUUID(),
+            name: "New goal",
+            target: 50000,
+            saved: 0,
+            due: monthsFromNow(6),
+          },
+        ],
+      })),
+    removeGoal: (id) => set((s) => ({ goals: s.goals.filter((g) => g.id !== id) })),
+    loadDemo: () => setState(DEMO),
+    startOwn: () => setState({ ...EMPTY, mode: "own" }),
+    reset: () => setState(EMPTY),
   };
   return <StoreCtx.Provider value={value}>{children}</StoreCtx.Provider>;
 }

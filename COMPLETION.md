@@ -1,0 +1,81 @@
+# ✅ Munshi AI: Completion Tracker
+
+Everything needed to finish Munshi AI for **The Product Space AI Hackathon** (problem statement **#04: Personal Finance Coach with a Living Money Model**).
+
+**Deadline:** 31 Oct, 11:59 PM IST
+**Overall progress:** about 35%
+**Rule:** everything must be **dynamic**. Every number, alert and status is calculated from real data, never hardcoded.
+
+Legend: 🔴 not started · 🟡 in progress · 🟢 done
+
+---
+
+## 📋 Mandatory: problem statement #04
+
+| # | Requirement | Status | Done | What exists | Still hardcoded / missing |
+|---|---|---|---|---|---|
+| 1 | Ingest messy bank data (PDF, CSV, SMS) with automatic categories | 🔴 | 0% | Nothing | No upload or paste flow. Categories come from keyword matching only |
+| 2 | Correction loop: user fixes a category and the system learns the rule | 🟡 | 15% | "Move to Food" button on one demo transaction | The suggestion is typed into the demo data. No rule is saved, and future transactions aren't affected |
+| 3 | Recurring payments and subscriptions, with alerts on change or non-use | 🟢 | 90% | Detected from transactions, with price-hike, unused and new alerts, voice commands and buttons | Lost on refresh (no saving yet) |
+| 4 | Persistent profile: income, fixed costs, emergency fund, goals with target dates | 🟢 | 95% | ✅ Money profile page: income, fixed costs (detected bills + your own), emergency fund (3–12 months of spending), goals with target, saved and date. Everything saves across refreshes | Nothing major |
+| 5 | Goal planner with what-if simulation ("cut dining by 30%", "rent goes up") | 🟡 | 35% | ✅ Goal status (Ahead / On track / At risk / Done) and advice calculated from income, spending and deadlines | What-If page still says "Coming soon" |
+| 6 | Nudges when spending drifts off plan | 🟡 | 40% | Subscription nudges are calculated | "Eating out +117%" comes from a fixed array. No budget plan to compare against |
+| 7 | Monthly review report | 🟡 | 15% | One bar chart | Chart uses fixed demo numbers. No real report (income, spend, top categories, wins, suggestions) |
+| 8 | Guardrails: educate and model scenarios, never recommend specific securities | 🔴 | 0% | Nothing | Coach page says "Coming soon" |
+
+## 🎙️ Hackathon must-haves
+
+| Item | Score weight | Status | Notes |
+|---|---|---|---|
+| AI voice parsing ("450, no wait, 480" → ₹480; several expenses in one sentence) | Voice 20% + AI 20% | 🔴 30% | Keyword matching parses self-corrections wrong. **Needs the Gemini API key** |
+| Wispr Flow usage (dictate every prompt, fix and message) | 20% | 🟡 Ongoing | Judges check activity on the Wispr account |
+| Live deployed URL | Required | 🔴 | Cloudflare (free); the project already builds for it |
+| LinkedIn post (demo video + tag Wispr Flow and the organizers) | 15% | 🔴 | Posting at all earns 6/10; higher engagement earns up to 10 |
+| Final submission | Required | 🔴 | Before 11:59 PM IST |
+
+## ✨ UI upgrades (creativity and UX)
+
+| # | Upgrade | Status | Why it matters |
+|---|---|---|---|
+| U1 | **"What Munshi heard"** card: raw speech with fillers and corrections struck through, then the clean entry | 🔴 | Makes the voice skill visible to judges |
+| U2 | **Munshi persona**: avatar plus warm Hinglish replies ("Ho gaya! ₹480 Swiggy pe likh diya.") | 🔴 | Makes the app memorable; builds on the munshi story |
+| U3 | **Munshi talks back**: spoken replies (free browser text-to-speech) | 🔴 | Wow moment in the demo; voice works both ways |
+| U4 | **Ledger (khata) look** for transactions (optional) | 🔴 | A distinct look, tied to the munshi idea |
+
+## 🧱 Behind the scenes (needed for "dynamic")
+
+| Item | Status | Details |
+|---|---|---|
+| Save data across refreshes | 🟢 | ✅ Transactions, profile, goals, subscription check-ins and cancellations all saved in the browser. Learned rules will be added with #2 |
+| Remove hardcoded values | 🟡 | ✅ `MONTHLY_INCOME` and goal `status`/`note` text removed. Still left: `DEMO_EATING_OUT` (task 4), demo `suggestedCategory` (task 2) |
+
+---
+
+## 🗺️ Build order
+
+| Order | Task | Needs Gemini key? | Time | Status |
+|---|---|---|---|---|
+| 1 | Save data + profile form (#4), replacing the fixed income and goal text | No | 1 hr | 🟢 |
+| 2 | Correction loop with real learned rules (#2) | No | 45 min | 🔴 |
+| 3 | Calculated goal status + What-If simulator (#5) | No | 1.5 hr | 🟡 Goal status done; What-If left |
+| 4 | Calculated nudges + monthly review from real transactions (#6, #7) | No | 1 hr | 🔴 |
+| 5 | AI voice parsing + U1 "What Munshi heard" | **Yes** | 1 hr | 🔴 |
+| 6 | Import: CSV + SMS paste with AI categories (#1); PDF only if time allows | **Yes** | 1 hr | 🔴 |
+| 7 | Coach with guardrails (#8) | **Yes** | 45 min | 🔴 |
+| 8 | U2 Munshi persona + U3 talk-back | No | 45 min | 🔴 |
+| 9 | Deploy, then record the demo, then the LinkedIn post, then submit | No | 1 hr | 🔴 |
+| — | U4 ledger look | No | Only if ahead | 🔴 |
+
+## 🕓 Done log
+
+Newest last. Every finished task gets a line here, along with whether it has been pushed to GitHub.
+
+| When (31 Oct, IST) | What was done | Pushed? |
+|---|---|---|
+| Before 3:00 PM | Design and all pages built in Lovable | ✅ |
+| 3:10 PM | Code moved to the `Munshi-AI` repo | ✅ |
+| 3:15 PM | README rewritten for Munshi AI | ✅ |
+| 3:25 PM | App renamed Pesa Pilot → Munshi AI; "Made by" line removed from README | ✅ |
+| 3:50 PM | **#3 Recurring payment detection:** subscriptions detected from transactions; price-hike, unused and new alerts; voice check-ins ("I never use Hotstar"); 10 tests | ✅ |
+| 4:00 PM | COMPLETION.md tracker created | ⏳ Not yet |
+| 4:55 PM | **Task 1, saving data + Money profile (#4):** everything saves across refreshes; new Money profile page (income, fixed costs, emergency fund, goals); goal status and advice calculated; "Start with my own numbers" option next to "Try with demo data"; Demo badge and Reset / switch button with confirmation; 8 tests | ⏳ Not yet |

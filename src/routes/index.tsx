@@ -2,7 +2,7 @@ import { createFileRoute, Link } from "@tanstack/react-router";
 import { Cell, Pie, PieChart, ResponsiveContainer, Tooltip } from "recharts";
 import { Lightbulb, TrendingUp, Repeat, ShieldAlert, Tag, Receipt } from "lucide-react";
 import { PageHeader } from "@/components/app-shell";
-import { DEMO_EATING_OUT, MONTHLY_INCOME, useStore } from "@/lib/store";
+import { DEMO_EATING_OUT, useStore } from "@/lib/store";
 import { daysSince, yearlyCost } from "@/lib/recurring";
 import { formatINR, formatINRShort } from "@/lib/format";
 import { Progress } from "@/components/ui/progress";
@@ -40,7 +40,7 @@ const COLORS = [
 ];
 
 function Dashboard() {
-  const { hydrated, transactions, subscriptions, goals } = useStore();
+  const { hydrated, transactions, subscriptions, goals, profile } = useStore();
   const now = new Date();
 
   if (!hydrated) {
@@ -81,11 +81,14 @@ function Dashboard() {
     return d.getMonth() === now.getMonth() && d.getFullYear() === now.getFullYear();
   });
   const spend = month.reduce((s, t) => s + t.amount, 0);
-  const savingsRate = Math.max(0, Math.round(((MONTHLY_INCOME - spend) / MONTHLY_INCOME) * 100));
-  const ef = goals.find((g) => g.name === "Emergency fund");
-  const efPct = ef ? Math.round((ef.saved / ef.target) * 100) : 0;
-  const goal = goals.find((g) => g !== ef);
-  const goalPct = goal ? Math.round((goal.saved / goal.target) * 100) : 0;
+  const income = profile.income;
+  const savingsRate =
+    income > 0 ? Math.max(0, Math.round(((income - spend) / income) * 100)) : null;
+  const ef = goals.find((g) => g.emergency);
+  // The unfinished goal with the nearest deadline.
+  const goal = goals
+    .filter((g) => !g.emergency && g.status !== "Done")
+    .sort((a, b) => a.due.localeCompare(b.due))[0];
 
   const byCat = Object.entries(
     month.reduce<Record<string, number>>(
@@ -150,13 +153,15 @@ function Dashboard() {
         <Stat
           label="This month's spend"
           value={formatINR(spend)}
-          hint={`of ${formatINRShort(MONTHLY_INCOME)} income`}
+          hint={
+            income > 0 ? `of ${formatINRShort(income)} income` : "Add your income in Money profile"
+          }
         />
         <Stat
           label="Savings rate"
-          value={`${savingsRate}%`}
+          value={savingsRate === null ? "—" : `${savingsRate}%`}
           hint="Target 30%"
-          accent={savingsRate >= 30}
+          accent={savingsRate !== null && savingsRate >= 30}
         />
         {ef && (
           <Link to="/goals" className="card-soft p-6 transition hover:shadow-glow">
@@ -165,9 +170,9 @@ function Dashboard() {
               <StatusBadge status={ef.status} />
             </div>
             <p className="mt-2 text-2xl font-semibold tabular-nums">{formatINRShort(ef.saved)}</p>
-            <Progress value={efPct} className="mt-4 h-1.5" />
+            <Progress value={ef.pct} className="mt-4 h-1.5" />
             <p className="mt-2 text-xs text-muted-foreground">
-              {efPct}% of {formatINRShort(ef.target)}
+              {ef.pct}% of {formatINRShort(ef.target)}
             </p>
           </Link>
         )}
@@ -175,9 +180,10 @@ function Dashboard() {
           <Link to="/goals" className="card-soft p-6 transition hover:shadow-glow">
             <p className="text-sm text-muted-foreground">Next goal</p>
             <p className="mt-2 truncate text-2xl font-semibold">{goal.name}</p>
-            <Progress value={goalPct} className="mt-4 h-1.5" />
+            <Progress value={goal.pct} className="mt-4 h-1.5" />
             <p className="mt-2 text-xs text-muted-foreground">
-              {formatINR(goal.saved)} / {formatINR(goal.target)} · {goal.due}
+              {formatINR(goal.saved)} / {formatINR(goal.target)} ·{" "}
+              {new Date(goal.due).toLocaleDateString("en-IN", { month: "short", year: "numeric" })}
             </p>
           </Link>
         )}
