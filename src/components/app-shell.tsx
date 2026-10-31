@@ -1,5 +1,5 @@
 import { Link, useRouterState } from "@tanstack/react-router";
-import type { ReactNode } from "react";
+import { useEffect, type ReactNode } from "react";
 import {
   LayoutDashboard,
   ArrowLeftRight,
@@ -25,6 +25,7 @@ import {
 import { MunshiAvatar } from "./munshi";
 import { VoiceBar } from "./voice-bar";
 import { Onboarding } from "./onboarding";
+import { stopSpeaking } from "@/lib/speech";
 import { useStore } from "@/lib/store";
 import { RotateCcw } from "lucide-react";
 import { SidebarFooter } from "@/components/ui/sidebar";
@@ -134,6 +135,10 @@ function ResetButton() {
 export function AppShell({ children }: { children: ReactNode }) {
   const path = useRouterState({ select: (r) => r.location.pathname });
   const { hydrated, mode } = useStore();
+  // Leaving a page stops whatever Munshi was saying there (e.g. the dashboard summary).
+  useEffect(() => {
+    stopSpeaking();
+  }, [path]);
   if (hydrated && !mode && path === "/") return <Onboarding />;
   return (
     <SidebarProvider>

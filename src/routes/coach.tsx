@@ -1,7 +1,7 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { ArrowUp, Loader2, MessageCircle, ShieldCheck, Sparkles, Volume2, Zap } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
-import { MunshiAvatar } from "@/components/munshi";
+import { MunshiAvatar, MuteButton } from "@/components/munshi";
 import { EmptyState } from "@/components/states";
 import { askCoach } from "@/lib/coach.functions";
 import { answerLocally, buildSnapshot } from "@/lib/coach";
@@ -114,6 +114,8 @@ function Page() {
       }
     }
     setMessages((m) => [...m, reply]);
+    // Answers are read aloud unless Munshi is muted (🔇 in the header).
+    speak({ text: reply.text, hindi: spokenEnglish(reply.text) });
     setBusy(false);
   };
 
@@ -125,9 +127,12 @@ function Page() {
           <h1 className="text-2xl font-semibold tracking-tight sm:text-3xl">Coach</h1>
           <p className="mt-1 text-muted-foreground">Ask Munshi ji anything about your money.</p>
         </div>
-        <span className="inline-flex items-center gap-1.5 self-start rounded-full border border-primary/30 bg-accent px-3 py-1 text-xs text-accent-foreground sm:self-auto">
-          <ShieldCheck className="size-3.5" /> Educational only, not investment advice
-        </span>
+        <div className="flex items-center gap-2 self-start sm:self-auto">
+          <span className="inline-flex items-center gap-1.5 rounded-full border border-primary/30 bg-accent px-3 py-1 text-xs text-accent-foreground">
+            <ShieldCheck className="size-3.5" /> Educational only, not investment advice
+          </span>
+          <MuteButton className="border" />
+        </div>
       </div>
 
       <section className="card-soft flex min-h-[55vh] flex-col p-4 sm:p-6">
