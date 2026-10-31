@@ -34,6 +34,7 @@ function Page() {
     hydrated,
     profile,
     spend,
+    invested,
     fixed,
     goals,
     updateProfile,
@@ -56,7 +57,7 @@ function Page() {
     );
   }
 
-  const free = profile.income - spend;
+  const free = profile.income - spend - invested;
 
   return (
     <>
@@ -68,10 +69,11 @@ function Page() {
       <div className="grid gap-5 lg:grid-cols-2">
         <Card title="Monthly income" hint="Take-home pay, after tax.">
           <AmountInput value={profile.income} onChange={(income) => updateProfile({ income })} />
-          <div className="mt-4 grid grid-cols-2 gap-3 text-sm">
+          <div className="mt-4 grid grid-cols-3 gap-3 text-sm">
             <Figure label="Spent in last 30 days" value={formatINR(spend)} />
+            <Figure label="Invested (SIPs etc.)" value={formatINR(invested)} />
             <Figure
-              label="Left over"
+              label="Left for goals"
               value={profile.income ? formatINR(free) : "—"}
               tone={free < 0 ? "bad" : "good"}
             />

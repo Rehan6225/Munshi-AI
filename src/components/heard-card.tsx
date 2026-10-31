@@ -1,5 +1,5 @@
 import { Brain, Check, Repeat, Sparkles, Tag, X, Zap } from "lucide-react";
-import { CATEGORIES } from "@/lib/categories";
+import { CategorySelect } from "./category-select";
 import { findRule } from "@/lib/rules";
 import { useStore, type Category } from "@/lib/store";
 import { cn } from "@/lib/utils";
@@ -180,18 +180,12 @@ function ExpenseRow({
           <Brain className="size-3" /> {learned}
         </span>
       ) : (
-        <select
+        <CategorySelect
           value={action.category}
-          onChange={(e) => onCategory(e.target.value as Category)}
-          aria-label="Category"
-          className="rounded-md bg-transparent px-1 py-0.5 text-xs text-muted-foreground hover:bg-secondary"
-        >
-          {CATEGORIES.map((c) => (
-            <option key={c} value={c} className="bg-popover">
-              {c}
-            </option>
-          ))}
-        </select>
+          onChange={onCategory}
+          label="Category"
+          className="text-xs text-muted-foreground"
+        />
       )}
       <span className="text-xs text-muted-foreground">{dayLabel(action.daysAgo)}</span>
     </div>

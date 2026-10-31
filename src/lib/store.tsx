@@ -7,10 +7,12 @@ import {
   useState,
   type ReactNode,
 } from "react";
+import { migrateCategory, type Category } from "./categories";
 import { detectRecurring, merchantKey, type Recurring, type Usage } from "./recurring";
 import { findRule, suggestCategories, type Rule } from "./rules";
 import {
   fixedCosts,
+  monthlyInvested,
   monthlySpend,
   monthsFromNow,
   planGoals,
@@ -20,8 +22,7 @@ import {
   type Profile,
 } from "./plan";
 
-export type Category =
-  "Food" | "Groceries" | "Transport" | "Shopping" | "Bills" | "Entertainment" | "Other";
+export type { Category };
 
 export interface Transaction {
   id: string;
@@ -45,17 +46,26 @@ const DEMO_TX: Transaction[] = [
     date: d(0),
     note: "Biryani order",
   },
-  { id: "2", merchant: "Zomato", category: "Food", amount: 520, date: d(1) },
+  { id: "2", merchant: "Zomato", category: "Food & Dining", amount: 520, date: d(1) },
   { id: "3", merchant: "Blinkit", category: "Groceries", amount: 1240, date: d(1) },
   { id: "4", merchant: "Uber", category: "Transport", amount: 320, date: d(2) },
-  { id: "6", merchant: "Third Wave Coffee", category: "Food", amount: 410, date: d(3) },
-  { id: "8", merchant: "Swiggy", category: "Food", amount: 780, date: d(5) },
+  { id: "6", merchant: "Third Wave Coffee", category: "Food & Dining", amount: 410, date: d(3) },
+  { id: "7", merchant: "Apollo Pharmacy", category: "Health", amount: 860, date: d(4) },
+  { id: "8", merchant: "Swiggy", category: "Food & Dining", amount: 780, date: d(5) },
   { id: "10", merchant: "Myntra", category: "Shopping", amount: 2899, date: d(7) },
-  { id: "11", merchant: "Social, Indiranagar", category: "Food", amount: 2350, date: d(8) },
+  {
+    id: "11",
+    merchant: "Social, Indiranagar",
+    category: "Food & Dining",
+    amount: 2350,
+    date: d(8),
+  },
+  { id: "12", merchant: "Looks Salon", category: "Personal care", amount: 700, date: d(9) },
   { id: "13", merchant: "Petrol", category: "Transport", amount: 2500, date: d(10) },
-  { id: "14", merchant: "Zomato", category: "Food", amount: 690, date: d(12) },
+  { id: "14", merchant: "Zomato", category: "Food & Dining", amount: 690, date: d(12) },
   { id: "15", merchant: "DMart", category: "Groceries", amount: 3150, date: d(14) },
-  { id: "16", merchant: "Swiggy", category: "Food", amount: 560, date: d(16) },
+  { id: "16", merchant: "Swiggy", category: "Food & Dining", amount: 560, date: d(16) },
+  { id: "17", merchant: "Sent to Mom", category: "Family support", amount: 5000, date: d(18) },
 ];
 
 /** One charge per cycle, oldest amount first, ending `latest` days ago. */
@@ -74,16 +84,24 @@ const charges = (
     date: d(latest + (amounts.length - 1 - i) * every),
   }));
 
-/** Six months of autopay history, so subscriptions are detected rather than hand-entered. */
+const six = (amount: number) => Array<number>(6).fill(amount);
+
+/** Six months of autopay history, so subscriptions and bills are detected rather than hand-entered. */
 const DEMO_RECURRING: Transaction[] = [
-  ...charges("Netflix", "Entertainment", [499, 499, 499, 499, 649, 649], 2),
-  ...charges("Disney+ Hotstar", "Entertainment", [299, 299, 299, 299, 299, 299], 6),
-  ...charges("Spotify", "Entertainment", [119, 119, 119, 119, 119, 119], 11),
-  ...charges("Cult.fit", "Other", [1299, 1299, 1299, 1299], 13),
-  ...charges("YouTube Premium", "Entertainment", [149, 149], 3),
-  ...charges("Amazon Prime", "Shopping", [1499, 1499], 260, 365),
-  ...charges("House rent", "Bills", [22000, 22000, 22000, 22000, 22000, 22000], 4),
-  ...charges("Airtel broadband", "Bills", [999, 999, 999, 999, 999, 999], 9),
+  ...charges("Netflix", "Subscriptions", [499, 499, 499, 499, 649, 649], 2),
+  ...charges("Disney+ Hotstar", "Subscriptions", six(299), 6),
+  ...charges("Spotify", "Subscriptions", six(119), 11),
+  ...charges("Cult.fit", "Subscriptions", [1299, 1299, 1299, 1299], 13),
+  ...charges("YouTube Premium", "Subscriptions", [149, 149], 3),
+  ...charges("Amazon Prime", "Subscriptions", [1499, 1499], 260, 365),
+  ...charges("House rent", "Rent & Housing", six(22000), 4),
+  ...charges("Airtel broadband", "Utilities", six(999), 9),
+  ...charges("BESCOM electricity", "Utilities", [1320, 1480, 1610, 1550, 1390, 1450], 7),
+  ...charges("Bike EMI", "EMIs & Loans", six(3200), 5),
+  ...charges("Star Health insurance", "Insurance", six(1250), 15),
+  ...charges("Maid (Sunita)", "Household help", six(3000), 1),
+  ...charges("Laundry & ironing", "Household help", six(600), 8),
+  ...charges("Groww SIP", "Savings & Investments", six(10000), 5),
 ];
 
 /** What the user told Munshi about when they last used each service. */
@@ -98,7 +116,7 @@ const DEMO_USAGE: Usage = {
 
 const DEMO_ALL_TX = [...DEMO_TX, ...DEMO_RECURRING].sort((a, b) => b.date.localeCompare(a.date));
 
-const DEMO_PROFILE: Profile = { income: 95000, emergencyMonths: 6, extraFixedCosts: [] };
+const DEMO_PROFILE: Profile = { income: 120000, emergencyMonths: 6, extraFixedCosts: [] };
 
 /** Targets and saved amounts only; status and advice are calculated in plan.ts. */
 const DEMO_GOALS: Goal[] = [
@@ -172,7 +190,17 @@ const DEMO: Saved = {
 function load(): Saved {
   try {
     const raw = localStorage.getItem(STORAGE_KEY);
-    return raw ? { ...EMPTY, ...(JSON.parse(raw) as Partial<Saved>) } : EMPTY;
+    if (!raw) return EMPTY;
+    const saved = { ...EMPTY, ...(JSON.parse(raw) as Partial<Saved>) };
+    // Data saved before the 18 categories used names like "Food" and "Bills".
+    return {
+      ...saved,
+      transactions: saved.transactions.map((t) => ({
+        ...t,
+        category: migrateCategory(t.category),
+      })),
+      rules: saved.rules.map((r) => ({ ...r, category: migrateCategory(r.category) })),
+    };
   } catch {
     return EMPTY;
   }
@@ -190,6 +218,8 @@ interface Ctx {
   goals: GoalPlan[];
   /** Spent in the last 30 days. */
   spend: number;
+  /** Put into savings and investments in the last 30 days. */
+  invested: number;
   fixed: ReturnType<typeof fixedCosts>;
   rules: Rule[];
   /** Transaction id → the category its merchant is usually filed under. */
@@ -248,6 +278,7 @@ export function StoreProvider({ children }: { children: ReactNode }) {
     [transactions, usage, cancelled],
   );
   const spend = useMemo(() => monthlySpend(transactions), [transactions]);
+  const invested = useMemo(() => monthlyInvested(transactions), [transactions]);
   const suggestions = useMemo(() => suggestCategories(transactions), [transactions]);
   const fixed = useMemo(() => fixedCosts(subscriptions, profile), [subscriptions, profile]);
   const goals = useMemo(
@@ -255,10 +286,11 @@ export function StoreProvider({ children }: { children: ReactNode }) {
       planGoals(state.goals, {
         income: profile.income,
         spend,
+        invested,
         fixed: fixed.total,
         emergencyMonths: profile.emergencyMonths,
       }),
-    [state.goals, profile, spend, fixed.total],
+    [state.goals, profile, spend, invested, fixed.total],
   );
 
   const value: Ctx = {
@@ -269,6 +301,7 @@ export function StoreProvider({ children }: { children: ReactNode }) {
     profile,
     goals,
     spend,
+    invested,
     fixed,
     rules: state.rules,
     suggestions,

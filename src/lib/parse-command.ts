@@ -1,12 +1,48 @@
 import type { Category } from "./store";
 
+/** Checked in order, so specific matches (subscriptions, travel) win over broad ones. */
 const CATEGORY_HINTS: [Category, RegExp][] = [
-  ["Food", /swiggy|zomato|food|lunch|dinner|breakfast|chai|coffee|restaurant|cafe|biryani|pizza/i],
-  ["Groceries", /blinkit|zepto|bigbasket|grocer|vegetable|sabzi|dmart|milk/i],
-  ["Transport", /uber|ola|rapido|metro|petrol|fuel|auto|cab|train|irctc|flight/i],
-  ["Shopping", /amazon|flipkart|myntra|ajio|shopping|clothes|shoes/i],
-  ["Bills", /rent|electricity|bill|recharge|jio|airtel|wifi|broadband|emi/i],
-  ["Entertainment", /netflix|hotstar|spotify|movie|pvr|prime|concert/i],
+  [
+    "Savings & Investments",
+    /\b(sip|mutual funds?|\brd\b|ppf|nps|invest\w*|groww|zerodha|stocks?)\b/i,
+  ],
+  [
+    "Subscriptions",
+    /netflix|hotstar|spotify|youtube premium|prime video|amazon prime|cult|gym|subscription|jiocinema|sonyliv|zee5/i,
+  ],
+  ["Rent & Housing", /\b(rent|maintenance|society|landlord)\b/i],
+  ["EMIs & Loans", /\b(emi|loan|credit card bill)\b/i],
+  ["Insurance", /insurance|\bpremium\b|\blic\b|policy/i],
+  [
+    "Utilities",
+    /electricity|bescom|power bill|water bill|\bgas\b|lpg|cylinder|recharge|jio|airtel|\bvi\b|wifi|broadband|dth|tata play/i,
+  ],
+  [
+    "Household help",
+    /\b(maid|cook|bai|driver|laundry|dhobi|ironing|press|househelp|house help)\b/i,
+  ],
+  ["Education", /\b(fees?|tuition|coaching|course|school|college|udemy|coursera|books?)\b/i],
+  [
+    "Family support",
+    /\b(sent|send|gave|transfer\w*)\b.*\b(mom|mum|maa|dad|papa|parents|home|family|sister|brother)\b/i,
+  ],
+  [
+    "Health",
+    /medicine|pharmacy|apollo|medplus|1mg|pharmeasy|doctor|hospital|clinic|\blab\b|dentist/i,
+  ],
+  ["Personal care", /salon|haircut|hair cut|spa|grooming|parlou?r|barber/i],
+  ["Travel", /flight|hotel|\btrip\b|makemytrip|goibibo|irctc|\btrain\b|oyo|airbnb|holiday/i],
+  ["Transport", /uber|ola|rapido|metro|petrol|diesel|fuel|\bauto\b|cab|\bbus\b|parking|toll/i],
+  [
+    "Groceries",
+    /blinkit|zepto|bigbasket|instamart|grocer|vegetable|sabzi|dmart|kirana|\bmilk\b|fruits?/i,
+  ],
+  [
+    "Food & Dining",
+    /swiggy|zomato|food|lunch|dinner|breakfast|chai|coffee|restaurant|cafe|biryani|pizza|snacks?/i,
+  ],
+  ["Shopping", /amazon|flipkart|myntra|ajio|meesho|nykaa|shopping|clothes|shoes|gadget/i],
+  ["Entertainment", /movie|pvr|inox|bookmyshow|concert|event|game|outing|club/i],
 ];
 
 /** Pulls amount, merchant and category out of long, messy dictated sentences. */

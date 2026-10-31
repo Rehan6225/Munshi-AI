@@ -3,6 +3,7 @@ import { Cell, Pie, PieChart, ResponsiveContainer, Tooltip } from "recharts";
 import { Lightbulb, TrendingUp, Repeat, ShieldAlert, Tag, Receipt } from "lucide-react";
 import { PageHeader } from "@/components/app-shell";
 import { DEMO_EATING_OUT, useStore } from "@/lib/store";
+import { isSaving } from "@/lib/categories";
 import { daysSince, yearlyCost } from "@/lib/recurring";
 import { formatINR, formatINRShort } from "@/lib/format";
 import { Progress } from "@/components/ui/progress";
@@ -76,9 +77,14 @@ function Dashboard() {
     );
   }
 
+  // SIPs and other investments are saving, not spending.
   const month = transactions.filter((t) => {
     const d = new Date(t.date);
-    return d.getMonth() === now.getMonth() && d.getFullYear() === now.getFullYear();
+    return (
+      !isSaving(t.category) &&
+      d.getMonth() === now.getMonth() &&
+      d.getFullYear() === now.getFullYear()
+    );
   });
   const spend = month.reduce((s, t) => s + t.amount, 0);
   const income = profile.income;

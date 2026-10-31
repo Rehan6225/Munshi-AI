@@ -19,13 +19,13 @@ const tx = (
 describe("suggestCategories", () => {
   it("flags the odd one out for a merchant", () => {
     const odd = tx("Swiggy", "Groceries");
-    const s = suggestCategories([odd, tx("Swiggy", "Food"), tx("Swiggy", "Food")]);
-    expect(s.get(odd.id)).toBe("Food");
+    const s = suggestCategories([odd, tx("Swiggy", "Food & Dining"), tx("Swiggy", "Food & Dining")]);
+    expect(s.get(odd.id)).toBe("Food & Dining");
     expect(s.size).toBe(1);
   });
 
   it("stays quiet without enough history or a clear majority", () => {
-    expect(suggestCategories([tx("Swiggy", "Groceries"), tx("Swiggy", "Food")]).size).toBe(0);
+    expect(suggestCategories([tx("Swiggy", "Groceries"), tx("Swiggy", "Food & Dining")]).size).toBe(0);
     expect(
       suggestCategories([
         tx("Amazon", "Shopping"),
@@ -38,7 +38,7 @@ describe("suggestCategories", () => {
   it("never second-guesses a category set by a learned rule", () => {
     const ruled = tx("Swiggy", "Groceries", { ruleId: "r1" });
     expect(
-      suggestCategories([ruled, tx("Swiggy", "Food"), tx("Swiggy", "Food")]).has(ruled.id),
+      suggestCategories([ruled, tx("Swiggy", "Food & Dining"), tx("Swiggy", "Food & Dining")]).has(ruled.id),
     ).toBe(false);
   });
 });
@@ -67,16 +67,16 @@ describe("parseRuleCommand", () => {
     expect(parseRuleCommand("uh, Swiggy is food, not groceries, remember that", merchants)).toEqual(
       {
         merchant: "Swiggy",
-        category: "Food",
+        category: "Food & Dining",
       },
     );
     expect(parseRuleCommand("swiggy is not groceries, it's eating out", merchants)).toEqual({
       merchant: "Swiggy",
-      category: "Food",
+      category: "Food & Dining",
     });
     expect(parseRuleCommand("move Swiggy from groceries to food", merchants)).toEqual({
       merchant: "Swiggy",
-      category: "Food",
+      category: "Food & Dining",
     });
   });
 

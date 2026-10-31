@@ -1,4 +1,4 @@
-import { CATEGORIES, isCategory } from "./categories";
+import { CATEGORIES, CATEGORY_INFO, isCategory } from "./categories";
 import { formatINR } from "./format";
 import { parseCommand } from "./parse-command";
 import { parseUsageCommand, type Recurring } from "./recurring";
@@ -188,7 +188,8 @@ Rules:
 - One sentence can hold several actions. "200 auto and 150 chai" is two expenses.
 - Amounts are in INR. "2k" = 2000, "1.5 lakh" = 150000.
 - daysAgo: 0 today, 1 yesterday or last night, 2 day before yesterday.
-- category must be one of: ${CATEGORIES.join(", ")}. Food = eating out, restaurants, food delivery, chai, coffee. Groceries = Blinkit, Zepto, DMart, vegetables, milk.
+- category must be exactly one of these (name: what belongs there):
+${CATEGORIES.map((c) => `  - ${c}: ${CATEGORY_INFO[c].hint}`).join("\n")}
 - Use a known merchant's exact spelling when the speaker means it.
 - A sentence saying a merchant belongs in a category ("Swiggy is food, not groceries") is a "rule" action.
 - A sentence saying a subscription isn't used, should be cancelled, or was used is a "subscription" action with action "unused", "cancel" or "used".
@@ -197,8 +198,8 @@ Return ONLY JSON in this shape:
 {
   "heard": [{"text": "...", "kind": "keep" | "filler" | "corrected"}],
   "actions": [
-    {"type": "expense", "amount": 480, "merchant": "Swiggy", "category": "Food", "daysAgo": 1},
-    {"type": "rule", "merchant": "Swiggy", "category": "Food"},
+    {"type": "expense", "amount": 480, "merchant": "Swiggy", "category": "Food & Dining", "daysAgo": 1},
+    {"type": "rule", "merchant": "Swiggy", "category": "Food & Dining"},
     {"type": "subscription", "merchant": "Netflix", "action": "cancel"}
   ]
 }
@@ -206,7 +207,7 @@ Return ONLY JSON in this shape:
 "heard" must split the ORIGINAL text, exactly as given, into consecutive pieces that join back into it. Mark filler words "filler", the values the speaker took back (plus the correction phrase) "corrected", everything else "keep".
 
 Example input: "uh spent like 450, no wait, 480 on swiggy last night"
-Example output: {"heard":[{"text":"uh ","kind":"filler"},{"text":"spent ","kind":"keep"},{"text":"like ","kind":"filler"},{"text":"450, no wait, ","kind":"corrected"},{"text":"480 on swiggy last night","kind":"keep"}],"actions":[{"type":"expense","amount":480,"merchant":"Swiggy","category":"Food","daysAgo":1}]}`;
+Example output: {"heard":[{"text":"uh ","kind":"filler"},{"text":"spent ","kind":"keep"},{"text":"like ","kind":"filler"},{"text":"450, no wait, ","kind":"corrected"},{"text":"480 on swiggy last night","kind":"keep"}],"actions":[{"type":"expense","amount":480,"merchant":"Swiggy","category":"Food & Dining","daysAgo":1}]}`;
 
 /** Short spoken-style summary of what was saved, e.g. for the toast. */
 export function summarize(actions: VoiceAction[]) {

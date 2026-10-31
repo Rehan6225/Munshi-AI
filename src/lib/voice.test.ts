@@ -56,14 +56,14 @@ describe("parseLocally", () => {
   it("keeps the corrected amount", () => {
     expect(
       parseLocally("uh so I spent like 450, no wait, 480 on Swiggy last night", ctx).actions,
-    ).toEqual([{ type: "expense", amount: 480, merchant: "Swiggy", category: "Food", daysAgo: 1 }]);
+    ).toEqual([{ type: "expense", amount: 480, merchant: "Swiggy", category: "Food & Dining", daysAgo: 1 }]);
   });
 
   it("splits several spends in one sentence", () => {
     const { actions } = parseLocally("paid 200 auto and 150 chai with friends", ctx);
     expect(actions).toEqual([
       { type: "expense", amount: 200, merchant: "Auto", category: "Transport", daysAgo: 0 },
-      { type: "expense", amount: 150, merchant: "Chai", category: "Food", daysAgo: 0 },
+      { type: "expense", amount: 150, merchant: "Chai", category: "Food & Dining", daysAgo: 0 },
     ]);
   });
 
@@ -78,7 +78,7 @@ describe("parseLocally", () => {
 
   it("understands corrections and subscription check-ins", () => {
     expect(parseLocally("uh, Swiggy is food, not groceries, remember that", ctx).actions).toEqual([
-      { type: "rule", merchant: "Swiggy", category: "Food" },
+      { type: "rule", merchant: "Swiggy", category: "Food & Dining" },
     ]);
     expect(parseLocally("honestly I never use hotstar", ctx).actions).toEqual([
       { type: "subscription", merchant: "Disney+ Hotstar", action: "unused" },
@@ -101,7 +101,7 @@ describe("sanitizeAiParse", () => {
           { text: "480 on swiggy", kind: "keep" },
         ],
         actions: [
-          { type: "expense", amount: 480, merchant: "Swiggy", category: "Food", daysAgo: 0 },
+          { type: "expense", amount: 480, merchant: "Swiggy", category: "Food & Dining", daysAgo: 0 },
         ],
       },
       text,

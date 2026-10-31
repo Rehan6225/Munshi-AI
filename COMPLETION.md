@@ -48,6 +48,7 @@ Legend: 🔴 not started · 🟡 in progress · 🟢 done
 |---|---|---|
 | Save data across refreshes | 🟢 | ✅ Transactions, profile, goals, learned rules, subscription check-ins and cancellations all saved in the browser |
 | Remove hardcoded values | 🟡 | ✅ `MONTHLY_INCOME`, goal `status`/`note` text and demo `suggestedCategory` removed. Still left: `DEMO_EATING_OUT` (task 4) |
+| **18 categories** in 4 groups (Commitments, Essentials, Lifestyle, Money moves) | 🟢 | ✅ Voice parser, Gemini prompt, learned rules, bill vs subscription detection, fixed costs, goals and demo data all use them. Investments count as saving, not spending |
 
 ---
 
@@ -81,3 +82,4 @@ Newest last. Every finished task gets a line here, along with whether it has bee
 | 4:55 PM | **Task 1, saving data + Money profile (#4):** everything saves across refreshes; new Money profile page (income, fixed costs, emergency fund, goals); goal status and advice calculated; "Start with my own numbers" option next to "Try with demo data"; Demo badge and Reset / switch button with confirmation; 8 tests | ⏳ Not yet |
 | 5:05 PM | **Task 2, correction loop (#2):** category picker on every transaction; "Remember" saves a rule and refiles past and future spends; 🧠 learned badge; Learned rules card; voice corrections ("Swiggy is food, not groceries"); calculated suggestions replace the hardcoded one; 11 tests | ⏳ Not yet |
 | 5:51 PM | **Task 5, voice parsing + U1 "What Munshi heard":** Gemini server function (key stays on the server) with an on-device fallback; handles fillers, "450, no wait, 480" and several spends per sentence; confirm card with struck-through speech, editable amounts and categories; 12 tests | ⏳ Not yet |
+| 5:57 PM | **18 categories:** Rent & Housing, Utilities, EMIs, Insurance, Household help (incl. laundry), Education, Family support, Subscriptions, Groceries, Transport, Health, Food & Dining, Shopping, Entertainment, Personal care, Travel, Savings & Investments, Other; grouped picker; fixed-cost categories auto-fill fixed costs; SIPs excluded from spending; bills get no price or "new" alerts; old saved data migrated; 25 tests | ⏳ Not yet |

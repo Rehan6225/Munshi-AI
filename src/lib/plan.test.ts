@@ -10,7 +10,7 @@ const tx = (
   merchant: string,
   amount: number,
   daysAgo: number,
-  category: Transaction["category"] = "Food",
+  category: Transaction["category"] = "Food & Dining",
 ) => ({
   id: `${merchant}${daysAgo}`,
   merchant,
@@ -31,8 +31,8 @@ describe("fixedCosts", () => {
   it("adds detected bills to costs the user typed in", () => {
     const subs = detectRecurring(
       [
-        tx("House rent", 22000, 34, "Bills"),
-        tx("House rent", 22000, 4, "Bills"),
+        tx("House rent", 22000, 34, "Rent & Housing"),
+        tx("House rent", 22000, 4, "Rent & Housing"),
         tx("Netflix", 649, 32),
         tx("Netflix", 649, 2),
       ],

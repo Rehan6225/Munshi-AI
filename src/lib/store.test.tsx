@@ -23,7 +23,7 @@ describe("store: correction loop", () => {
   it("suggests fixing the miscategorised Swiggy order in the demo", async () => {
     const { result } = await demoStore();
     const odd = swiggy(result.current).find((t) => t.category === "Groceries")!;
-    expect(result.current.suggestions.get(odd.id)).toBe("Food");
+    expect(result.current.suggestions.get(odd.id)).toBe("Food & Dining");
   });
 
   it("learns a rule, refiles the past and categorises the future", async () => {
@@ -31,13 +31,13 @@ describe("store: correction loop", () => {
 
     let changed = 0;
     act(() => {
-      changed = result.current.learnRule("Swiggy", "Food");
+      changed = result.current.learnRule("Swiggy", "Food & Dining");
     });
     expect(changed).toBe(1);
-    expect(swiggy(result.current).every((t) => t.category === "Food" && t.ruleId)).toBe(true);
+    expect(swiggy(result.current).every((t) => t.category === "Food & Dining" && t.ruleId)).toBe(true);
     expect(result.current.suggestions.size).toBe(0);
     expect(result.current.rules).toMatchObject([
-      { merchant: "Swiggy", category: "Food", applied: 3 },
+      { merchant: "Swiggy", category: "Food & Dining", applied: 3 },
     ]);
 
     // A new spend the parser guessed wrong gets fixed by the rule.
@@ -50,17 +50,17 @@ describe("store: correction loop", () => {
         date: new Date().toISOString(),
       });
     });
-    expect(added).toMatchObject({ category: "Food" });
+    expect(added).toMatchObject({ category: "Food & Dining" });
     expect(added.ruleId).toBeTruthy();
     expect(result.current.rules[0]!.applied).toBe(4);
   });
 
   it("forgetting a rule keeps categories but drops the learned badge", async () => {
     const { result } = await demoStore();
-    act(() => void result.current.learnRule("Swiggy", "Food"));
+    act(() => void result.current.learnRule("Swiggy", "Food & Dining"));
     act(() => result.current.removeRule(result.current.rules[0]!.id));
     expect(result.current.rules).toEqual([]);
-    expect(swiggy(result.current).every((t) => t.category === "Food" && !t.ruleId)).toBe(true);
+    expect(swiggy(result.current).every((t) => t.category === "Food & Dining" && !t.ruleId)).toBe(true);
   });
 
   it("keeps rules and profile across a reload", async () => {
