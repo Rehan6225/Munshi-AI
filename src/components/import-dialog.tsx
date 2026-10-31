@@ -107,7 +107,8 @@ function Pick({
   const { transactions, ownRules } = useStore();
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState("");
-  const [sms, setSms] = useState("");
+  // Opens with the sample messages in place, so the SMS import can be tried in one click.
+  const [sms, setSms] = useState(() => sampleSms());
   const [locked, setLocked] = useState<File | null>(null);
   const [password, setPassword] = useState("");
   const [dragging, setDragging] = useState(false);
@@ -247,8 +248,20 @@ function Pick({
             className="w-full resize-none rounded-xl border bg-card p-3 font-mono text-xs leading-relaxed outline-none placeholder:text-muted-foreground/60 focus:border-primary/50"
           />
           <p className="text-xs text-muted-foreground">
-            In Messages, long-press your bank's alerts, copy them and paste here. Separate messages
-            with a blank line.
+            {sms.trim() === sampleSms().trim() ? (
+              <>
+                These are sample bank alerts. To use yours,{" "}
+                <button
+                  onClick={() => setSms("")}
+                  className="font-medium text-primary underline-offset-2 hover:underline"
+                >
+                  clear them
+                </button>
+                , then copy your bank's alerts from Messages and paste them here.
+              </>
+            ) : (
+              "In Messages, long-press your bank's alerts, copy them and paste here. Separate messages with a blank line."
+            )}
           </p>
           <button
             onClick={readSms}
